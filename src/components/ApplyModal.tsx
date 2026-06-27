@@ -2,11 +2,14 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Form, Formik } from "formik";
 import { X, Send, CheckCircle, ExternalLink } from "lucide-react";
 import Link from "next/link";
+import { FormTextInput, FormTextarea } from "@/components/form/FormFields";
 import { getProfile } from "@/lib/profile";
 import { apiFetch } from "@/lib/api-client";
 import { formatDateTimeJST } from "@/lib/datetime";
+import { applySchema } from "@/lib/validation/schemas";
 import type { Job } from "@/lib/types";
 
 type ApplyModalProps = {
@@ -19,51 +22,19 @@ const CALENDLY_URL = process.env.NEXT_PUBLIC_CALENDLY_URL ?? "";
 
 export default function ApplyModal({ job, onClose, onSuccess }: ApplyModalProps) {
   const profile = getProfile();
-  const [name, setName] = useState(profile?.name ?? "");
-  const [age, setAge] = useState(profile?.age?.toString() ?? "");
-  const [area, setArea] = useState(profile?.area ?? "");
-  const [jobType, setJobType] = useState(profile?.desiredJobType ?? "");
-  const [email, setEmail] = useState(profile?.email ?? "");
-  const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState<"form" | "booking" | "done">("form");
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [booked, setBooked] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
-  useEffect(() => {
-    if (profile) {
-      setName(profile.name);
-      setAge(profile.age?.toString() ?? "");
-      setArea(profile.area);
-      setJobType(profile.desiredJobType);
-      setEmail(profile.email);
-    }
-  }, [profile]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    try {
-      const res = await apiFetch("/api/applications", {
-        method: "POST",
-        body: JSON.stringify({
-          jobId: job.id,
-          message,
-          applicantName: name,
-          applicantEmail: email,
-          applicantAge: Number(age),
-          applicantArea: area,
-          applicantJobType: jobType,
-        }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setApplicationId(data.application?.id ?? null);
-        setStep("booking");
-      }
-    } finally {
-      setSubmitting(false);
-    }
+  const initialValues = {
+    name: profile?.name ?? "",
+    age: profile?.age ? String(profile.age) : "",
+    area: profile?.area ?? "",
+    jobType: profile?.desiredJobType ?? "",
+    email: profile?.email ?? "",
+    message: "",
   };
 
   const handleBookingComplete = useCallback(async (slot?: string) => {
@@ -134,38 +105,61 @@ export default function ApplyModal({ job, onClose, onSuccess }: ApplyModalProps)
 
         <AnimatePresence mode="wait">
           {step === "form" && (
-            <motion.form key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onSubmit={handleSubmit} className="space-y-4">
-              <label className="block">
-                <span className="mb-1.5 block text-sm font-medium text-slate-600">氏名</span>
-                <input className="input-field" value={name} onChange={(e) => setName(e.target.value)} required />
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="block">
-                  <span className="mb-1 block text-sm text-[#64748B]">年齢</span>
-                  <input type="number" className="input-field" value={age} onChange={(e) => setAge(e.target.value)} required />
-                </label>
-                <label className="block">
-                  <span className="mb-1 block text-sm text-[#64748B]">エリア</span>
-                  <input className="input-field" value={area} onChange={(e) => setArea(e.target.value)} required />
-                </label>
-              </div>
-              <label className="block">
-                <span className="mb-1 block text-sm text-[#64748B]">希望職種</span>
-                <input className="input-field" value={jobType} onChange={(e) => setJobType(e.target.value)} required />
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-sm text-[#64748B]">メールアドレス</span>
-                <input type="email" className="input-field" value={email} onChange={(e) => setEmail(e.target.value)} required />
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-sm text-[#64748B]">志望動機（任意）</span>
-                <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={3} className="input-field resize-none" />
-              </label>
-              <button type="submit" disabled={submitting} className="btn-primary w-full py-3.5">
-                <Send className="h-4 w-4" />
-                {submitting ? "送信中..." : "応募を送信"}
-              </button>
-            </motion.form>
+            <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              {submitError && (
+                <p className="mb-4 rounded-xl border border-red-100 bg-red-50 px-3.5 py-2.5 text-sm text-red-600">
+                  {submitError}
+                </p>
+              )}
+              <Formik
+                initialValues={initialValues}
+                validationSchema={applySchema}
+                enableReinitialize
+                onSubmit={async (values) => {
+                  setSubmitting(true);
+                  setSubmitError("");
+                  try {
+                    const res = await apiFetch("/api/applications", {
+                      method: "POST",
+                      body: JSON.stringify({
+                        jobId: job.id,
+                        message: values.message,
+                        applicantName: values.name,
+                        applicantEmail: values.email,
+                        applicantAge: Number(values.age),
+                        applicantArea: values.area,
+                        applicantJobType: values.jobType,
+                      }),
+                    });
+                    if (res.ok) {
+                      const data = await res.json();
+                      setApplicationId(data.application?.id ?? null);
+                      setStep("booking");
+                    } else {
+                      const data = await res.json().catch(() => ({}));
+                      setSubmitError(typeof data.error === "string" ? data.error : "応募に失敗しました");
+                    }
+                  } finally {
+                    setSubmitting(false);
+                  }
+                }}
+              >
+                <Form className="space-y-4">
+                  <FormTextInput name="name" label="氏名" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormTextInput name="age" label="年齢" type="number" />
+                    <FormTextInput name="area" label="エリア" />
+                  </div>
+                  <FormTextInput name="jobType" label="希望職種" />
+                  <FormTextInput name="email" label="メールアドレス" type="email" />
+                  <FormTextarea name="message" label="志望動機（任意）" rows={3} />
+                  <button type="submit" disabled={submitting} className="btn-primary w-full py-3.5">
+                    <Send className="h-4 w-4" />
+                    {submitting ? "送信中..." : "応募を送信"}
+                  </button>
+                </Form>
+              </Formik>
+            </motion.div>
           )}
 
           {step === "booking" && (

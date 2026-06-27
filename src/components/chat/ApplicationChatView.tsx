@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { Form, Formik, useField } from "formik";
 import { Send } from "lucide-react";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { FormError } from "@/components/form/FormFields";
 import { apiFetch } from "@/lib/api-client";
 import { useChatRealtime } from "@/hooks/useChatRealtime";
 import { formatTimeJST } from "@/lib/datetime";
+import { chatMessageSchema } from "@/lib/validation/schemas";
 import type { ChatMessage } from "@/lib/types";
 
 type ApplicationChatViewProps = {
@@ -15,6 +18,21 @@ type ApplicationChatViewProps = {
   className?: string;
 };
 
+function ChatInputField() {
+  const [field, meta] = useField("content");
+
+  return (
+    <div className="min-w-0 flex-1">
+      <input
+        {...field}
+        placeholder="メッセージを入力..."
+        className={`input-field w-full rounded-full ${meta.touched && meta.error ? "ring-1 ring-red-300" : ""}`}
+      />
+      <FormError name="content" />
+    </div>
+  );
+}
+
 export default function ApplicationChatView({
   applicationId,
   sender,
@@ -22,9 +40,7 @@ export default function ApplicationChatView({
   className = "",
 }: ApplicationChatViewProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const seenIds = useRef(new Set<string>());
 
@@ -57,27 +73,6 @@ export default function ApplicationChatView({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const sendMessage = async () => {
-    if (!input.trim() || sending) return;
-    setSending(true);
-    try {
-      const res = await apiFetch("/api/chat", {
-        method: "POST",
-        body: JSON.stringify({ applicationId, content: input, sender }),
-      });
-      if (res.ok) {
-        setInput("");
-        const data = await res.json();
-        if (!seenIds.current.has(data.message.id)) {
-          seenIds.current.add(data.message.id);
-          setMessages((prev) => [...prev, data.message]);
-        }
-      }
-    } finally {
-      setSending(false);
-    }
-  };
-
   const isOwn = (msg: ChatMessage) => msg.sender === sender;
 
   return (
@@ -109,24 +104,53 @@ export default function ApplicationChatView({
       </div>
 
       <div className="border-t border-slate-200 bg-white px-4 py-3">
-        <div className="flex gap-2">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
-            placeholder="メッセージを入力..."
-            className="input-field flex-1 rounded-full"
-          />
-          <button
-            type="button"
-            onClick={sendMessage}
-            disabled={sending || !input.trim()}
-            className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm transition active:scale-95 disabled:opacity-50"
-            aria-label="送信"
-          >
-            <Send className="h-4 w-4" />
-          </button>
-        </div>
+        <Formik
+          initialValues={{ content: "" }}
+          validationSchema={chatMessageSchema}
+          onSubmit={async (values, { resetForm, setSubmitting }) => {
+            setSubmitting(true);
+            try {
+              const res = await apiFetch("/api/chat", {
+                method: "POST",
+                body: JSON.stringify({ applicationId, content: values.content, sender }),
+              });
+              if (res.ok) {
+                resetForm();
+                const data = await res.json();
+                if (!seenIds.current.has(data.message.id)) {
+                  seenIds.current.add(data.message.id);
+                  setMessages((prev) => [...prev, data.message]);
+                }
+              }
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        >
+          {({ isSubmitting, values, submitForm }) => (
+            <Form className="flex flex-col gap-1">
+              <div
+                className="flex gap-2"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    submitForm();
+                  }
+                }}
+              >
+                <ChatInputField />
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !values.content.trim()}
+                  className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm transition active:scale-95 disabled:opacity-50"
+                  aria-label="送信"
+                >
+                  <Send className="h-4 w-4" />
+                </button>
+              </div>
+            </Form>
+          )}
+        </Formik>
       </div>
     </div>
   );

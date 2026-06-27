@@ -9,6 +9,7 @@ import {
   MessageCircle,
   LogOut,
   ShieldCheck,
+  User,
 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import Logo from "@/components/ui/Logo";
@@ -36,12 +37,14 @@ export default function StaffPanelShell({ children }: StaffPanelShellProps) {
           { href: basePath, label: "ダッシュボード", icon: LayoutDashboard },
           { href: `${basePath}/jobs`, label: "求人審査", icon: ShieldCheck },
           { href: `${basePath}/applications`, label: "応募一覧", icon: FileText },
+          { href: `${basePath}/profile`, label: "プロフィール", icon: User },
         ]
       : [
           { href: basePath, label: "ダッシュボード", icon: LayoutDashboard },
           { href: `${basePath}/jobs`, label: "求人管理", icon: Briefcase },
           { href: `${basePath}/applications`, label: "応募管理", icon: FileText },
           { href: `${basePath}/chat`, label: "チャット", icon: MessageCircle },
+          { href: `${basePath}/profile`, label: "プロフィール", icon: User },
         ];
 
   const isActive = (href: string) =>

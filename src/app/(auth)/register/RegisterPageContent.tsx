@@ -3,9 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Form, Formik } from "formik";
 import { Building2, ChevronLeft, ChevronRight, UserPlus, Users } from "lucide-react";
 import SeekerAuthShell from "@/components/auth/SeekerAuthShell";
-import PasswordField from "@/components/auth/PasswordField";
+import { FormPassword, FormSelect, FormTextInput } from "@/components/form/FormFields";
 import {
   AREAS,
   JOB_CATEGORIES,
@@ -13,19 +14,21 @@ import {
   EXPERIENCE_LEVELS,
   EMPLOYMENT_TYPES,
 } from "@/lib/constants";
-import { DEFAULT_PROFILE, saveProfile } from "@/lib/profile";
+import { saveProfile } from "@/lib/profile";
 import { apiFetch } from "@/lib/api-client";
 import { mapAuthError } from "@/lib/auth/errors";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import type { UserProfile } from "@/lib/types";
+import {
+  companyRegisterSchema,
+  seekerAccountSchema,
+  seekerProfileSchema,
+  type SeekerAccountValues,
+} from "@/lib/validation/schemas";
 
 type AccountType = "seeker" | "company";
 type RegisterStep = "type" | "seeker-1" | "seeker-2" | "company";
 
-function resolveInitialStep(
-  presetEmail: string,
-  presetType: string | null
-): RegisterStep {
+function resolveInitialStep(presetEmail: string, presetType: string | null): RegisterStep {
   if (presetEmail) return "seeker-2";
   if (presetType === "seeker") return "seeker-1";
   if (presetType === "company") return "company";
@@ -45,163 +48,18 @@ export default function RegisterPageContent() {
     return null;
   });
 
-  const [form, setForm] = useState<UserProfile>({
-    ...DEFAULT_PROFILE,
-    email: presetEmail,
-  });
-  const [companyName, setCompanyName] = useState("");
-  const [contactName, setContactName] = useState("");
-  const [companyEmail, setCompanyEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [account, setAccount] = useState<SeekerAccountValues | null>(
+    presetEmail ? { email: presetEmail, password: "", confirmPassword: "" } : null
+  );
   const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
 
   const next = searchParams.get("next") || "/explore";
   const loginHref = `/login${next !== "/explore" ? `?next=${encodeURIComponent(next)}` : ""}`;
-
-  const update = (key: keyof UserProfile, value: string | number) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const validatePasswords = (email: string): boolean => {
-    if (!email.trim()) {
-      setError("メールアドレスを入力してください");
-      return false;
-    }
-    if (!password || password.length < 8) {
-      setError("パスワードは8文字以上で設定してください");
-      return false;
-    }
-    if (password !== confirmPassword) {
-      setError("パスワードが一致しません");
-      return false;
-    }
-    return true;
-  };
 
   const selectAccountType = (type: AccountType) => {
     setError("");
     setAccountType(type);
     setStep(type === "seeker" ? "seeker-1" : "company");
-  };
-
-  const handleSeekerStep1 = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    if (validatePasswords(form.email)) setStep("seeker-2");
-  };
-
-  const handleSeekerRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.name || !form.gender || !form.area || !form.desiredJobType || !form.experience || !form.employmentType) {
-      setError("必須項目をすべて入力してください");
-      return;
-    }
-    if (form.age < 18 || form.age > 80) {
-      setError("年齢は18〜80歳の範囲で入力してください");
-      return;
-    }
-    if (!validatePasswords(form.email)) {
-      setStep("seeker-1");
-      return;
-    }
-
-    setSubmitting(true);
-    setError("");
-
-    try {
-      const supabase = createSupabaseBrowserClient();
-      if (!supabase) {
-        setError("認証サービスが設定されていません。管理者にお問い合わせください。");
-        return;
-      }
-
-      const { error: authError } = await supabase.auth.signUp({
-        email: form.email.trim(),
-        password,
-        options: {
-          data: { name: form.name, role: "seeker" },
-        },
-      });
-
-      if (authError) {
-        setError(mapAuthError(authError.message));
-        if (authError.message.toLowerCase().includes("already")) setStep("seeker-1");
-        return;
-      }
-
-      const res = await apiFetch("/api/profile", {
-        method: "POST",
-        body: JSON.stringify(form),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.error ?? "プロフィールの保存に失敗しました");
-        return;
-      }
-
-      const data = await res.json();
-      saveProfile(data.profile);
-      router.replace(next);
-      router.refresh();
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleCompanyRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!companyName.trim() || !contactName.trim()) {
-      setError("会社名と担当者名を入力してください");
-      return;
-    }
-    if (!validatePasswords(companyEmail)) return;
-
-    setSubmitting(true);
-    setError("");
-
-    try {
-      const supabase = createSupabaseBrowserClient();
-      if (!supabase) {
-        setError("認証サービスが設定されていません。管理者にお問い合わせください。");
-        return;
-      }
-
-      const { error: authError } = await supabase.auth.signUp({
-        email: companyEmail.trim(),
-        password,
-        options: {
-          data: { name: contactName, role: "company" },
-        },
-      });
-
-      if (authError) {
-        setError(mapAuthError(authError.message));
-        return;
-      }
-
-      const res = await apiFetch("/api/company/register", {
-        method: "POST",
-        body: JSON.stringify({
-          companyName: companyName.trim(),
-          contactName: contactName.trim(),
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.error ?? "企業アカウントの登録に失敗しました");
-        return;
-      }
-
-      await apiFetch("/api/admin/auth/sync", { method: "POST" });
-      router.replace("/company");
-      router.refresh();
-    } finally {
-      setSubmitting(false);
-    }
   };
 
   const shellSubtitle =
@@ -300,237 +158,229 @@ export default function RegisterPageContent() {
       )}
 
       {step === "seeker-1" && (
-        <form onSubmit={handleSeekerStep1} className="space-y-5">
-          <button
-            type="button"
-            onClick={() => {
-              setError("");
-              setStep("type");
-            }}
-            className="flex items-center gap-1 text-sm font-medium text-[var(--muted)] hover:text-[var(--foreground)]"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            登録タイプを選び直す
-          </button>
-
-          <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">メールアドレス</span>
-            <input
-              type="email"
-              className="input-field"
-              value={form.email}
-              onChange={(e) => update("email", e.target.value)}
-              placeholder="you@example.com"
-              autoComplete="email"
-              required
-            />
-          </label>
-
-          <PasswordField
-            label="パスワード"
-            value={password}
-            onChange={setPassword}
-            autoComplete="new-password"
-            minLength={8}
-            hint="8文字以上・英数字の組み合わせを推奨"
-          />
-
-          <PasswordField
-            label="パスワード（確認）"
-            value={confirmPassword}
-            onChange={setConfirmPassword}
-            autoComplete="new-password"
-            minLength={8}
-          />
-
-          <button type="submit" className="btn-primary flex w-full items-center justify-center gap-2 py-3">
-            次へ：プロフィール入力
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </form>
-      )}
-
-      {step === "seeker-2" && (
-        <form onSubmit={handleSeekerRegister} className="space-y-4">
-          {!presetEmail && (
+        <Formik
+          initialValues={{ email: account?.email ?? "", password: "", confirmPassword: "" }}
+          validationSchema={seekerAccountSchema}
+          onSubmit={(values) => {
+            setError("");
+            setAccount(values);
+            setStep("seeker-2");
+          }}
+        >
+          <Form className="space-y-5">
             <button
               type="button"
               onClick={() => {
                 setError("");
-                setStep("seeker-1");
+                setStep("type");
               }}
               className="flex items-center gap-1 text-sm font-medium text-[var(--muted)] hover:text-[var(--foreground)]"
             >
               <ChevronLeft className="h-4 w-4" />
-              アカウント情報に戻る
+              登録タイプを選び直す
             </button>
+
+            <FormTextInput name="email" label="メールアドレス" type="email" placeholder="you@example.com" autoComplete="email" />
+            <FormPassword name="password" label="パスワード" autoComplete="new-password" hint="8文字以上・英数字の組み合わせを推奨" />
+            <FormPassword name="confirmPassword" label="パスワード（確認）" autoComplete="new-password" />
+
+            <button type="submit" className="btn-primary flex w-full items-center justify-center gap-2 py-3">
+              次へ：プロフィール入力
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </Form>
+        </Formik>
+      )}
+
+      {step === "seeker-2" && account && (
+        <Formik
+          initialValues={{
+            name: "",
+            gender: "",
+            age: "",
+            area: "",
+            desiredJobType: "",
+            experience: "",
+            employmentType: "",
+            email: account.email,
+          }}
+          validationSchema={seekerProfileSchema}
+          onSubmit={async (values, { setSubmitting }) => {
+            setError("");
+            setSubmitting(true);
+            try {
+              const supabase = createSupabaseBrowserClient();
+              if (!supabase) {
+                setError("認証サービスが設定されていません。管理者にお問い合わせください。");
+                return;
+              }
+
+              const { error: authError } = await supabase.auth.signUp({
+                email: account.email.trim(),
+                password: account.password,
+                options: {
+                  data: { name: values.name, role: "seeker" },
+                },
+              });
+
+              if (authError) {
+                setError(mapAuthError(authError.message));
+                if (authError.message.toLowerCase().includes("already")) setStep("seeker-1");
+                return;
+              }
+
+              const res = await apiFetch("/api/profile", {
+                method: "POST",
+                body: JSON.stringify(values),
+              });
+
+              if (!res.ok) {
+                const data = await res.json();
+                setError(data.error ?? "プロフィールの保存に失敗しました");
+                return;
+              }
+
+              const data = await res.json();
+              saveProfile(data.profile);
+              router.replace(next);
+              router.refresh();
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        >
+          {({ isSubmitting }) => (
+            <Form className="space-y-4">
+              {!presetEmail && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError("");
+                    setStep("seeker-1");
+                  }}
+                  className="flex items-center gap-1 text-sm font-medium text-[var(--muted)] hover:text-[var(--foreground)]"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  アカウント情報に戻る
+                </button>
+              )}
+
+              <FormTextInput name="name" label="氏名" placeholder="山田 太郎" autoComplete="name" />
+
+              <div className="grid grid-cols-2 gap-3">
+                <FormSelect name="gender" label="性別" options={GENDERS} />
+                <FormTextInput name="age" label="年齢" type="number" placeholder="25" />
+              </div>
+
+              <FormSelect name="area" label="希望エリア" options={AREAS} />
+              <FormSelect name="desiredJobType" label="希望職種" options={JOB_CATEGORIES} />
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <FormSelect name="experience" label="社会人経験" options={EXPERIENCE_LEVELS} />
+                <FormSelect name="employmentType" label="希望雇用形態" options={EMPLOYMENT_TYPES} />
+              </div>
+
+              <input type="hidden" name="email" value={account.email} readOnly />
+
+              <p className="rounded-lg bg-[var(--surface)] px-3 py-2 text-xs leading-relaxed text-[var(--muted)]">
+                登録情報は応募フォームに自動入力されます。送信前にいつでも編集できます。
+              </p>
+
+              <button type="submit" disabled={isSubmitting} className="btn-primary flex w-full items-center justify-center gap-2 py-3">
+                <UserPlus className="h-4 w-4" />
+                {isSubmitting ? "登録中..." : "登録して始める"}
+              </button>
+            </Form>
           )}
-
-          <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">氏名</span>
-            <input
-              className="input-field"
-              value={form.name}
-              onChange={(e) => update("name", e.target.value)}
-              placeholder="山田 太郎"
-              autoComplete="name"
-              required
-            />
-          </label>
-
-          <div className="grid grid-cols-2 gap-3">
-            <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">性別</span>
-              <select className="input-field" value={form.gender} onChange={(e) => update("gender", e.target.value)} required>
-                <option value="">選択</option>
-                {GENDERS.map((g) => (
-                  <option key={g} value={g}>{g}</option>
-                ))}
-              </select>
-            </label>
-            <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">年齢</span>
-              <input
-                type="number"
-                className="input-field"
-                value={form.age || ""}
-                onChange={(e) => update("age", Number(e.target.value))}
-                min={18}
-                max={80}
-                placeholder="25"
-                required
-              />
-            </label>
-          </div>
-
-          <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">希望エリア</span>
-            <select className="input-field" value={form.area} onChange={(e) => update("area", e.target.value)} required>
-              <option value="">選択</option>
-              {AREAS.map((a) => (
-                <option key={a} value={a}>{a}</option>
-              ))}
-            </select>
-          </label>
-
-          <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">希望職種</span>
-            <select className="input-field" value={form.desiredJobType} onChange={(e) => update("desiredJobType", e.target.value)} required>
-              <option value="">選択</option>
-              {JOB_CATEGORIES.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </label>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">社会人経験</span>
-              <select className="input-field" value={form.experience} onChange={(e) => update("experience", e.target.value)} required>
-                <option value="">選択</option>
-                {EXPERIENCE_LEVELS.map((exp) => (
-                  <option key={exp} value={exp}>{exp}</option>
-                ))}
-              </select>
-            </label>
-            <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">希望雇用形態</span>
-              <select className="input-field" value={form.employmentType} onChange={(e) => update("employmentType", e.target.value)} required>
-                <option value="">選択</option>
-                {EMPLOYMENT_TYPES.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <p className="rounded-lg bg-[var(--surface)] px-3 py-2 text-xs leading-relaxed text-[var(--muted)]">
-            登録情報は応募フォームに自動入力されます。送信前にいつでも編集できます。
-          </p>
-
-          <button type="submit" disabled={submitting} className="btn-primary flex w-full items-center justify-center gap-2 py-3">
-            <UserPlus className="h-4 w-4" />
-            {submitting ? "登録中..." : "登録して始める"}
-          </button>
-        </form>
+        </Formik>
       )}
 
       {step === "company" && (
-        <form onSubmit={handleCompanyRegister} className="space-y-5">
-          <button
-            type="button"
-            onClick={() => {
-              setError("");
-              setStep("type");
-            }}
-            className="flex items-center gap-1 text-sm font-medium text-[var(--muted)] hover:text-[var(--foreground)]"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            登録タイプを選び直す
-          </button>
+        <Formik
+          initialValues={{
+            companyName: "",
+            contactName: "",
+            email: "",
+            password: "",
+            confirmPassword: "",
+          }}
+          validationSchema={companyRegisterSchema}
+          onSubmit={async (values, { setSubmitting }) => {
+            setError("");
+            setSubmitting(true);
+            try {
+              const supabase = createSupabaseBrowserClient();
+              if (!supabase) {
+                setError("認証サービスが設定されていません。管理者にお問い合わせください。");
+                return;
+              }
 
-          <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">会社名</span>
-            <input
-              className="input-field"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-              placeholder="株式会社サンプル"
-              required
-            />
-          </label>
+              const { error: authError } = await supabase.auth.signUp({
+                email: values.email.trim(),
+                password: values.password,
+                options: {
+                  data: { name: values.contactName, role: "company" },
+                },
+              });
 
-          <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">担当者名</span>
-            <input
-              className="input-field"
-              value={contactName}
-              onChange={(e) => setContactName(e.target.value)}
-              placeholder="採用 太郎"
-              autoComplete="name"
-              required
-            />
-          </label>
+              if (authError) {
+                setError(mapAuthError(authError.message));
+                return;
+              }
 
-          <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">メールアドレス</span>
-            <input
-              type="email"
-              className="input-field"
-              value={companyEmail}
-              onChange={(e) => setCompanyEmail(e.target.value)}
-              placeholder="hr@company.com"
-              autoComplete="email"
-              required
-            />
-          </label>
+              const res = await apiFetch("/api/company/register", {
+                method: "POST",
+                body: JSON.stringify({
+                  companyName: values.companyName.trim(),
+                  contactName: values.contactName.trim(),
+                }),
+              });
 
-          <PasswordField
-            label="パスワード"
-            value={password}
-            onChange={setPassword}
-            autoComplete="new-password"
-            minLength={8}
-            hint="8文字以上・英数字の組み合わせを推奨"
-          />
+              if (!res.ok) {
+                const data = await res.json();
+                setError(data.error ?? "企業アカウントの登録に失敗しました");
+                return;
+              }
 
-          <PasswordField
-            label="パスワード（確認）"
-            value={confirmPassword}
-            onChange={setConfirmPassword}
-            autoComplete="new-password"
-            minLength={8}
-          />
+              await apiFetch("/api/admin/auth/sync", { method: "POST" });
+              router.replace("/company");
+              router.refresh();
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        >
+          {({ isSubmitting }) => (
+            <Form className="space-y-5">
+              <button
+                type="button"
+                onClick={() => {
+                  setError("");
+                  setStep("type");
+                }}
+                className="flex items-center gap-1 text-sm font-medium text-[var(--muted)] hover:text-[var(--foreground)]"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                登録タイプを選び直す
+              </button>
 
-          <p className="rounded-lg bg-[var(--surface)] px-3 py-2 text-xs leading-relaxed text-[var(--muted)]">
-            登録後、管理画面から求人の作成・応募管理ができます。求人は管理者承認後に公開されます。
-          </p>
+              <FormTextInput name="companyName" label="会社名" placeholder="株式会社サンプル" />
+              <FormTextInput name="contactName" label="担当者名" placeholder="採用 太郎" autoComplete="name" />
+              <FormTextInput name="email" label="メールアドレス" type="email" placeholder="hr@company.com" autoComplete="email" />
+              <FormPassword name="password" label="パスワード" autoComplete="new-password" hint="8文字以上・英数字の組み合わせを推奨" />
+              <FormPassword name="confirmPassword" label="パスワード（確認）" autoComplete="new-password" />
 
-          <button type="submit" disabled={submitting} className="btn-primary flex w-full items-center justify-center gap-2 py-3">
-            <Building2 className="h-4 w-4" />
-            {submitting ? "登録中..." : "企業アカウントを作成"}
-          </button>
-        </form>
+              <p className="rounded-lg bg-[var(--surface)] px-3 py-2 text-xs leading-relaxed text-[var(--muted)]">
+                登録後、管理画面から求人の作成・応募管理ができます。求人は管理者承認後に公開されます。
+              </p>
+
+              <button type="submit" disabled={isSubmitting} className="btn-primary flex w-full items-center justify-center gap-2 py-3">
+                <Building2 className="h-4 w-4" />
+                {isSubmitting ? "登録中..." : "企業アカウントを作成"}
+              </button>
+            </Form>
+          )}
+        </Formik>
       )}
     </SeekerAuthShell>
   );

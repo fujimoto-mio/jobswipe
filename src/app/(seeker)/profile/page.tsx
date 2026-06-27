@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { User, LogOut, Pencil, Check, X, Briefcase } from "lucide-react";
+import { Form, Formik } from "formik";
+import { User, LogOut, Pencil, Briefcase } from "lucide-react";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
 import BottomNav from "@/components/BottomNav";
 import { AppHeader, AppPage, AppBadge, AppCard } from "@/components/ui/AppShell";
@@ -19,13 +20,14 @@ import {
 import { getProfile, saveProfile, clearProfile, isProfileComplete } from "@/lib/profile";
 import { apiFetch } from "@/lib/api-client";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { FormSelect, FormTextInput } from "@/components/form/FormFields";
+import { profileSchema } from "@/lib/validation/schemas";
 import type { Application, Job, UserProfile } from "@/lib/types";
 
 export default function ProfilePage() {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState<UserProfile | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
   const [jobs, setJobs] = useState<Record<string, Job>>({});
   const [saveCount, setSaveCount] = useState(0);
@@ -52,7 +54,6 @@ export default function ProfilePage() {
       if (!isProfileComplete(p)) return;
 
       setProfile(p);
-      setForm(p);
 
       const [appsRes, jobsRes, savesRes] = await Promise.all([
         apiFetch("/api/applications"),
@@ -79,22 +80,6 @@ export default function ProfilePage() {
     };
   }, [router]);
 
-  const handleSave = () => {
-    if (!form) return;
-    apiFetch("/api/profile", {
-      method: "PATCH",
-      body: JSON.stringify(form),
-    }).then(async (res) => {
-      if (res.ok) {
-        const data = await res.json();
-        saveProfile(data.profile);
-        setProfile(data.profile);
-        setForm(data.profile);
-        setEditing(false);
-      }
-    });
-  };
-
   const handleLogout = async () => {
     const supabase = createSupabaseBrowserClient();
     if (supabase) await supabase.auth.signOut();
@@ -102,7 +87,7 @@ export default function ProfilePage() {
     router.replace("/");
   };
 
-  if (loading || !profile || !form) {
+  if (loading || !profile) {
     return (
       <AppPage>
         <AppHeader title="プロフィール" />
@@ -112,8 +97,15 @@ export default function ProfilePage() {
     );
   }
 
-  const update = (key: keyof UserProfile, value: string | number) => {
-    setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
+  const profileFormValues = {
+    name: profile.name,
+    gender: profile.gender,
+    age: profile.age,
+    area: profile.area,
+    desiredJobType: profile.desiredJobType,
+    experience: profile.experience,
+    employmentType: profile.employmentType,
+    email: profile.email,
   };
 
   return (
@@ -126,16 +118,7 @@ export default function ProfilePage() {
               <Pencil className="h-4 w-4" />
               編集
             </button>
-          ) : (
-            <div className="flex gap-1">
-              <button onClick={() => { setForm(profile); setEditing(false); }} className="btn-ghost">
-                <X className="h-4 w-4" />
-              </button>
-              <button onClick={handleSave} className="btn-ghost text-blue-600">
-                <Check className="h-4 w-4" />
-              </button>
-            </div>
-          )
+          ) : undefined
         }
       />
 
@@ -146,23 +129,65 @@ export default function ProfilePage() {
           </div>
           <h2 className="text-xl font-bold text-slate-900">{profile.name}</h2>
           <p className="mt-0.5 text-sm text-slate-500">{profile.email}</p>
+          <span className="mt-3 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+            求職者
+          </span>
         </div>
 
         <AppCard className="mb-5">
           <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-slate-400">登録情報</h3>
           {editing ? (
-            <div className="space-y-3">
-              <Field label="氏名" value={form.name} onChange={(v) => update("name", v)} />
-              <Field label="性別" value={form.gender} onChange={(v) => update("gender", v)} options={[...GENDERS]} />
-              <Field label="年齢" value={String(form.age)} onChange={(v) => update("age", Number(v))} type="number" />
-              <Field label="エリア" value={form.area} onChange={(v) => update("area", v)} options={[...AREAS]} />
-              <Field label="希望職種" value={form.desiredJobType} onChange={(v) => update("desiredJobType", v)} options={[...JOB_CATEGORIES]} />
-              <Field label="経験歴" value={form.experience} onChange={(v) => update("experience", v)} options={[...EXPERIENCE_LEVELS]} />
-              <Field label="雇用形態" value={form.employmentType} onChange={(v) => update("employmentType", v)} options={[...EMPLOYMENT_TYPES]} />
-              <Field label="メール" value={form.email} onChange={(v) => update("email", v)} type="email" />
-            </div>
+            <Formik
+              initialValues={profileFormValues}
+              validationSchema={profileSchema}
+              enableReinitialize
+              onSubmit={async (values, { setSubmitting }) => {
+                const res = await apiFetch("/api/profile", {
+                  method: "PATCH",
+                  body: JSON.stringify(values),
+                });
+                if (res.ok) {
+                  const data = await res.json();
+                  saveProfile(data.profile);
+                  setProfile(data.profile);
+                  setEditing(false);
+                }
+                setSubmitting(false);
+              }}
+            >
+              {({ isSubmitting, submitForm }) => (
+                <Form className="space-y-3">
+                  <FormTextInput name="name" label="氏名" />
+                  <FormSelect name="gender" label="性別" options={GENDERS} />
+                  <FormTextInput name="age" label="年齢" type="number" />
+                  <FormSelect name="area" label="エリア" options={AREAS} />
+                  <FormSelect name="desiredJobType" label="希望職種" options={JOB_CATEGORIES} />
+                  <FormSelect name="experience" label="経験歴" options={EXPERIENCE_LEVELS} />
+                  <FormSelect name="employmentType" label="雇用形態" options={EMPLOYMENT_TYPES} />
+                  <FormTextInput name="email" label="メール" type="email" />
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditing(false)}
+                      className="btn-secondary flex-1 py-2.5 text-sm"
+                    >
+                      キャンセル
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => submitForm()}
+                      disabled={isSubmitting}
+                      className="btn-primary flex-1 py-2.5 text-sm"
+                    >
+                      {isSubmitting ? "保存中..." : "保存する"}
+                    </button>
+                  </div>
+                </Form>
+              )}
+            </Formik>
           ) : (
             <dl className="divide-y divide-slate-100">
+              <Row label="アカウント種別" value="求職者" />
               <Row label="性別" value={profile.gender} />
               <Row label="年齢" value={`${profile.age}歳`} />
               <Row label="エリア" value={profile.area} />
@@ -220,34 +245,5 @@ function Row({ label, value }: { label: string; value: string }) {
       <dt className="text-slate-500">{label}</dt>
       <dd className="font-medium text-slate-800">{value}</dd>
     </div>
-  );
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-  options,
-  type = "text",
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options?: string[];
-  type?: string;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-1.5 block text-xs font-medium text-slate-500">{label}</span>
-      {options ? (
-        <select className="input-field" value={value} onChange={(e) => onChange(e.target.value)}>
-          {options.map((o) => (
-            <option key={o} value={o}>{o}</option>
-          ))}
-        </select>
-      ) : (
-        <input type={type} className="input-field" value={value} onChange={(e) => onChange(e.target.value)} />
-      )}
-    </label>
   );
 }

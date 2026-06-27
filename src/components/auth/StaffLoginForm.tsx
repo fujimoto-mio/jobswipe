@@ -3,11 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Form, Formik } from "formik";
 import { ArrowLeft, Building2, LogIn, Shield } from "lucide-react";
 import Logo from "@/components/ui/Logo";
-import PasswordField from "@/components/auth/PasswordField";
+import { FormPassword, FormTextInput } from "@/components/form/FormFields";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { apiFetch } from "@/lib/api-client";
+import { loginSchema } from "@/lib/validation/schemas";
 
 type StaffLoginFormProps = {
   mode: "admin" | "company";
@@ -21,7 +23,6 @@ const CONFIG = {
     allowedRole: "admin" as const,
     wrongRoleMessage: "管理者アカウントでログインしてください。企業担当者の方は企業ログインをご利用ください。",
     wrongRoleLink: { href: "/company/login", label: "企業ログインへ" },
-    footerSeeker: true,
     emailPlaceholder: "admin@example.com",
   },
   company: {
@@ -31,7 +32,6 @@ const CONFIG = {
     allowedRole: "company" as const,
     wrongRoleMessage: "企業担当者アカウントでログインしてください。",
     wrongRoleLink: { href: "/admin/login", label: "管理者ログインへ" },
-    footerSeeker: true,
     emailPlaceholder: "company@example.com",
   },
 };
@@ -42,53 +42,10 @@ export default function StaffLoginForm({ mode }: StaffLoginFormProps) {
   const cfg = CONFIG[mode];
   const Icon = cfg.icon;
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const configError = searchParams.get("error") === "supabase";
   const staffOnlyError = searchParams.get("error") === "staff_only";
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    const supabase = createSupabaseBrowserClient();
-    if (!supabase) {
-      setError("Supabase が設定されていません。.env を確認してください。");
-      setLoading(false);
-      return;
-    }
-
-    const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (signInError || !data.user) {
-      setError("メールアドレスまたはパスワードが正しくありません");
-      setLoading(false);
-      return;
-    }
-
-    const role = (data.user.app_metadata?.role ?? data.user.user_metadata?.role) as string | undefined;
-
-    if (role !== cfg.allowedRole) {
-      await supabase.auth.signOut();
-      setError(cfg.wrongRoleMessage);
-      setLoading(false);
-      return;
-    }
-
-    await apiFetch("/api/admin/auth/sync", { method: "POST" });
-
-    const next = searchParams.get("next");
-    const home = mode === "admin" ? "/admin" : "/company";
-    const prefix = home;
-    const dest = next && next.startsWith(prefix) ? next : home;
-    router.push(dest);
-    router.refresh();
-    setLoading(false);
-  };
 
   return (
     <div className="min-h-[100dvh] bg-[var(--surface)]">
@@ -140,36 +97,67 @@ export default function StaffLoginForm({ mode }: StaffLoginFormProps) {
               </p>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <label className="block">
-                <span className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">メールアドレス</span>
-                <input
-                  type="email"
-                  className="input-field"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder={cfg.emailPlaceholder}
-                  required
-                  autoComplete="email"
-                />
-              </label>
+            <Formik
+              initialValues={{ email: "", password: "" }}
+              validationSchema={loginSchema}
+              onSubmit={async (values, { setSubmitting }) => {
+                setError("");
 
-              <PasswordField
-                label="パスワード"
-                value={password}
-                onChange={setPassword}
-                autoComplete="current-password"
-              />
+                const supabase = createSupabaseBrowserClient();
+                if (!supabase) {
+                  setError("Supabase が設定されていません。.env を確認してください。");
+                  setSubmitting(false);
+                  return;
+                }
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn-primary flex w-full items-center justify-center gap-2 py-3"
-              >
-                <LogIn className="h-4 w-4" />
-                {loading ? "ログイン中..." : "ログイン"}
-              </button>
-            </form>
+                const { data, error: signInError } = await supabase.auth.signInWithPassword(values);
+
+                if (signInError || !data.user) {
+                  setError("メールアドレスまたはパスワードが正しくありません");
+                  setSubmitting(false);
+                  return;
+                }
+
+                const role = (data.user.app_metadata?.role ?? data.user.user_metadata?.role) as string | undefined;
+
+                if (role !== cfg.allowedRole) {
+                  await supabase.auth.signOut();
+                  setError(cfg.wrongRoleMessage);
+                  setSubmitting(false);
+                  return;
+                }
+
+                await apiFetch("/api/admin/auth/sync", { method: "POST" });
+
+                const next = searchParams.get("next");
+                const home = mode === "admin" ? "/admin" : "/company";
+                const dest = next && next.startsWith(home) ? next : home;
+                router.push(dest);
+                router.refresh();
+                setSubmitting(false);
+              }}
+            >
+              {({ isSubmitting }) => (
+                <Form className="space-y-5">
+                  <FormTextInput
+                    name="email"
+                    label="メールアドレス"
+                    type="email"
+                    placeholder={cfg.emailPlaceholder}
+                    autoComplete="email"
+                  />
+                  <FormPassword label="パスワード" name="password" autoComplete="current-password" />
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="btn-primary flex w-full items-center justify-center gap-2 py-3"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    {isSubmitting ? "ログイン中..." : "ログイン"}
+                  </button>
+                </Form>
+              )}
+            </Formik>
           </div>
 
           <p className="mt-6 text-center text-sm text-[var(--muted)]">
