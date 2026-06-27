@@ -7,7 +7,8 @@ export type { AuthRole, StaffRole } from "@/lib/auth/roles";
 export { getRoleFromUser, isStaffRole } from "@/lib/auth/roles";
 
 const SEEKER_PROTECTED = ["/liked", "/profile", "/chat"];
-const SEEKER_API_PROTECTED = ["/api/saves", "/api/applications", "/api/chat", "/api/profile"];
+/** Auth required; route handlers enforce seeker vs staff permissions. */
+const AUTH_REQUIRED_APIS = ["/api/saves", "/api/applications", "/api/chat", "/api/profile"];
 
 function isAdminLoginPath(pathname: string): boolean {
   return pathname === "/admin/login";
@@ -75,7 +76,6 @@ export async function updateSession(request: NextRequest) {
 
   const role = user ? getRoleFromUser(user) : null;
   const isStaff = isStaffRole(role);
-  const isSeeker = Boolean(user) && !isStaff;
 
   if (isAdminApi) {
     if (!isStaff) {
@@ -137,7 +137,7 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse;
   }
 
-  if (SEEKER_API_PROTECTED.some((p) => pathname.startsWith(p)) && !isSeeker) {
+  if (AUTH_REQUIRED_APIS.some((p) => pathname.startsWith(p)) && !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
