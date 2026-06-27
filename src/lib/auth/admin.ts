@@ -1,0 +1,47 @@
+import { NextResponse } from "next/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { prisma } from "@/lib/prisma";
+import { getRoleFromUser, isStaffRole, type StaffRole } from "@/lib/auth/roles";
+
+export type StaffUser = {
+  id: string;
+  email: string;
+  role: StaffRole;
+  companyId: string | null;
+};
+
+export async function getStaffUser(): Promise<StaffUser | null> {
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return null;
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user?.email) return null;
+
+  const role = getRoleFromUser(user);
+  if (!isStaffRole(role)) return null;
+
+  let companyId: string | null = null;
+  const account = await prisma.account.findUnique({ where: { id: user.id } });
+  companyId = account?.companyId ?? null;
+
+  return { id: user.id, email: user.email, role, companyId };
+}
+
+export async function requireStaffUser(): Promise<StaffUser | NextResponse> {
+  const staff = await getStaffUser();
+  if (!staff) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  return staff;
+}
+
+export async function requireAdminUser(): Promise<StaffUser | NextResponse> {
+  const staff = await getStaffUser();
+  if (!staff || staff.role !== "admin") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  return staff;
+}

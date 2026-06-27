@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Company {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  logoUrl     String?  @map("logo_url")
+  description String?
+  website     String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  jobs        Job[]
+  accounts    Account[]
+
+  @@map("companies")
+}
+
+model Job {
+  id             String   @id @default(uuid())
+  companyId      String   @map("company_id")
+  company        Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  title          String
+  location       String
+  area           String
+  category       String
+  salaryDisplay  String   @map("salary_display")
+  employmentType String   @map("employment_type")
+  description    String
+  requirements   Json     @default("[]")
+  benefits       Json     @default("[]")
+  tags           Json     @default("[]")
+  videoUrl       String   @map("video_url")
+  thumbnailUrl   String?  @map("thumbnail_url")
+  links          Json     @default("{}")
+  approvalStatus String   @default("pending") @map("approval_status")
+  viewCount      Int      @default(0) @map("view_count")
+  postedAt       DateTime @default(now()) @map("posted_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  savedJobs    SavedJob[]
+  applications Application[]
+
+  @@index([approvalStatus, postedAt(sort: Desc)])
+  @@map("jobs")
+}
+
+/// Authenticated staff accounts (admin / company) — linked to Supabase auth.users
+model Account {
+  id        String   @id
+  email     String   @unique
+  name      String?
+  role      String   // admin | company
+  companyId String?  @map("company_id")
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([role])
+  @@map("accounts")
+}
+
+model SeekerProfile {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  name           String
+  gender         String
+  age            Int
+  area           String
+  desiredJobType String   @map("desired_job_type")
+  experience     String
+  employmentType String   @map("employment_type")
+  supabaseUserId String?  @unique @map("supabase_user_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  savedJobs    SavedJob[]
+  applications Application[]
+
+  @@map("seeker_profiles")
+}
+
+model SavedJob {
+  id        String        @id @default(uuid())
+  seekerId  String        @map("seeker_id")
+  jobId     String        @map("job_id")
+  seeker    SeekerProfile @relation(fields: [seekerId], references: [id], onDelete: Cascade)
+  job       Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  @@unique([seekerId, jobId])
+  @@index([seekerId, createdAt(sort: Desc)])
+  @@map("saved_jobs")
+}
+
+model Application {
+  id               String        @id @default(uuid())
+  seekerId         String        @map("seeker_id")
+  jobId            String        @map("job_id")
+  applicantName    String        @map("applicant_name")
+  applicantEmail   String        @map("applicant_email")
+  applicantAge     Int?          @map("applicant_age")
+  applicantArea    String?       @map("applicant_area")
+  applicantJobType String?       @map("applicant_job_type")
+  message          String?
+  status           String        @default("new")
+  interviewSlot    String?       @map("interview_slot")
+  interviewBookedAt DateTime?    @map("interview_booked_at")
+  matchEmailSentAt DateTime?     @map("match_email_sent_at")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  seeker   SeekerProfile @relation(fields: [seekerId], references: [id], onDelete: Cascade)
+  job      Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  messages ChatMessage[]
+
+  @@unique([seekerId, jobId])
+  @@index([status, createdAt(sort: Desc)])
+  @@index([jobId])
+  @@map("applications")
+}
+
+model ChatMessage {
+  id            String      @id @default(uuid())
+  applicationId String      @map("application_id")
+  sender        String
+  content       String
+  createdAt     DateTime    @default(now()) @map("created_at")
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId, createdAt])
+  @@map("chat_messages")
+}

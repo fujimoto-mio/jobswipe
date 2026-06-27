@@ -1,0 +1,130 @@
+export type EmploymentType =
+  | "正社員"
+  | "契約社員"
+  | "派遣"
+  | "パート・アルバイト"
+  | "業務委託"
+  | "インターン"
+  | "アルバイト";
+
+export type JobApprovalStatus = "pending" | "approved" | "rejected";
+
+export type JobLinks = {
+  website?: string;
+  careersPage?: string;
+  twitter?: string;
+  instagram?: string;
+  linkedin?: string;
+  jobPdf?: string;
+};
+
+export type Job = {
+  id: string;
+  title: string;
+  company: string;
+  companyLogo: string;
+  location: string;
+  area: string;
+  category: string;
+  salary: string;
+  employmentType: EmploymentType;
+  tags: string[];
+  description: string;
+  requirements: string[];
+  benefits: string[];
+  videoUrl: string;
+  thumbnailUrl: string;
+  postedAt: string;
+  links?: JobLinks;
+  approvalStatus: JobApprovalStatus;
+  viewCount: number;
+};
+
+export type CreateJobInput = {
+  title: string;
+  company: string;
+  location: string;
+  area?: string;
+  category?: string;
+  salary: string;
+  employmentType: EmploymentType;
+  description: string;
+  videoUrl: string;
+  thumbnailUrl?: string;
+  tags?: string[];
+  requirements?: string[];
+  benefits?: string[];
+  links?: JobLinks;
+};
+
+export type UpdateJobInput = Partial<CreateJobInput> & {
+  approvalStatus?: JobApprovalStatus;
+};
+
+export type ApplicationStatus =
+  | "new"
+  | "scheduling"
+  | "interview_done"
+  | "hired"
+  | "rejected";
+
+export type Application = {
+  id: string;
+  jobId: string;
+  seekerId?: string;
+  applicantName: string;
+  applicantEmail: string;
+  applicantAge?: number;
+  applicantArea?: string;
+  applicantJobType?: string;
+  message?: string;
+  status: ApplicationStatus;
+  interviewSlot?: string;
+  interviewBookedAt?: string;
+  createdAt: string;
+};
+
+export type SeekerProfileDetail = UserProfile & {
+  id: string;
+  gender: string;
+  experience: string;
+  employmentType: string;
+};
+
+export type ApplicationWithSeeker = Application & {
+  seeker?: SeekerProfileDetail;
+};
+
+export type CreateApplicationInput = {
+  jobId: string;
+  applicantName?: string;
+  applicantEmail?: string;
+  applicantAge?: number;
+  applicantArea?: string;
+  applicantJobType?: string;
+  message?: string;
+};
+
+export type UserProfile = {
+  name: string;
+  gender: string;
+  age: number;
+  area: string;
+  desiredJobType: string;
+  experience: string;
+  employmentType: string;
+  email: string;
+};
+
+export type ChatMessage = {
+  id: string;
+  applicationId: string;
+  sender: "seeker" | "company";
+  content: string;
+  createdAt: string;
+};
+
+export type JobFilters = {
+  areas: string[];
+  categories: string[];
+};

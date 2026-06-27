@@ -1,0 +1,183 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import SwipeCard from "./SwipeCard";
+import ApplyModal from "./ApplyModal";
+import { preloadVideoUrl } from "@/lib/video";
+import { apiFetch } from "@/lib/api-client";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import type { Job, JobFilters } from "@/lib/types";
+
+type VideoFeedProps = {
+  filters: JobFilters;
+  onSaveCountChange?: (count: number) => void;
+};
+
+export default function VideoFeed({ filters, onSaveCountChange }: VideoFeedProps) {
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [index, setIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [applyJob, setApplyJob] = useState<Job | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+
+  const buildJobsUrl = useCallback(() => {
+    const params = new URLSearchParams();
+    if (filters.areas.length) params.set("areas", filters.areas.join(","));
+    if (filters.categories.length) params.set("categories", filters.categories.join(","));
+    const qs = params.toString();
+    return `/api/jobs${qs ? `?${qs}` : ""}`;
+  }, [filters]);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [jobsRes, savedRes] = await Promise.all([
+        apiFetch(buildJobsUrl()),
+        apiFetch("/api/saves"),
+      ]);
+      const jobsData = await jobsRes.json();
+      const savedData = await savedRes.json();
+      setJobs(jobsData.jobs);
+      setIndex(0);
+      setSavedIds(new Set(savedData.savedIds));
+      onSaveCountChange?.(savedData.count);
+    } finally {
+      setLoading(false);
+    }
+  }, [buildJobsUrl, onSaveCountChange]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    const current = jobs[index];
+    if (current) {
+      apiFetch(`/api/jobs/${current.id}`).catch(() => {});
+    }
+    const next = jobs[index + 1];
+    const els: HTMLVideoElement[] = [];
+    if (next) {
+      const el = preloadVideoUrl(next.videoUrl);
+      if (el) els.push(el);
+    }
+    return () => els.forEach((el) => { el.src = ""; el.load(); });
+  }, [index, jobs]);
+
+  const showToast = (message: string) => {
+    setToast(message);
+    setTimeout(() => setToast(null), 2000);
+  };
+
+  const goNext = () => setIndex((i) => Math.min(i + 1, jobs.length - 1));
+
+  const handleSave = async (job: Job) => {
+    const res = await apiFetch("/api/saves", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jobId: job.id }),
+    });
+    const data = await res.json();
+    setSavedIds(new Set(data.savedIds));
+    onSaveCountChange?.(data.count);
+    showToast(data.saved ? "気になるに保存しました" : "保存を解除しました");
+  };
+
+  const handleSwipeRight = async (job: Job) => {
+    if (!savedIds.has(job.id)) {
+      await handleSave(job);
+    } else {
+      showToast("すでに保存済みです");
+    }
+    goNext();
+  };
+
+  const handleApplySuccess = () => {
+    setApplyJob(null);
+    showToast("応募が完了しました");
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-full items-center justify-center bg-black">
+        <LoadingSpinner size="lg" message="求人動画を読み込み中..." dark />
+      </div>
+    );
+  }
+
+  if (jobs.length === 0) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-4 bg-black px-6 text-center">
+        <p className="text-lg font-medium text-white">条件に合う求人がありません</p>
+        <p className="text-sm text-white/60">絞り込み条件を変更してください</p>
+      </div>
+    );
+  }
+
+  const currentJob = jobs[index];
+  const nextJob = jobs[index + 1];
+
+  return (
+    <>
+      <div className="relative h-full w-full bg-black">
+        <div className="pointer-events-none absolute left-1/2 top-14 z-20 -translate-x-1/2">
+          <span className="rounded-full bg-black/40 px-3 py-1 text-xs font-medium text-white/70 backdrop-blur-sm">
+            {index + 1} / {jobs.length}
+          </span>
+        </div>
+
+        {nextJob && (
+          <SwipeCard
+            key={`bg-${nextJob.id}`}
+            job={nextJob}
+            isTop={false}
+            isSaved={savedIds.has(nextJob.id)}
+            onSwipeUp={() => {}}
+            onSwipeDown={() => {}}
+            onSwipeRight={() => {}}
+            onSave={() => handleSave(nextJob)}
+            onApply={() => setApplyJob(nextJob)}
+          />
+        )}
+        <AnimatePresence mode="popLayout">
+          {currentJob && (
+            <SwipeCard
+              key={currentJob.id}
+              job={currentJob}
+              isTop={true}
+              isSaved={savedIds.has(currentJob.id)}
+              onSwipeUp={goNext}
+              onSwipeDown={goNext}
+              onSwipeRight={() => handleSwipeRight(currentJob)}
+              onSave={() => handleSave(currentJob)}
+              onApply={() => setApplyJob(currentJob)}
+            />
+          )}
+        </AnimatePresence>
+      </div>
+
+      {applyJob && (
+        <ApplyModal
+          job={applyJob}
+          onClose={() => setApplyJob(null)}
+          onSuccess={handleApplySuccess}
+        />
+      )}
+
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-[4.5rem] left-1/2 z-50 -translate-x-1/2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 shadow-xl ring-1 ring-slate-200"
+          >
+            {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
