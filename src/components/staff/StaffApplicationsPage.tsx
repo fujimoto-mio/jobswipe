@@ -35,7 +35,7 @@ export default function StaffApplicationsPage() {
     setLoading(true);
     setFetchError(null);
     Promise.all([
-      apiFetch("/api/applications").then(async (r) => {
+      apiFetch("/api/admin/applications").then(async (r) => {
         const data = await r.json().catch(() => ({}));
         if (!r.ok) {
           throw new Error(
@@ -73,7 +73,7 @@ export default function StaffApplicationsPage() {
   }, [fetchData]);
 
   const updateStatus = async (id: string, status: ApplicationStatus) => {
-    await apiFetch("/api/applications", {
+    await apiFetch("/api/admin/applications", {
       method: "PATCH",
       body: JSON.stringify({ id, status }),
     });
