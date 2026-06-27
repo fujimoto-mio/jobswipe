@@ -10,6 +10,9 @@ import {
   Plus,
   ArrowRight,
   User,
+  Heart,
+  TrendingUp,
+  UserCheck,
 } from "lucide-react";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
 import { apiFetch } from "@/lib/api-client";
@@ -24,6 +27,9 @@ type CompanyStats = {
   applicationCount: number;
   pendingApplications: number;
   videoViews: number;
+  savedCount: number;
+  interviewRate: number;
+  hireRate: number;
   activeChatCount: number;
 };
 
@@ -65,13 +71,19 @@ export default function CompanyDashboard() {
     );
   }
 
-  const cards = [
+  const kpiCards = [
+    { label: "動画再生数", value: stats?.videoViews ?? 0, icon: Eye, color: "text-violet-600", bg: "bg-violet-50", suffix: "" },
+    { label: "いいね数", value: stats?.savedCount ?? 0, icon: Heart, color: "text-rose-600", bg: "bg-rose-50", suffix: "" },
+    { label: "応募数", value: stats?.applicationCount ?? 0, icon: FileText, color: "text-emerald-600", bg: "bg-emerald-50", suffix: "" },
+    { label: "面接率", value: stats?.interviewRate ?? 0, icon: TrendingUp, color: "text-blue-600", bg: "bg-blue-50", suffix: "%" },
+    { label: "採用率", value: stats?.hireRate ?? 0, icon: UserCheck, color: "text-indigo-600", bg: "bg-indigo-50", suffix: "%" },
+  ];
+
+  const opsCards = [
     { label: "掲載中求人", value: stats?.approvedJobs ?? 0, icon: Briefcase, color: "text-blue-600", bg: "bg-blue-50" },
     { label: "承認待ち", value: stats?.pendingJobs ?? 0, icon: Briefcase, color: "text-amber-600", bg: "bg-amber-50" },
-    { label: "応募数", value: stats?.applicationCount ?? 0, icon: FileText, color: "text-emerald-600", bg: "bg-emerald-50" },
     { label: "未対応応募", value: stats?.pendingApplications ?? 0, icon: User, color: "text-orange-600", bg: "bg-orange-50" },
-    { label: "動画再生", value: stats?.videoViews ?? 0, icon: Eye, color: "text-violet-600", bg: "bg-violet-50" },
-    { label: "チャット", value: stats?.activeChatCount ?? 0, icon: MessageCircle, color: "text-rose-600", bg: "bg-rose-50" },
+    { label: "チャット", value: stats?.activeChatCount ?? 0, icon: MessageCircle, color: "text-slate-600", bg: "bg-slate-50" },
   ];
 
   return (
@@ -83,17 +95,38 @@ export default function CompanyDashboard() {
         </p>
       </div>
 
-      <div className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4">
-        {cards.map(({ label, value, icon: Icon, color, bg }) => (
-          <div key={label} className="card p-5">
-            <div className={`mb-3 flex h-9 w-9 items-center justify-center rounded-lg ${bg}`}>
-              <Icon className={`h-4 w-4 ${color}`} />
+      <section className="mb-8">
+        <h2 className="mb-3 text-sm font-semibold text-slate-700">採用KPI</h2>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-5 lg:gap-4">
+          {kpiCards.map(({ label, value, icon: Icon, color, bg, suffix }) => (
+            <div key={label} className="card p-5">
+              <div className={`mb-3 flex h-9 w-9 items-center justify-center rounded-lg ${bg}`}>
+                <Icon className={`h-4 w-4 ${color}`} />
+              </div>
+              <p className="text-2xl font-bold text-slate-900">
+                {value.toLocaleString()}
+                {suffix}
+              </p>
+              <p className="mt-0.5 text-xs text-slate-500">{label}</p>
             </div>
-            <p className="text-2xl font-bold text-slate-900">{value.toLocaleString()}</p>
-            <p className="mt-0.5 text-xs text-slate-500">{label}</p>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mb-8">
+        <h2 className="mb-3 text-sm font-semibold text-slate-700">運用状況</h2>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+          {opsCards.map(({ label, value, icon: Icon, color, bg }) => (
+            <div key={label} className="card p-5">
+              <div className={`mb-3 flex h-9 w-9 items-center justify-center rounded-lg ${bg}`}>
+                <Icon className={`h-4 w-4 ${color}`} />
+              </div>
+              <p className="text-2xl font-bold text-slate-900">{value.toLocaleString()}</p>
+              <p className="mt-0.5 text-xs text-slate-500">{label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <div className="mb-8 grid gap-4 md:grid-cols-3">
         <Link

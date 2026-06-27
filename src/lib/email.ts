@@ -38,7 +38,7 @@ export async function sendMatchNotificationEmail(
   jobTitle: string,
   company: string
 ): Promise<boolean> {
-  const chatUrl = `${getAppUrl()}/chat`;
+  const chatUrl = `${await getAppUrl()}/chat`;
 
   return sendEmail({
     to,

@@ -1,27 +1,27 @@
-/**
- * App base URL (no trailing slash).
- * Set NEXT_PUBLIC_APP_URL in .env — required for Vercel / custom domains.
- * Falls back to VERCEL_URL (server) or window.location.origin (browser).
- */
-export function getAppUrl(): string {
-  const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  if (fromEnv) return fromEnv.replace(/\/$/, "");
+import { headers } from "next/headers";
 
-  if (typeof window !== "undefined") {
-    return window.location.origin;
+/** Server-only base URL for absolute links (e.g. email). Derived from the request or Vercel. */
+export async function getAppUrl(): Promise<string> {
+  try {
+    const h = await headers();
+    const host = h.get("x-forwarded-host") ?? h.get("host");
+    if (host) {
+      const forwardedProto = h.get("x-forwarded-proto");
+      const proto =
+        forwardedProto ??
+        (host.startsWith("localhost") || host.startsWith("127.0.0.1") ? "http" : "https");
+      return `${proto}://${host}`.replace(/\/$/, "");
+    }
+  } catch {
+    // headers() is unavailable outside a request (e.g. scripts)
   }
 
   const vercel = process.env.VERCEL_URL?.trim();
-  if (vercel) return `https://${vercel.replace(/\/$/, "")}`;
-
-  return "http://localhost:3000";
-}
-
-/** Resolve a path or absolute URL for fetch (e.g. `/api/jobs` → full URL when APP_URL is set). */
-export function apiUrl(input: string): string {
-  if (input.startsWith("http://") || input.startsWith("https://")) {
-    return input;
+  if (vercel) {
+    const host = vercel.replace(/^https?:\/\//, "").replace(/\/$/, "");
+    return `https://${host}`;
   }
-  const path = input.startsWith("/") ? input : `/${input}`;
-  return `${getAppUrl()}${path}`;
+
+  const port = process.env.PORT ?? "3000";
+  return `http://localhost:${port}`;
 }
