@@ -1,70 +1,209 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { MessageCircle, Search } from "lucide-react";
-import { apiFetch } from "@/lib/api-client";
+import { useSearchParams } from "next/navigation";
+import { ArrowLeft, MessageCircle, Search } from "lucide-react";
+import { apiFetch, invalidateApiCache } from "@/lib/api-client";
 import ApplicationChatView from "@/components/chat/ApplicationChatView";
+import ChatThreadList, { ChatThreadHeader } from "@/components/chat/ChatThreadList";
 import BottomNav from "@/components/BottomNav";
-import { AppHeader, AppPage, AppBadge } from "@/components/ui/AppShell";
+import { AppHeader, AppPage } from "@/components/ui/AppShell";
 import EmptyState from "@/components/ui/EmptyState";
-import { PageLoading } from "@/components/ui/LoadingSpinner";
-import { APPLICATION_STATUS_LABELS } from "@/lib/constants";
-import { formatTimeJST } from "@/lib/datetime";
-import type { Application, ChatMessage, Job } from "@/lib/types";
+import LoadingSpinner, { PageLoading } from "@/components/ui/LoadingSpinner";
+import { markSeekerChatRead, prefetchChatMessages } from "@/lib/chat-unread";
+import type { ChatMessage, ChatThread } from "@/lib/types";
 
-type Thread = {
-  application: Application;
-  job: Job;
-  lastMessage?: ChatMessage;
-};
+function syncChatUrl(applicationId: string | null) {
+  const url = applicationId ? `/chat?applicationId=${applicationId}` : "/chat";
+  window.history.replaceState(window.history.state, "", url);
+}
 
 function SeekerChatContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const presetId = searchParams.get("applicationId");
+  const initialApplicationId = useRef(searchParams.get("applicationId")).current;
 
-  const [threads, setThreads] = useState<Thread[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(presetId);
+  const [threads, setThreads] = useState<ChatThread[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(initialApplicationId);
+  const [messageCache, setMessageCache] = useState<Record<string, ChatMessage[]>>({});
+  const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
   const [saveCount, setSaveCount] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [unreadTotal, setUnreadTotal] = useState(0);
+  const [initialLoading, setInitialLoading] = useState(true);
 
-  const fetchThreads = useCallback(() => {
-    setLoading(true);
-    Promise.all([apiFetch("/api/chat"), apiFetch("/api/saves")])
-      .then(async ([chatRes, savesRes]) => {
-        const d = await chatRes.json();
-        const saves = await savesRes.json();
-        const list = d.threads ?? [];
-        setThreads(list);
-        setSaveCount(saves.count);
-        setSelectedId((prev) => {
-          if (prev && list.some((t: Thread) => t.application.id === prev)) return prev;
-          if (presetId && list.some((t: Thread) => t.application.id === presetId)) return presetId;
-          return list[0]?.application.id ?? null;
-        });
-      })
-      .finally(() => setLoading(false));
-  }, [presetId]);
+  const refreshThreads = useCallback(async () => {
+    const [chatRes, savesRes] = await Promise.all([
+      apiFetch("/api/chat"),
+      apiFetch("/api/saves"),
+    ]);
+    const chatData = await chatRes.json();
+    const saves = await savesRes.json();
+    const list = (chatData.threads ?? []) as ChatThread[];
+    setThreads(list);
+    setUnreadTotal(chatData.unreadTotal ?? 0);
+    setSaveCount(saves.count ?? 0);
+    return list;
+  }, []);
+
+  const messageCacheRef = useRef(messageCache);
+  messageCacheRef.current = messageCache;
+
+  const loadMessagesFor = useCallback(async (applicationId: string) => {
+    if (messageCacheRef.current[applicationId]) return;
+
+    setLoadingIds((prev) => new Set(prev).add(applicationId));
+    try {
+      const res = await apiFetch(`/api/chat?applicationId=${applicationId}`);
+      const data = await res.json();
+      const msgs = (data.messages ?? []) as ChatMessage[];
+      setMessageCache((prev) => (prev[applicationId] ? prev : { ...prev, [applicationId]: msgs }));
+    } finally {
+      setLoadingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(applicationId);
+        return next;
+      });
+    }
+  }, []);
+
+  const loadMessagesForRef = useRef(loadMessagesFor);
+  loadMessagesForRef.current = loadMessagesFor;
 
   useEffect(() => {
-    fetchThreads();
-  }, [fetchThreads]);
+    let cancelled = false;
 
-  const selectThread = (id: string) => {
-    setSelectedId(id);
-    router.replace(`/chat?applicationId=${id}`, { scroll: false });
+    void (async () => {
+      setInitialLoading(true);
+      try {
+        const list = await refreshThreads();
+        if (cancelled) return;
+
+        let resolvedId: string | null = null;
+        setSelectedId((prev) => {
+          if (prev && list.some((t) => t.application.id === prev)) {
+            resolvedId = prev;
+            return prev;
+          }
+          if (initialApplicationId && list.some((t) => t.application.id === initialApplicationId)) {
+            resolvedId = initialApplicationId;
+            return initialApplicationId;
+          }
+          resolvedId = list[0]?.application.id ?? null;
+          return resolvedId;
+        });
+
+        if (resolvedId) {
+          syncChatUrl(resolvedId);
+          void loadMessagesForRef.current(resolvedId);
+        }
+
+        void prefetchChatMessages(list.map((t) => t.application.id)).then((cache) => {
+          if (!cancelled) setMessageCache((prev) => ({ ...prev, ...cache }));
+        });
+      } finally {
+        if (!cancelled) setInitialLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load threads once on mount
+  }, [refreshThreads]);
+
+  const markRead = useCallback(async (applicationId: string) => {
+    const total = await markSeekerChatRead(applicationId);
+    setThreads((prev) =>
+      prev.map((t) => (t.application.id === applicationId ? { ...t, unreadCount: 0 } : t))
+    );
+    setUnreadTotal(total);
+    invalidateApiCache("/api/chat");
+  }, []);
+
+  const selectThread = useCallback(
+    (id: string) => {
+      if (id === selectedId) return;
+      setSelectedId(id);
+      syncChatUrl(id);
+      void loadMessagesFor(id);
+      void markRead(id);
+    },
+    [selectedId, loadMessagesFor, markRead]
+  );
+
+  const backToList = () => {
+    setSelectedId(null);
+    syncChatUrl(null);
   };
 
   const selectedThread = threads.find((t) => t.application.id === selectedId);
+  const cachedMessages = selectedId ? messageCache[selectedId] : undefined;
+  const chatLoading = Boolean(
+    selectedId && cachedMessages === undefined && loadingIds.has(selectedId)
+  );
+
+  const updateMessages = useCallback((applicationId: string, messages: ChatMessage[]) => {
+    setMessageCache((prev) => ({ ...prev, [applicationId]: messages }));
+    const last = messages[messages.length - 1];
+    if (last) {
+      setThreads((prev) =>
+        prev.map((t) => (t.application.id === applicationId ? { ...t, lastMessage: last } : t))
+      );
+    }
+  }, []);
+
+  const handleSent = useCallback(() => {
+    void refreshThreads();
+  }, [refreshThreads]);
+
+  const chatPanel = selectedThread ? (
+    <>
+      <div className="flex shrink-0 items-center gap-2 border-b border-slate-100 bg-white px-2 md:px-0">
+        <button
+          type="button"
+          onClick={backToList}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-slate-600 transition active:bg-slate-100 md:hidden"
+          aria-label="一覧に戻る"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <div className="min-w-0 flex-1 md:hidden">
+          <p className="truncate text-sm font-bold text-slate-900">{selectedThread.job.company}</p>
+          <p className="truncate text-xs text-slate-500">{selectedThread.job.title}</p>
+        </div>
+        <div className="hidden w-full md:block">
+          <ChatThreadHeader thread={selectedThread} />
+        </div>
+      </div>
+      {chatLoading ? (
+        <div className="flex min-h-0 flex-1 items-center justify-center bg-slate-50">
+          <LoadingSpinner message="メッセージを読み込み中..." />
+        </div>
+      ) : (
+        <ApplicationChatView
+          applicationId={selectedThread.application.id}
+          sender="seeker"
+          messages={cachedMessages ?? []}
+          loading={false}
+          onMessagesChange={(msgs) => updateMessages(selectedThread.application.id, msgs)}
+          onSent={handleSent}
+          emptyHint="企業担当者にメッセージを送って、選考について質問しましょう"
+          className="min-h-0 flex-1"
+        />
+      )}
+    </>
+  ) : (
+    <div className="flex flex-1 items-center justify-center text-sm text-slate-400">
+      左のリストから企業を選択してください
+    </div>
+  );
 
   return (
     <AppPage>
       <AppHeader title="チャット" backHref="/explore" />
 
-      <main className="page-container flex flex-1 flex-col overflow-hidden pb-[4.5rem]">
-        {loading ? (
+      <main className="flex min-h-0 flex-1 flex-col overflow-hidden pb-[4.5rem]">
+        {initialLoading ? (
           <PageLoading message="チャットを読み込み中..." minHeight="min-h-[50vh]" />
         ) : threads.length === 0 ? (
           <EmptyState
@@ -79,58 +218,32 @@ function SeekerChatContent() {
             }
           />
         ) : (
-          <>
-            <div className="border-b border-slate-100 bg-white">
-              <div className="flex gap-2 overflow-x-auto px-4 py-3">
-                {threads.map((t) => (
-                  <button
-                    key={t.application.id}
-                    type="button"
-                    onClick={() => selectThread(t.application.id)}
-                    className={`max-w-[200px] shrink-0 rounded-2xl px-3 py-2 text-left transition ${
-                      selectedId === t.application.id
-                        ? "bg-blue-600 text-white shadow-sm"
-                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                    }`}
-                  >
-                    <p className="truncate text-xs font-semibold">{t.job.company}</p>
-                    <p className="truncate text-[10px] opacity-80">{t.job.title}</p>
-                    {t.lastMessage && (
-                      <p className={`mt-0.5 truncate text-[10px] ${selectedId === t.application.id ? "text-blue-100" : "text-slate-400"}`}>
-                        {t.lastMessage.content}
-                      </p>
-                    )}
-                  </button>
-                ))}
+          <div className="flex min-h-0 flex-1 overflow-hidden border-t border-slate-100">
+            <aside
+              className={`min-h-0 shrink-0 flex-col border-r border-slate-100 bg-white md:flex md:w-[300px] ${
+                selectedId ? "hidden md:flex" : "flex w-full"
+              }`}
+            >
+              <div className="border-b border-slate-100 px-3 py-2.5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">企業</p>
               </div>
-            </div>
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                <ChatThreadList threads={threads} selectedId={selectedId} onSelect={selectThread} />
+              </div>
+            </aside>
 
-            {selectedThread && (
-              <>
-                <div className="border-b border-slate-100 bg-white px-4 py-3">
-                  <p className="font-semibold text-slate-900">{selectedThread.job.company}</p>
-                  <p className="text-sm text-slate-500">{selectedThread.job.title}</p>
-                  <AppBadge>{APPLICATION_STATUS_LABELS[selectedThread.application.status]}</AppBadge>
-                  {selectedThread.lastMessage && (
-                    <p className="mt-1 text-[10px] text-slate-400">
-                      最終更新 {formatTimeJST(selectedThread.lastMessage.createdAt)}
-                    </p>
-                  )}
-                </div>
-
-                <ApplicationChatView
-                  applicationId={selectedThread.application.id}
-                  sender="seeker"
-                  emptyHint="企業担当者にメッセージを送って、選考について質問しましょう"
-                  className="flex-1"
-                />
-              </>
-            )}
-          </>
+            <section
+              className={`min-w-0 flex-1 flex-col bg-white ${
+                selectedId ? "flex" : "hidden md:flex"
+              }`}
+            >
+              {chatPanel}
+            </section>
+          </div>
         )}
       </main>
 
-      <BottomNav saveCount={saveCount} chatCount={threads.length} />
+      <BottomNav saveCount={saveCount} chatCount={unreadTotal} />
     </AppPage>
   );
 }

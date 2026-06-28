@@ -14,7 +14,7 @@ model Company {
   logoUrl     String?  @map("logo_url")
   description String?
   website     String?
-  createdAt   DateTime @default(now()) @map("created_at")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   jobs        Job[]
   accounts    Account[]
 
@@ -40,9 +40,9 @@ model Job {
   links          Json     @default("{}")
   approvalStatus String   @default("pending") @map("approval_status")
   viewCount      Int      @default(0) @map("view_count")
-  postedAt       DateTime @default(now()) @map("posted_at")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  postedAt       DateTime @default(now()) @map("posted_at") @db.Timestamptz(3)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   savedJobs    SavedJob[]
   applications Application[]
@@ -59,8 +59,8 @@ model Account {
   role      String   // admin | company
   companyId String?  @map("company_id")
   company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@index([role])
   @@map("accounts")
@@ -77,8 +77,8 @@ model SeekerProfile {
   experience     String
   employmentType String   @map("employment_type")
   supabaseUserId String   @unique @map("supabase_user_id")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   savedJobs    SavedJob[]
   applications Application[]
@@ -92,7 +92,7 @@ model SavedJob {
   jobId     String        @map("job_id")
   seeker    SeekerProfile @relation(fields: [seekerId], references: [id], onDelete: Cascade)
   job       Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  createdAt DateTime      @default(now()) @map("created_at")
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
 
   @@unique([seekerId, jobId])
   @@index([seekerId, createdAt(sort: Desc)])
@@ -111,10 +111,12 @@ model Application {
   message          String?
   status           String        @default("new")
   interviewSlot    String?       @map("interview_slot")
-  interviewBookedAt DateTime?    @map("interview_booked_at")
-  matchEmailSentAt DateTime?     @map("match_email_sent_at")
-  createdAt        DateTime      @default(now()) @map("created_at")
-  updatedAt        DateTime      @updatedAt @map("updated_at")
+  interviewBookedAt DateTime?    @map("interview_booked_at") @db.Timestamptz(3)
+  matchEmailSentAt DateTime?     @map("match_email_sent_at") @db.Timestamptz(3)
+  seekerReadAt     DateTime?     @map("seeker_read_at") @db.Timestamptz(3)
+  companyReadAt    DateTime?     @map("company_read_at") @db.Timestamptz(3)
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   seeker   SeekerProfile @relation(fields: [seekerId], references: [id], onDelete: Cascade)
   job      Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
@@ -131,7 +133,7 @@ model ChatMessage {
   applicationId String      @map("application_id")
   sender        String
   content       String
-  createdAt     DateTime    @default(now()) @map("created_at")
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
 
   application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 

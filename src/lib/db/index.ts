@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { mapApplication, mapChatMessage, mapJob, mapSeekerProfile } from "@/lib/db/mappers";
+import { now } from "@/lib/datetime";
 import { parseBirthday } from "@/lib/birthday";
 import { getCompanyLogoUrl } from "@/lib/job-image";
 import type {
@@ -378,7 +379,7 @@ export async function updateApplicationStatus(
       if (sent) {
         await prisma.application.update({
           where: { id },
-          data: { matchEmailSentAt: new Date() },
+          data: { matchEmailSentAt: now() },
         });
       }
     }
@@ -394,9 +395,18 @@ export async function addChatMessage(
   sender: "seeker" | "company",
   content: string
 ): Promise<ChatMessage> {
+  const sentAt = now();
   const row = await prisma.chatMessage.create({
     data: { applicationId, sender, content },
   });
+
+  if (sender === "seeker") {
+    await prisma.application.update({
+      where: { id: applicationId },
+      data: { seekerReadAt: sentAt },
+    });
+  }
+
   return mapChatMessage(row);
 }
 
@@ -408,23 +418,81 @@ export async function getChatMessages(applicationId: string): Promise<ChatMessag
   return rows.map(mapChatMessage);
 }
 
-export async function getChatThreadsForSeeker(
+export async function markSeekerChatRead(
+  applicationId: string,
   seekerId: string
-): Promise<{ application: Application; job: Job; lastMessage?: ChatMessage }[]> {
-  const apps = await prisma.application.findMany({
-    where: { seekerId },
-    include: {
-      job: { include: jobInclude },
-      messages: { orderBy: { createdAt: "desc" }, take: 1 },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+): Promise<boolean> {
+  try {
+    await prisma.application.update({
+      where: { id: applicationId, seekerId },
+      data: { seekerReadAt: now() },
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
 
-  return apps.map((app) => ({
+export async function getSeekerUnreadTotal(seekerId: string): Promise<number> {
+  const rows = await prisma.$queryRaw<{ count: bigint }[]>`
+    SELECT COUNT(*) AS count
+    FROM chat_messages cm
+    INNER JOIN applications a ON a.id = cm.application_id
+    WHERE a.seeker_id = ${seekerId}
+      AND cm.sender = 'company'
+      AND (a.seeker_read_at IS NULL OR cm.created_at > a.seeker_read_at)
+  `;
+  return Number(rows[0]?.count ?? 0);
+}
+
+async function getSeekerUnreadByApplication(
+  seekerId: string
+): Promise<Map<string, number>> {
+  const rows = await prisma.$queryRaw<{ application_id: string; count: bigint }[]>`
+    SELECT cm.application_id, COUNT(*) AS count
+    FROM chat_messages cm
+    INNER JOIN applications a ON a.id = cm.application_id
+    WHERE a.seeker_id = ${seekerId}
+      AND cm.sender = 'company'
+      AND (a.seeker_read_at IS NULL OR cm.created_at > a.seeker_read_at)
+    GROUP BY cm.application_id
+  `;
+
+  const map = new Map<string, number>();
+  for (const row of rows) {
+    map.set(row.application_id, Number(row.count));
+  }
+  return map;
+}
+
+export async function getChatThreadsForSeeker(seekerId: string): Promise<
+  { application: Application; job: Job; lastMessage?: ChatMessage; unreadCount: number }[]
+> {
+  const [apps, unreadMap] = await Promise.all([
+    prisma.application.findMany({
+      where: { seekerId },
+      include: {
+        job: { include: jobInclude },
+        messages: { orderBy: { createdAt: "desc" }, take: 1 },
+      },
+    }),
+    getSeekerUnreadByApplication(seekerId),
+  ]);
+
+  const threads = apps.map((app) => ({
     application: mapApplication(app),
     job: mapJob(app.job),
     lastMessage: app.messages[0] ? mapChatMessage(app.messages[0]) : undefined,
+    unreadCount: unreadMap.get(app.id) ?? 0,
   }));
+
+  threads.sort((a, b) => {
+    const aTime = a.lastMessage?.createdAt ?? a.application.createdAt;
+    const bTime = b.lastMessage?.createdAt ?? b.application.createdAt;
+    return bTime.localeCompare(aTime);
+  });
+
+  return threads;
 }
 
 export async function getChatThreadsForStaff(

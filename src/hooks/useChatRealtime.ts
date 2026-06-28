@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { serializeTimestamp } from "@/lib/datetime";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { ChatMessage } from "@/lib/types";
 
@@ -37,7 +38,7 @@ export function useChatRealtime(
             applicationId: row.application_id,
             sender: row.sender as ChatMessage["sender"],
             content: row.content,
-            createdAt: row.created_at,
+            createdAt: serializeTimestamp(row.created_at),
           });
         }
       )

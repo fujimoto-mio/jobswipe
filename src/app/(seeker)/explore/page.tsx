@@ -6,6 +6,7 @@ import VideoFeed from "@/components/VideoFeed";
 import BottomNav from "@/components/BottomNav";
 import FilterScreen from "@/components/FilterScreen";
 import { apiFetch, apiFetchCached } from "@/lib/api-client";
+import { fetchSeekerUnreadTotal } from "@/lib/chat-unread";
 import { getCachedClientSession } from "@/lib/auth/client-session";
 import { saveProfile } from "@/lib/profile";
 import Logo from "@/components/ui/Logo";
@@ -29,9 +30,7 @@ function ExploreContent() {
     void apiFetchCached<{ count?: number }>("/api/saves", 20_000).then((d) =>
       setSaveCount(d.count ?? 0)
     );
-    void apiFetchCached<{ threads?: unknown[] }>("/api/chat", 20_000).then((d) =>
-      setChatCount(d.threads?.length ?? 0)
-    );
+    void fetchSeekerUnreadTotal().then(setChatCount);
   }, []);
 
   useEffect(() => {

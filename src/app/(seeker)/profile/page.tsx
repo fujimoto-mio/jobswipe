@@ -11,7 +11,8 @@ import { AppHeader, AppPage, AppBadge, AppCard } from "@/components/ui/AppShell"
 import EmptyState from "@/components/ui/EmptyState";
 import { APPLICATION_STATUS_LABELS } from "@/lib/constants";
 import { getProfile, saveProfile, isProfileComplete } from "@/lib/profile";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, apiFetchCached } from "@/lib/api-client";
+import { fetchSeekerUnreadTotal } from "@/lib/chat-unread";
 import SeekerProfileFormFields from "@/components/form/SeekerProfileFormFields";
 import { formatBirthdayDisplay } from "@/lib/birthday";
 import { profileEditSchema } from "@/lib/validation/schemas";
@@ -23,6 +24,7 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [applications, setApplications] = useState<Application[]>([]);
   const [saveCount, setSaveCount] = useState(0);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -67,7 +69,10 @@ export default function ProfilePage() {
           .then((r) => r.json())
           .then((data) => {
             if (!cancelled) setSaveCount(data.count ?? 0);
-          })
+          }),
+        fetchSeekerUnreadTotal().then((count) => {
+          if (!cancelled) setUnreadChatCount(count);
+        })
       );
 
       await Promise.all(tasks);
@@ -217,7 +222,7 @@ export default function ProfilePage() {
         </section>
       </main>
 
-      <BottomNav saveCount={saveCount} chatCount={applications.length} />
+      <BottomNav saveCount={saveCount} chatCount={unreadChatCount} />
     </AppPage>
   );
 }

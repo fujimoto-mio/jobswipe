@@ -126,6 +126,13 @@ export type ChatMessage = {
   createdAt: string;
 };
 
+export type ChatThread = {
+  application: Application;
+  job: Job;
+  lastMessage?: ChatMessage;
+  unreadCount?: number;
+};
+
 export type JobFilters = {
   areas: string[];
   categories: string[];

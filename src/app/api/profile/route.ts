@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { upsertSeekerProfile } from "@/lib/db";
 import { getSeekerSession } from "@/lib/auth/seeker";
 import { getSupabaseUserFromRequest } from "@/lib/auth/supabase-user";
-import { profileEditSchema, seekerProfileSchema } from "@/lib/validation/schemas";
+import { profileEditSchema, seekerProfileSchema, type ProfileEditValues, type SeekerProfileValues } from "@/lib/validation/schemas";
 import { validateBody } from "@/lib/validation/validate-body";
 import type { UserProfile } from "@/lib/types";
 
@@ -22,7 +22,10 @@ export async function POST(request: Request) {
 
   try {
     const raw = await request.json();
-    const validated = await validateBody(seekerProfileSchema, { ...raw, email: user.email });
+    const validated = await validateBody<SeekerProfileValues>(seekerProfileSchema, {
+      ...raw,
+      email: user.email,
+    });
     if (!validated.ok) {
       return NextResponse.json({ error: validated.error }, { status: validated.status });
     }
@@ -53,7 +56,7 @@ export async function PATCH(request: Request) {
       employmentType: raw.employmentType ?? session.profile.employmentType,
     };
 
-    const validated = await validateBody(profileEditSchema, merged);
+    const validated = await validateBody<ProfileEditValues>(profileEditSchema, merged);
     if (!validated.ok) {
       return NextResponse.json({ error: validated.error }, { status: validated.status });
     }

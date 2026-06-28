@@ -4,6 +4,8 @@ import {
   getChatMessages,
   getChatThreadsForSeeker,
   getChatThreadsForStaff,
+  getSeekerUnreadTotal,
+  markSeekerChatRead,
 } from "@/lib/db";
 import { requireSeekerSession, getSeekerSession } from "@/lib/auth/seeker";
 import { requireStaffUser, getStaffUser } from "@/lib/auth/admin";
@@ -38,7 +40,11 @@ export async function GET(request: Request) {
 
   const session = await getSeekerSession();
   if (session) {
-    return NextResponse.json({ threads: await getChatThreadsForSeeker(session.seekerId) });
+    const [threads, unreadTotal] = await Promise.all([
+      getChatThreadsForSeeker(session.seekerId),
+      getSeekerUnreadTotal(session.seekerId),
+    ]);
+    return NextResponse.json({ threads, unreadTotal });
   }
 
   const staff = await getStaffUser();
@@ -48,6 +54,29 @@ export async function GET(request: Request) {
 
   const threads = await getChatThreadsForStaff(staff.role === "company" ? staff.companyId : null);
   return NextResponse.json({ threads });
+}
+
+export async function PATCH(request: Request) {
+  const session = await requireSeekerSession();
+  if (session instanceof NextResponse) return session;
+
+  try {
+    const { applicationId } = (await request.json()) as { applicationId?: string };
+    if (!applicationId) {
+      return NextResponse.json({ error: "applicationId is required" }, { status: 400 });
+    }
+
+    const allowed = await seekerCanAccessApplication(applicationId, session.seekerId);
+    if (!allowed) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    await markSeekerChatRead(applicationId, session.seekerId);
+    const unreadTotal = await getSeekerUnreadTotal(session.seekerId);
+    return NextResponse.json({ success: true, unreadTotal });
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
 }
 
 export async function POST(request: Request) {

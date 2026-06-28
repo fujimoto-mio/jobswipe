@@ -1,7 +1,7 @@
 import type { Job as PrismaJob, Company, Application as PrismaApplication, ChatMessage as PrismaChatMessage } from "@prisma/client";
 import { birthdayToInputValue } from "@/lib/birthday";
 import { getCompanyLogoUrl } from "@/lib/job-image";
-import { formatDateISOJST, toISOStringJST } from "@/lib/datetime";
+import { formatDateISOJST, serializeTimestamp } from "@/lib/datetime";
 import type {
   Application,
   ApplicationStatus,
@@ -63,8 +63,8 @@ export function mapApplication(
     message: row.message ?? undefined,
     status: row.status as ApplicationStatus,
     interviewSlot: row.interviewSlot ?? undefined,
-    interviewBookedAt: row.interviewBookedAt ? toISOStringJST(row.interviewBookedAt) : undefined,
-    createdAt: toISOStringJST(row.createdAt),
+    interviewBookedAt: row.interviewBookedAt ? serializeTimestamp(row.interviewBookedAt) : undefined,
+    createdAt: serializeTimestamp(row.createdAt),
     ...(job ? { jobTitle: job.title, companyName: job.company.name } : {}),
   };
 }
@@ -75,7 +75,7 @@ export function mapChatMessage(row: PrismaChatMessage): ChatMessage {
     applicationId: row.applicationId,
     sender: row.sender as ChatMessage["sender"],
     content: row.content,
-    createdAt: toISOStringJST(row.createdAt),
+    createdAt: serializeTimestamp(row.createdAt),
   };
 }
 

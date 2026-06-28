@@ -5,7 +5,7 @@ import { Form, Formik, useField } from "formik";
 import { Send } from "lucide-react";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { FormError } from "@/components/form/FormFields";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, invalidateApiCache } from "@/lib/api-client";
 import { useChatRealtime } from "@/hooks/useChatRealtime";
 import { formatTimeJST } from "@/lib/datetime";
 import { chatMessageSchema } from "@/lib/validation/schemas";
@@ -16,17 +16,48 @@ type ApplicationChatViewProps = {
   sender: "seeker" | "company";
   emptyHint?: string;
   className?: string;
+  /** When set, skips fetch and uses parent cache (instant thread switch). */
+  messages?: ChatMessage[];
+  loading?: boolean;
+  onMessagesChange?: (messages: ChatMessage[]) => void;
+  onSent?: () => void;
 };
 
-function ChatInputField() {
+function ChatInputField({ onSubmit }: { onSubmit: () => void }) {
   const [field, meta] = useField("content");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const resize = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+  }, []);
+
+  useEffect(() => {
+    resize();
+  }, [field.value, resize]);
 
   return (
     <div className="min-w-0 flex-1">
-      <input
+      <textarea
         {...field}
+        ref={textareaRef}
+        rows={1}
         placeholder="メッセージを入力..."
-        className={`input-field w-full rounded-full ${meta.touched && meta.error ? "ring-1 ring-red-300" : ""}`}
+        onChange={(e) => {
+          field.onChange(e);
+          resize();
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            onSubmit();
+          }
+        }}
+        className={`input-field scrollbar-none max-h-[120px] min-h-[42px] w-full resize-none overflow-y-auto rounded-2xl py-2.5 leading-snug ${
+          meta.touched && meta.error ? "ring-1 ring-red-300" : ""
+        }`}
       />
       <FormError name="content" />
     </div>
@@ -38,40 +69,69 @@ export default function ApplicationChatView({
   sender,
   emptyHint = "メッセージを送信して会話を始めましょう",
   className = "",
+  messages: controlledMessages,
+  loading: controlledLoading,
+  onMessagesChange,
+  onSent,
 }: ApplicationChatViewProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [loading, setLoading] = useState(true);
+  const isControlled = controlledMessages !== undefined;
+  const [internalMessages, setInternalMessages] = useState<ChatMessage[]>([]);
+  const [internalLoading, setInternalLoading] = useState(!isControlled);
   const bottomRef = useRef<HTMLDivElement>(null);
   const seenIds = useRef(new Set<string>());
 
+  const messages = isControlled ? controlledMessages : internalMessages;
+  const loading = isControlled ? (controlledLoading ?? false) : internalLoading;
+
+  const setMessages = useCallback(
+    (updater: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => {
+      if (isControlled && onMessagesChange) {
+        const next = typeof updater === "function" ? updater(controlledMessages ?? []) : updater;
+        onMessagesChange(next);
+      } else {
+        setInternalMessages(updater);
+      }
+    },
+    [isControlled, onMessagesChange, controlledMessages]
+  );
+
   const loadMessages = useCallback(() => {
-    setLoading(true);
+    if (isControlled) return;
+    setInternalLoading(true);
     seenIds.current.clear();
     apiFetch(`/api/chat?applicationId=${applicationId}`)
       .then((r) => r.json())
       .then((d) => {
         const msgs = (d.messages ?? []) as ChatMessage[];
         msgs.forEach((m) => seenIds.current.add(m.id));
-        setMessages(msgs);
+        setInternalMessages(msgs);
       })
-      .finally(() => setLoading(false));
-  }, [applicationId]);
+      .finally(() => setInternalLoading(false));
+  }, [applicationId, isControlled]);
 
   useEffect(() => {
     loadMessages();
   }, [loadMessages]);
 
-  const onRealtimeMessage = useCallback((message: ChatMessage) => {
-    if (seenIds.current.has(message.id)) return;
-    seenIds.current.add(message.id);
-    setMessages((prev) => [...prev, message]);
-  }, []);
+  useEffect(() => {
+    seenIds.current.clear();
+    messages.forEach((m) => seenIds.current.add(m.id));
+  }, [applicationId, messages]);
+
+  const onRealtimeMessage = useCallback(
+    (message: ChatMessage) => {
+      if (seenIds.current.has(message.id)) return;
+      seenIds.current.add(message.id);
+      setMessages((prev) => [...prev, message]);
+    },
+    [setMessages]
+  );
 
   useChatRealtime(applicationId, onRealtimeMessage);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, applicationId]);
 
   const isOwn = (msg: ChatMessage) => msg.sender === sender;
 
@@ -92,7 +152,7 @@ export default function ApplicationChatView({
                     : "rounded-bl-md border border-slate-100 bg-white text-slate-700"
                 }`}
               >
-                {msg.content}
+                <p className="whitespace-pre-wrap break-words">{msg.content}</p>
                 <p className={`mt-1 text-[10px] ${isOwn(msg) ? "text-blue-200" : "text-slate-400"}`}>
                   {formatTimeJST(msg.createdAt)}
                 </p>
@@ -121,6 +181,8 @@ export default function ApplicationChatView({
                   seenIds.current.add(data.message.id);
                   setMessages((prev) => [...prev, data.message]);
                 }
+                invalidateApiCache("/api/chat");
+                onSent?.();
               }
             } finally {
               setSubmitting(false);
@@ -129,20 +191,12 @@ export default function ApplicationChatView({
         >
           {({ isSubmitting, values, submitForm }) => (
             <Form className="flex flex-col gap-1">
-              <div
-                className="flex gap-2"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    submitForm();
-                  }
-                }}
-              >
-                <ChatInputField />
+              <div className="flex items-end gap-2">
+                <ChatInputField onSubmit={submitForm} />
                 <button
                   type="submit"
                   disabled={isSubmitting || !values.content.trim()}
-                  className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm transition active:scale-95 disabled:opacity-50"
+                  className="mb-0.5 flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm transition active:scale-95 disabled:opacity-50"
                   aria-label="送信"
                 >
                   <Send className="h-4 w-4" />
