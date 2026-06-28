@@ -125,7 +125,7 @@ function ApplicationSeekerAccordionItem({
   onUpdateStatus: (id: string, status: ApplicationStatus) => void;
 }) {
   return (
-    <div className={`overflow-hidden rounded-xl border border-[var(--border)] ${expanded ? "bg-[#f1f1f2]" : "bg-white"}`}>
+    <div className={`overflow-hidden rounded-xl border border-[var(--border)] ${expanded ? "bg-slate-50" : "bg-white"}`}>
       <div
         className={`flex items-center gap-2 sm:gap-3 ${expanded ? "bg-blue-50/60" : ""}`}
       >
