@@ -4,6 +4,7 @@ import { getSeekerSession } from "@/lib/auth/seeker";
 import { getSupabaseUserFromRequest } from "@/lib/auth/supabase-user";
 import { profileEditSchema, seekerProfileSchema, type ProfileEditValues, type SeekerProfileValues } from "@/lib/validation/schemas";
 import { validateBody } from "@/lib/validation/validate-body";
+import { normalizeSeekerProfileFields, asSkills } from "@/lib/profile-fields";
 import type { UserProfile } from "@/lib/types";
 
 export async function GET() {
@@ -30,7 +31,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: validated.error }, { status: validated.status });
     }
 
-    const profile = await upsertSeekerProfile(validated.data, { supabaseUserId: user.id });
+    const profile = await upsertSeekerProfile(
+      { ...normalizeSeekerProfileFields(null), ...validated.data },
+      { supabaseUserId: user.id }
+    );
     return NextResponse.json({ success: true, profile }, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Invalid JSON body";
@@ -46,17 +50,26 @@ export async function PATCH(request: Request) {
 
   try {
     const raw = (await request.json()) as Partial<UserProfile>;
-    const merged = {
-      name: raw.name ?? session.profile.name,
-      gender: raw.gender ?? session.profile.gender,
-      birthday: raw.birthday ?? session.profile.birthday,
-      area: raw.area ?? session.profile.area,
-      desiredJobType: raw.desiredJobType ?? session.profile.desiredJobType,
-      experience: raw.experience ?? session.profile.experience,
-      employmentType: raw.employmentType ?? session.profile.employmentType,
-      introSentence: raw.introSentence ?? session.profile.introSentence,
-      summary: raw.summary ?? session.profile.summary,
-      resumeUrl: raw.resumeUrl ?? session.profile.resumeUrl,
+    const base = session.profile;
+    const merged: UserProfile = {
+      name: raw.name ?? base.name,
+      gender: raw.gender ?? base.gender,
+      birthday: raw.birthday ?? base.birthday,
+      area: raw.area ?? base.area,
+      desiredJobType: raw.desiredJobType ?? base.desiredJobType,
+      experience: raw.experience ?? base.experience,
+      employmentType: raw.employmentType ?? base.employmentType,
+      email: base.email,
+      introSentence: raw.introSentence ?? base.introSentence,
+      profileTitle: raw.profileTitle ?? base.profileTitle,
+      resumeUrl: raw.resumeUrl ?? base.resumeUrl,
+      futureGoals: raw.futureGoals ?? base.futureGoals,
+      desiredSalary: raw.desiredSalary ?? base.desiredSalary,
+      jobSearchIntent: raw.jobSearchIntent ?? base.jobSearchIntent,
+      education: raw.education ?? base.education,
+      portfolioUrl: raw.portfolioUrl ?? base.portfolioUrl,
+      skills: raw.skills ?? base.skills,
+      workHistory: raw.workHistory ?? base.workHistory,
     };
 
     const validated = await validateBody<ProfileEditValues>(profileEditSchema, merged);
@@ -66,7 +79,9 @@ export async function PATCH(request: Request) {
 
     const profile = await upsertSeekerProfile(
       {
+        ...normalizeSeekerProfileFields(base),
         ...validated.data,
+        skills: asSkills(validated.data.skills),
         email: session.profile.email,
       },
       {

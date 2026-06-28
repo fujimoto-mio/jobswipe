@@ -3,6 +3,7 @@ import { createConfirmedAuthUser, deleteAuthUser } from "@/lib/auth/admin-signup
 import { upsertSeekerProfile } from "@/lib/db";
 import { seekerRegisterSchema } from "@/lib/validation/schemas";
 import { validateBody } from "@/lib/validation/validate-body";
+import { normalizeSeekerProfileFields } from "@/lib/profile-fields";
 
 export async function POST(request: Request) {
   try {
@@ -31,9 +32,7 @@ export async function POST(request: Request) {
         {
           ...profileFields,
           email: email.trim(),
-          introSentence: "",
-          summary: "",
-          resumeUrl: "",
+          ...normalizeSeekerProfileFields(null),
         },
         { supabaseUserId: auth.userId }
       );

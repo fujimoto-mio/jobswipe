@@ -1,5 +1,6 @@
 import type { Job as PrismaJob, Company, Application as PrismaApplication, ChatMessage as PrismaChatMessage } from "@prisma/client";
 import { birthdayToInputValue } from "@/lib/birthday";
+import { asStringArray as parseNonEmptyStrings, asWorkHistory, asSkills } from "@/lib/profile-fields";
 import { getCompanyLogoUrl } from "@/lib/job-image";
 import { formatDateISOJST, serializeTimestamp } from "@/lib/datetime";
 import type {
@@ -14,7 +15,7 @@ import type {
 
 type JobWithCompany = PrismaJob & { company: Company };
 
-function asStringArray(value: unknown): string[] {
+function asJsonStringArray(value: unknown): string[] {
   return Array.isArray(value) ? (value as string[]) : [];
 }
 
@@ -27,6 +28,7 @@ export function mapJob(row: JobWithCompany): Job {
   return {
     id: row.id,
     title: row.title,
+    companyId: row.companyId,
     company: row.company.name,
     companyLogo: row.company.logoUrl ?? getCompanyLogoUrl(row.company.name),
     location: row.location,
@@ -34,13 +36,14 @@ export function mapJob(row: JobWithCompany): Job {
     category: row.category,
     salary: row.salaryDisplay,
     employmentType: row.employmentType as Job["employmentType"],
-    tags: asStringArray(row.tags),
+    tags: asJsonStringArray(row.tags),
     description: row.description,
-    requirements: asStringArray(row.requirements),
-    benefits: asStringArray(row.benefits),
+    requirements: asJsonStringArray(row.requirements),
+    benefits: asJsonStringArray(row.benefits),
     videoUrl: row.videoUrl,
     thumbnailUrl: row.thumbnailUrl ?? getCompanyLogoUrl(row.company.name),
     postedAt: formatDateISOJST(row.postedAt),
+    approvedAt: row.approvedAt ? serializeTimestamp(row.approvedAt) : null,
     links: asJobLinks(row.links),
     approvalStatus: row.approvalStatus as JobApprovalStatus,
     viewCount: row.viewCount,
@@ -60,7 +63,7 @@ export function mapApplication(
     applicantBirthday: row.applicantBirthday ? birthdayToInputValue(row.applicantBirthday) : undefined,
     applicantArea: row.applicantArea ?? undefined,
     applicantJobType: row.applicantJobType ?? undefined,
-    message: row.message ?? undefined,
+    message: row.message?.trim() || undefined,
     status: row.status as ApplicationStatus,
     interviewSlot: row.interviewSlot ?? undefined,
     interviewBookedAt: row.interviewBookedAt ? serializeTimestamp(row.interviewBookedAt) : undefined,
@@ -74,6 +77,8 @@ export function mapChatMessage(row: PrismaChatMessage): ChatMessage {
     id: row.id,
     applicationId: row.applicationId,
     sender: row.sender as ChatMessage["sender"],
+    senderName: row.senderName,
+    senderAvatarUrl: row.senderAvatarUrl,
     content: row.content,
     createdAt: serializeTimestamp(row.createdAt),
   };
@@ -91,8 +96,14 @@ export function mapSeekerProfile(row: {
   employmentType: string;
   introSentence?: string | null;
   profileTitle?: string | null;
-  summary?: string | null;
   resumeUrl?: string | null;
+  futureGoals?: string | null;
+  desiredSalary?: string | null;
+  jobSearchIntent?: string | null;
+  education?: string | null;
+  portfolioUrl?: string | null;
+  skills?: unknown;
+  workHistory?: unknown;
 }): UserProfile & { id: string } {
   return {
     id: row.id,
@@ -106,7 +117,13 @@ export function mapSeekerProfile(row: {
     email: row.email,
     introSentence: row.introSentence ?? "",
     profileTitle: row.profileTitle ?? "",
-    summary: row.summary ?? "",
     resumeUrl: row.resumeUrl ?? "",
+    futureGoals: row.futureGoals ?? "",
+    desiredSalary: row.desiredSalary ?? "",
+    jobSearchIntent: row.jobSearchIntent ?? "",
+    education: row.education ?? "",
+    portfolioUrl: row.portfolioUrl ?? "",
+    skills: asSkills(row.skills),
+    workHistory: asWorkHistory(row.workHistory),
   };
 }

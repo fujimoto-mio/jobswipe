@@ -33,7 +33,10 @@ export async function POST(request: Request) {
     const count = await getSavedCount(session.seekerId);
 
     return NextResponse.json({ success: true, saved, savedIds, count });
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && error.message === "JOB_NOT_AVAILABLE") {
+      return NextResponse.json({ error: "この求人は保存できません" }, { status: 404 });
+    }
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 }

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Form, Formik } from "formik";
-import { Briefcase, ChevronRight, ExternalLink, FileText, Pencil, Search, Settings } from "lucide-react";
+import { Briefcase, ChevronRight, Pencil, Search, Settings } from "lucide-react";
 import LoadingSpinner, { PageLoading, ButtonSpinner } from "@/components/ui/LoadingSpinner";
 import BottomNav from "@/components/BottomNav";
 import { AppHeader, AppPage } from "@/components/ui/AppShell";
@@ -14,7 +14,9 @@ import { getProfile, saveProfile, isProfileComplete } from "@/lib/profile";
 import { apiFetch } from "@/lib/api-client";
 import { fetchSeekerUnreadTotal } from "@/lib/chat-unread";
 import SeekerProfileFormFields from "@/components/form/SeekerProfileFormFields";
+import { SeekerProfileCareerView } from "@/components/seeker/SeekerProfileSections";
 import { formatBirthdayDisplay } from "@/lib/birthday";
+import { calcProfileCompletion, normalizeSeekerProfileFields } from "@/lib/profile-fields";
 import { formatDateJST } from "@/lib/datetime";
 import { profileEditSchema } from "@/lib/validation/schemas";
 import type { Application, UserProfile } from "@/lib/types";
@@ -48,9 +50,7 @@ function normalizeProfile(p: UserProfile | null): UserProfile | null {
   if (!p) return null;
   return {
     ...p,
-    introSentence: p.introSentence ?? "",
-    summary: p.summary ?? "",
-    resumeUrl: p.resumeUrl ?? "",
+    ...normalizeSeekerProfileFields(p),
   };
 }
 
@@ -127,26 +127,15 @@ export default function ProfilePage() {
   }
 
   const profileFormValues = {
-    name: profile.name,
-    gender: profile.gender,
-    birthday: profile.birthday,
-    area: profile.area,
-    desiredJobType: profile.desiredJobType,
-    experience: profile.experience,
-    employmentType: profile.employmentType,
-    email: profile.email,
-    introSentence: profile.introSentence,
-    summary: profile.summary,
-    resumeUrl: profile.resumeUrl,
+    ...profile,
   };
 
-  const profileFields: { label: string; value: string; span?: 2 }[] = [
+  const profileCompletion = calcProfileCompletion(profile);
+
+  const registrationFields: { label: string; value: string; span?: 2 }[] = [
     { label: "性別", value: profile.gender },
     { label: "生年月日", value: formatBirthdayDisplay(profile.birthday) },
-    { label: "希望エリア", value: profile.area },
-    { label: "希望職種", value: profile.desiredJobType },
-    { label: "社会人経験", value: profile.experience },
-    { label: "希望雇用形態", value: profile.employmentType },
+    { label: "最終学歴", value: profile.education || "未設定" },
     { label: "メール", value: profile.email, span: 2 },
   ];
 
@@ -154,12 +143,47 @@ export default function ProfilePage() {
     <AppPage>
       <AppHeader title="プロフィール" onBack={() => router.push("/explore")} />
 
-      <main className="min-h-0 flex-1 overflow-y-auto pb-[4.5rem]">
+      <main className="profile-page min-h-0 flex-1 overflow-y-auto pb-[4.5rem]">
+        <div className="flex items-center justify-end bg-white px-4 py-2.5">
+          {editing ? (
+            <button
+              type="button"
+              onClick={() => setEditing(false)}
+              className="btn-ghost text-xs text-slate-500"
+            >
+              キャンセル
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="btn-ghost flex items-center gap-1.5 text-xs font-semibold text-slate-700"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              編集
+            </button>
+          )}
+        </div>
+
         {/* Hero */}
         <div className="flex flex-col items-center bg-white px-4 pb-5 pt-6">
           <ProfileAvatar name={profile.name} />
           <h2 className="mt-4 text-lg font-bold text-slate-900">{profile.name}</h2>
           <p className="mt-0.5 max-w-[260px] truncate text-sm text-slate-500">{profile.email}</p>
+          {!editing && (
+            <div className="mt-4 w-full max-w-xs">
+              <div className="mb-1 flex items-center justify-between text-xs text-slate-500">
+                <span>プロフィール完成度</span>
+                <span className="font-semibold text-slate-700">{profileCompletion}%</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                <div
+                  className="h-full rounded-full bg-[#fe2c55] transition-all duration-300"
+                  style={{ width: `${profileCompletion}%` }}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Stats */}
@@ -169,92 +193,31 @@ export default function ProfilePage() {
           <StatItem label="未読" value={unreadChatCount} />
         </div>
 
-        {/* Career profile */}
-        {!editing && (
-          <section className="mt-2 bg-white">
-            <div className="border-b border-slate-100 px-4 py-2.5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">プロフィール</p>
-            </div>
-            <div className="space-y-4 px-4 py-4">
-              <div>
-                <p className="text-xs font-medium text-slate-500">一言紹介</p>
-                <p
-                  className={`mt-1 whitespace-pre-wrap text-sm leading-relaxed ${
-                    profile.introSentence.trim() ? "text-slate-900" : "text-slate-400"
-                  }`}
-                >
-                  {profile.introSentence.trim() || "未設定"}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-medium text-slate-500">サマリー</p>
-                <p
-                  className={`mt-1 whitespace-pre-wrap text-sm leading-relaxed ${
-                    profile.summary.trim() ? "text-slate-900" : "text-slate-400"
-                  }`}
-                >
-                  {profile.summary.trim() || "未設定"}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-medium text-slate-500">履歴書</p>
-                {profile.resumeUrl.trim() ? (
-                  <a
-                    href={profile.resumeUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 transition active:bg-slate-100"
-                  >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-600">
-                      <FileText className="h-5 w-5" />
-                    </div>
-                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-900">
-                      {profile.resumeUrl}
-                    </span>
-                    <ExternalLink className="h-4 w-4 shrink-0 text-slate-400" />
-                  </a>
-                ) : (
-                  <p className="mt-1 text-sm text-slate-400">未設定</p>
-                )}
-              </div>
-            </div>
-          </section>
-        )}
+        {!editing && <SeekerProfileCareerView profile={profile} />}
 
         {/* Profile info / edit */}
-        <section className="mt-2 bg-white">
-          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">登録情報</p>
-            {editing ? (
-              <button
-                type="button"
-                onClick={() => setEditing(false)}
-                className="btn-ghost text-xs text-slate-500"
-              >
-                キャンセル
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setEditing(true)}
-                className="btn-ghost flex items-center gap-1.5 text-xs font-semibold text-slate-700"
-              >
-                <Pencil className="h-3.5 w-3.5" />
-                編集
-              </button>
-            )}
+        <section className="profile-section">
+          <div className="profile-section-header">
+            <p className="profile-section-title">登録情報</p>
           </div>
 
           {editing ? (
-            <div className="px-4 py-4">
+            <div className="profile-section-content">
               <Formik
                 initialValues={profileFormValues}
                 validationSchema={profileEditSchema}
                 enableReinitialize
                 onSubmit={async (values, { setSubmitting }) => {
+                  const payload = {
+                    ...values,
+                    workHistory: values.workHistory.filter(
+                      (entry) => entry.company.trim() || entry.role.trim()
+                    ),
+                    skills: values.skills.filter((skill) => skill.name.trim()),
+                  };
                   const res = await apiFetch("/api/profile", {
                     method: "PATCH",
-                    body: JSON.stringify(values),
+                    body: JSON.stringify(payload),
                   });
                   if (res.ok) {
                     const data = await res.json();
@@ -265,42 +228,61 @@ export default function ProfilePage() {
                   setSubmitting(false);
                 }}
               >
-                {({ isSubmitting, submitForm }) => (
+                {({ isSubmitting, submitForm, resetForm }) => (
                   <Form className="profile-form">
                     <SeekerProfileFormFields showEmail showCareerProfile emailReadOnly />
                     <p className="profile-form-note text-xs text-slate-500">
                       メールアドレスの変更はアカウント設定から行ってください。
                     </p>
-                    <button
-                      type="button"
-                      onClick={() => submitForm()}
-                      disabled={isSubmitting}
-                      className="profile-form-submit btn-primary flex w-full items-center justify-center gap-2"
-                    >
-                      {isSubmitting && <ButtonSpinner />}
-                      {isSubmitting ? "保存中..." : "保存する"}
-                    </button>
+                    <div className="profile-form-actions">
+                      <button
+                        type="button"
+                        onClick={() => submitForm()}
+                        disabled={isSubmitting}
+                        className="profile-form-submit btn-primary flex w-full items-center justify-center gap-2"
+                      >
+                        {isSubmitting && <ButtonSpinner />}
+                        {isSubmitting ? "保存中..." : "保存する"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          resetForm();
+                          setEditing(false);
+                        }}
+                        disabled={isSubmitting}
+                        className="profile-form-submit btn-secondary flex w-full items-center justify-center"
+                      >
+                        キャンセル
+                      </button>
+                    </div>
                   </Form>
                 )}
               </Formik>
             </div>
           ) : (
-            <div className="profile-info-grid grid grid-cols-2 gap-px bg-slate-100">
-              {profileFields.map(({ label, value, span }) => (
-                <div
-                  key={label}
-                  className={`profile-info-cell bg-white px-4 py-3.5 ${span === 2 ? "col-span-2" : ""}`}
-                >
-                  <p className="text-xs font-medium text-slate-500">{label}</p>
-                  <p className="mt-1 truncate text-sm font-semibold text-slate-900">{value}</p>
-                </div>
-              ))}
+            <div className="profile-section-content profile-section-content--flush">
+              <div className="profile-info-list">
+              {registrationFields.map(({ label, value, span }) =>
+                span === 2 ? (
+                  <div key={label} className="px-4 pb-4 pt-2">
+                    <p className="profile-field-label">{label}</p>
+                    <p className="profile-field-value truncate">{value}</p>
+                  </div>
+                ) : (
+                  <div key={label} className="profile-info-row">
+                    <p className="profile-field-label">{label}</p>
+                    <p className="profile-info-value truncate">{value || "未設定"}</p>
+                  </div>
+                )
+              )}
+              </div>
             </div>
           )}
         </section>
 
         {/* Settings */}
-        <section className="mt-2 bg-white">
+        <section className="profile-section">
           <ul className="divide-y divide-slate-100">
             <li>
               <Link
@@ -318,17 +300,17 @@ export default function ProfilePage() {
         </section>
 
         {/* Applications */}
-        <section className="mt-2 bg-white">
-          <div className="border-b border-slate-100 px-4 py-2.5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">応募履歴</p>
+        <section className="profile-section">
+          <div className="profile-section-header">
+            <p className="profile-section-title">応募履歴</p>
           </div>
 
           {applicationsLoading ? (
-            <div className="flex justify-center px-4 py-10">
+            <div className="profile-section-content flex justify-center py-6">
               <LoadingSpinner size="md" message="読み込み中..." />
             </div>
           ) : applications.length === 0 ? (
-            <div className="px-4 py-8">
+            <div className="profile-section-content py-4">
               <EmptyState
                 icon={Briefcase}
                 title="応募履歴はありません"
@@ -342,6 +324,7 @@ export default function ProfilePage() {
               />
             </div>
           ) : (
+            <div className="profile-section-content profile-section-content--flush">
             <ul className="divide-y divide-slate-100">
               {applications.map((app) => {
                 const company = app.companyName ?? "企業";
@@ -378,6 +361,7 @@ export default function ProfilePage() {
                 );
               })}
             </ul>
+            </div>
           )}
         </section>
       </main>

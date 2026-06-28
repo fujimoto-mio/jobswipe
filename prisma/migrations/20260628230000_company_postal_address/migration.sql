@@ -1,0 +1,2 @@
+ALTER TABLE "companies" ADD COLUMN IF NOT EXISTS "postal_code" TEXT;
+ALTER TABLE "companies" ADD COLUMN IF NOT EXISTS "address" TEXT;

@@ -11,6 +11,8 @@ type SwipeCardProps = {
   job: Job;
   isTop: boolean;
   isSaved: boolean;
+  canSwipeUp?: boolean;
+  canSwipeDown?: boolean;
   onSwipeUp: () => void;
   onSwipeDown: () => void;
   onSwipeRight: () => void;
@@ -22,6 +24,8 @@ export default function SwipeCard({
   job,
   isTop,
   isSaved,
+  canSwipeUp = true,
+  canSwipeDown = true,
   onSwipeUp,
   onSwipeDown,
   onSwipeRight,
@@ -33,7 +37,7 @@ export default function SwipeCard({
   const rotate = useTransform(x, [-200, 0, 200], [-6, 0, 6]);
   const likeOpacity = useTransform(x, [0, 100], [0, 1]);
   const likeScale = useTransform(x, [0, 100], [0.6, 1]);
-  const skipOpacity = useTransform(y, [0, 100], [0, 1]);
+  const prevOpacity = useTransform(y, [0, 100], [0, 1]);
   const nextOpacity = useTransform(y, [-100, 0], [1, 0]);
 
   useEffect(() => {
@@ -41,16 +45,29 @@ export default function SwipeCard({
     x.set(0);
   }, [job.id, y, x]);
 
+  const snapBack = () => {
+    animate(y, 0, { type: "spring", stiffness: 500, damping: 35 });
+    animate(x, 0, { type: "spring", stiffness: 500, damping: 35 });
+  };
+
   const handleDragEnd = (_: unknown, info: PanInfo) => {
     const { offset } = info;
 
     if (offset.y < -SWIPE_THRESHOLD) {
+      if (!canSwipeUp) {
+        snapBack();
+        return;
+      }
       animate(y, -600, { duration: 0.22 }).then(() => {
         onSwipeUp();
         y.set(0);
         x.set(0);
       });
     } else if (offset.y > SWIPE_THRESHOLD) {
+      if (!canSwipeDown) {
+        snapBack();
+        return;
+      }
       animate(y, 600, { duration: 0.22 }).then(() => {
         onSwipeDown();
         y.set(0);
@@ -63,8 +80,7 @@ export default function SwipeCard({
         y.set(0);
       });
     } else {
-      animate(y, 0, { type: "spring", stiffness: 500, damping: 35 });
-      animate(x, 0, { type: "spring", stiffness: 500, damping: 35 });
+      snapBack();
     }
   };
 
@@ -102,11 +118,11 @@ export default function SwipeCard({
               </div>
             </motion.div>
             <motion.div
-              style={{ opacity: skipOpacity }}
+              style={{ opacity: prevOpacity }}
               className="pointer-events-none absolute left-1/2 top-[38%] z-30 -translate-x-1/2"
             >
               <div className="rounded-2xl border-[3px] border-white/60 px-6 py-2">
-                <span className="text-3xl font-black tracking-wide text-white/80">スキップ</span>
+                <span className="text-3xl font-black tracking-wide text-white/80">前へ</span>
               </div>
             </motion.div>
             <motion.div

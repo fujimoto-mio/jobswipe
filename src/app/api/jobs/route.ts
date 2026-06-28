@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAllJobs, createJob, getJobsForStaff } from "@/lib/db";
 import { requireStaffUser } from "@/lib/auth/admin";
-import { prisma } from "@/lib/prisma";
 import type { CreateJobInput, JobFilters } from "@/lib/types";
 
 export async function GET(request: Request) {
@@ -50,25 +49,27 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as CreateJobInput;
 
-    if (!body.title || !body.videoUrl || !body.description) {
+    if (!body.title || !body.description) {
       return NextResponse.json(
-        { error: "必須項目: title, videoUrl, description" },
+        { error: "必須項目: title, description" },
         { status: 400 }
       );
     }
 
-    if (staff.role === "company" && staff.companyId) {
-      const company = await prisma.company.findUnique({ where: { id: staff.companyId } });
-      if (company) body.company = company.name;
+    if (staff.role === "company") {
+      if (!staff.companyId) {
+        return NextResponse.json({ error: "企業アカウントが会社に紐づいていません" }, { status: 403 });
+      }
+    } else if (!body.companyId && !body.company?.trim()) {
+      return NextResponse.json({ error: "companyId or company is required" }, { status: 400 });
     }
 
-    if (!body.company) {
-      return NextResponse.json({ error: "company is required" }, { status: 400 });
-    }
-
-    const job = await createJob(body);
+    const job = await createJob(body, {
+      staffCompanyId: staff.role === "company" ? staff.companyId : null,
+    });
     return NextResponse.json({ success: true, job }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Invalid JSON body";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }

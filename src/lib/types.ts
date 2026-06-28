@@ -21,6 +21,7 @@ export type JobLinks = {
 export type Job = {
   id: string;
   title: string;
+  companyId: string;
   company: string;
   companyLogo: string;
   location: string;
@@ -35,6 +36,7 @@ export type Job = {
   videoUrl: string;
   thumbnailUrl: string;
   postedAt: string;
+  approvedAt?: string | null;
   links?: JobLinks;
   approvalStatus: JobApprovalStatus;
   viewCount: number;
@@ -42,14 +44,15 @@ export type Job = {
 
 export type CreateJobInput = {
   title: string;
-  company: string;
+  company?: string;
+  companyId?: string;
   location: string;
   area?: string;
   category?: string;
   salary: string;
   employmentType: EmploymentType;
   description: string;
-  videoUrl: string;
+  videoUrl?: string;
   thumbnailUrl?: string;
   tags?: string[];
   requirements?: string[];
@@ -107,6 +110,24 @@ export type CreateApplicationInput = {
   message?: string;
 };
 
+export type SkillEntry = {
+  name: string;
+  years: string;
+};
+
+export type WorkHistoryEntry = {
+  company: string;
+  role: string;
+  startYear: string;
+  startMonth: string;
+  startDay: string;
+  endYear: string;
+  endMonth: string;
+  endDay: string;
+  isCurrent: boolean;
+  description: string;
+};
+
 export type UserProfile = {
   name: string;
   gender: string;
@@ -118,21 +139,35 @@ export type UserProfile = {
   email: string;
   introSentence: string;
   profileTitle: string;
-  summary: string;
   resumeUrl: string;
+  futureGoals: string;
+  desiredSalary: string;
+  jobSearchIntent: string;
+  education: string;
+  portfolioUrl: string;
+  skills: SkillEntry[];
+  workHistory: WorkHistoryEntry[];
 };
 
 export type ChatMessage = {
   id: string;
   applicationId: string;
   sender: "seeker" | "company";
+  senderName?: string | null;
+  senderAvatarUrl?: string | null;
   content: string;
   createdAt: string;
+};
+
+export type CompanyStaffProfile = {
+  name: string;
+  avatarUrl: string | null;
 };
 
 export type ChatThread = {
   application: Application;
   job: Job;
+  companyStaff?: CompanyStaffProfile;
   lastMessage?: ChatMessage;
   unreadCount?: number;
 };

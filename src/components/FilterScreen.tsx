@@ -4,15 +4,16 @@ import { AREAS, JOB_CATEGORIES } from "@/lib/constants";
 import Logo from "@/components/ui/Logo";
 import SeekerAccountMenu from "@/components/seeker/SeekerAccountMenu";
 import type { JobFilters } from "@/lib/types";
-import { MapPin, Briefcase, Sparkles } from "lucide-react";
+import { MapPin, Briefcase } from "lucide-react";
 
 type FilterScreenProps = {
   filters: JobFilters;
   onChange: (filters: JobFilters) => void;
   onContinue: () => void;
+  onCancel: () => void;
 };
 
-export default function FilterScreen({ filters, onChange, onContinue }: FilterScreenProps) {
+export default function FilterScreen({ filters, onChange, onContinue, onCancel }: FilterScreenProps) {
   const toggleArea = (area: string) => {
     const areas = filters.areas.includes(area)
       ? filters.areas.filter((a) => a !== area)
@@ -30,29 +31,26 @@ export default function FilterScreen({ filters, onChange, onContinue }: FilterSc
   const canContinue = filters.areas.length > 0 || filters.categories.length > 0;
 
   return (
-    <div className="page-shell relative">
-      <div className="absolute right-4 top-3.5 z-10">
+    <div className="seeker-filter-page flex h-full min-h-0 flex-col">
+      <div className="flex shrink-0 items-center justify-end px-4 py-3">
         <SeekerAccountMenu />
       </div>
-      <div className="page-scroll flex-1">
-        <div className="page-container py-8">
-          <div className="mb-8">
-            <Logo size="md" />
-            <div className="mt-6 flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-blue-600" />
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900">あなたに合う求人を探す</h1>
-            </div>
-            <p className="mt-2 text-sm leading-relaxed text-slate-500">
-              エリアと職種を選んで、動画フィードをスタート
-            </p>
-          </div>
 
-          <section className="card mb-5 p-5">
-          <div className="mb-4 flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50">
-              <MapPin className="h-4 w-4 text-blue-600" />
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+        <div className="mb-6">
+          <Logo size="md" />
+          <h1 className="seeker-filter-title mt-5">あなたに合う求人を探す</h1>
+          <p className="seeker-filter-subtitle mt-2">
+            エリアと職種を選んで、動画フィードをスタート
+          </p>
+        </div>
+
+        <section className="seeker-filter-section">
+          <div className="seeker-filter-section-header">
+            <div className="seeker-filter-section-icon">
+              <MapPin className="h-4 w-4" />
             </div>
-            <h2 className="text-sm font-semibold text-slate-800">エリア</h2>
+            <h2 className="seeker-filter-section-title">エリア</h2>
           </div>
           <div className="flex flex-wrap gap-2">
             {AREAS.map((area) => (
@@ -68,12 +66,12 @@ export default function FilterScreen({ filters, onChange, onContinue }: FilterSc
           </div>
         </section>
 
-        <section className="card mb-6 p-5">
-          <div className="mb-4 flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50">
-              <Briefcase className="h-4 w-4 text-blue-600" />
+        <section className="seeker-filter-section mt-3">
+          <div className="seeker-filter-section-header">
+            <div className="seeker-filter-section-icon">
+              <Briefcase className="h-4 w-4" />
             </div>
-            <h2 className="text-sm font-semibold text-slate-800">職種</h2>
+            <h2 className="seeker-filter-section-title">職種</h2>
           </div>
           <div className="flex flex-wrap gap-2">
             {JOB_CATEGORIES.map((cat) => (
@@ -87,26 +85,28 @@ export default function FilterScreen({ filters, onChange, onContinue }: FilterSc
               </button>
             ))}
           </div>
-          </section>
-        </div>
+        </section>
       </div>
 
-      <div className="shrink-0 border-t border-slate-200 bg-white pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <div className="page-container py-4">
-          <button
-          type="button"
-          onClick={onContinue}
-          disabled={!canContinue}
-          className="btn-primary w-full disabled:opacity-40"
-        >
-          動画を見る
+      <div className="seeker-filter-footer shrink-0 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
+        <div className="flex gap-3">
+          <button type="button" onClick={onCancel} className="btn-secondary flex-1">
+            キャンセル
           </button>
-          {!canContinue && (
-            <p className="mt-2.5 text-center text-xs text-slate-400">
-              エリアまたは職種を1つ以上選択
-            </p>
-          )}
+          <button
+            type="button"
+            onClick={onContinue}
+            disabled={!canContinue}
+            className="btn-primary flex-1 disabled:opacity-40"
+          >
+            動画を見る
+          </button>
         </div>
+        {!canContinue && (
+          <p className="mt-2.5 text-center text-xs text-[rgba(22,24,35,0.45)]">
+            エリアまたは職種を1つ以上選択
+          </p>
+        )}
       </div>
     </div>
   );

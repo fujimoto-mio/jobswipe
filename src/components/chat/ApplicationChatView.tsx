@@ -1,19 +1,21 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Form, Formik, useField } from "formik";
 import { Send } from "lucide-react";
 import LoadingSpinner, { ButtonSpinner } from "@/components/ui/LoadingSpinner";
-import { FormError } from "@/components/form/FormFields";
 import { apiFetch, invalidateApiCache } from "@/lib/api-client";
 import { useChatRealtime } from "@/hooks/useChatRealtime";
-import { formatTimeJST } from "@/lib/datetime";
-import { chatMessageSchema } from "@/lib/validation/schemas";
+import { formatDateTimeFullJST } from "@/lib/datetime";
+import { resolveStaffAvatarUrl } from "@/lib/job-image";
 import type { ChatMessage } from "@/lib/types";
 
 type ApplicationChatViewProps = {
   applicationId: string;
   sender: "seeker" | "company";
+  seekerName: string;
+  companyName: string;
+  companyStaffName?: string | null;
+  companyStaffAvatarUrl?: string | null;
   emptyHint?: string;
   className?: string;
   /** When set, skips fetch and uses parent cache (instant thread switch). */
@@ -21,11 +23,79 @@ type ApplicationChatViewProps = {
   loading?: boolean;
   onMessagesChange?: (messages: ChatMessage[]) => void;
   onSent?: () => void;
+  onIncomingMessage?: (message: ChatMessage) => void;
 };
 
-function ChatInputField({ onSubmit }: { onSubmit: () => void }) {
-  const [field, meta] = useField("content");
+function ChatAvatar({
+  name,
+  imageUrl,
+  variant,
+}: {
+  name: string;
+  imageUrl?: string | null;
+  variant: "seeker" | "company" | "company-hr";
+}) {
+  if (imageUrl) {
+    return (
+      <img
+        src={imageUrl}
+        alt=""
+        className="chat-message-avatar chat-message-avatar--image"
+      />
+    );
+  }
+
+  const initial = name.trim().charAt(0) || "?";
+  return (
+    <span className={`chat-message-avatar chat-message-avatar--${variant}`} aria-hidden>
+      {initial}
+    </span>
+  );
+}
+
+function getMessageParticipant(
+  msg: ChatMessage,
+  {
+    seekerName,
+    companyName,
+    companyStaffName,
+    companyStaffAvatarUrl,
+  }: {
+    seekerName: string;
+    companyName: string;
+    companyStaffName?: string | null;
+    companyStaffAvatarUrl?: string | null;
+  }
+) {
+  if (msg.sender === "seeker") {
+    return { name: seekerName, imageUrl: null, variant: "seeker" as const };
+  }
+
+  const staffName = msg.senderName?.trim() || companyStaffName?.trim() || companyName;
+  const staffAvatarUrl = msg.senderAvatarUrl?.trim() || companyStaffAvatarUrl || null;
+
+  return {
+    name: staffName,
+    imageUrl: resolveStaffAvatarUrl(staffName, staffAvatarUrl),
+    variant: "company-hr" as const,
+  };
+}
+
+function ChatComposer({
+  applicationId,
+  sender,
+  onSent,
+  onMessageSent,
+}: {
+  applicationId: string;
+  sender: "seeker" | "company";
+  onSent?: () => void;
+  onMessageSent: (message: ChatMessage) => void;
+}) {
+  const [content, setContent] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const canSubmit = Boolean(content.trim()) && !isSubmitting;
 
   const resize = useCallback(() => {
     const el = textareaRef.current;
@@ -36,30 +106,65 @@ function ChatInputField({ onSubmit }: { onSubmit: () => void }) {
 
   useEffect(() => {
     resize();
-  }, [field.value, resize]);
+  }, [content, resize]);
+
+  const handleSubmit = async () => {
+    const trimmed = content.trim();
+    if (!trimmed || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      const res = await apiFetch("/api/chat", {
+        method: "POST",
+        body: JSON.stringify({ applicationId, content: trimmed, sender }),
+      });
+      if (res.ok) {
+        setContent("");
+        if (textareaRef.current) {
+          textareaRef.current.style.height = "auto";
+        }
+        const data = await res.json();
+        onMessageSent(data.message as ChatMessage);
+        invalidateApiCache("/api/chat");
+        onSent?.();
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
-    <div className="min-w-0 flex-1">
-      <textarea
-        {...field}
-        ref={textareaRef}
-        rows={1}
-        placeholder="メッセージを入力..."
-        onChange={(e) => {
-          field.onChange(e);
-          resize();
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            onSubmit();
-          }
-        }}
-        className={`input-field scrollbar-none max-h-[120px] min-h-[42px] w-full resize-none overflow-y-auto leading-snug ${
-          meta.touched && meta.error ? "ring-1 ring-red-300" : ""
-        }`}
-      />
-      <FormError name="content" />
+    <div className="chat-composer">
+      <div className="chat-composer-field">
+        <textarea
+          ref={textareaRef}
+          rows={2}
+          value={content}
+          placeholder="メッセージを入力..."
+          onChange={(e) => {
+            setContent(e.target.value);
+            resize();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              if (canSubmit) void handleSubmit();
+            }
+          }}
+          className="input-field chat-composer-input scrollbar-none max-h-[120px] w-full resize-none overflow-y-auto leading-snug"
+        />
+      </div>
+      <div className="chat-composer-send">
+        <button
+          type="button"
+          onClick={() => void handleSubmit()}
+          disabled={!canSubmit}
+          className="btn-send"
+          aria-label="送信"
+        >
+          {isSubmitting ? <ButtonSpinner /> : <Send className="h-4 w-4" />}
+        </button>
+      </div>
     </div>
   );
 }
@@ -67,12 +172,17 @@ function ChatInputField({ onSubmit }: { onSubmit: () => void }) {
 export default function ApplicationChatView({
   applicationId,
   sender,
+  seekerName,
+  companyName,
+  companyStaffName,
+  companyStaffAvatarUrl,
   emptyHint = "メッセージを送信して会話を始めましょう",
   className = "",
   messages: controlledMessages,
   loading: controlledLoading,
   onMessagesChange,
   onSent,
+  onIncomingMessage,
 }: ApplicationChatViewProps) {
   const isControlled = controlledMessages !== undefined;
   const [internalMessages, setInternalMessages] = useState<ChatMessage[]>([]);
@@ -123,8 +233,9 @@ export default function ApplicationChatView({
       if (seenIds.current.has(message.id)) return;
       seenIds.current.add(message.id);
       setMessages((prev) => [...prev, message]);
+      onIncomingMessage?.(message);
     },
-    [setMessages]
+    [setMessages, onIncomingMessage]
   );
 
   useChatRealtime(applicationId, onRealtimeMessage);
@@ -143,68 +254,54 @@ export default function ApplicationChatView({
         ) : messages.length === 0 ? (
           <p className="py-8 text-center text-sm text-slate-400">{emptyHint}</p>
         ) : (
-          messages.map((msg) => (
-            <div key={msg.id} className={`mb-3 flex ${isOwn(msg) ? "justify-end" : "justify-start"}`}>
+          messages.map((msg) => {
+            const own = isOwn(msg);
+            const participant = getMessageParticipant(msg, {
+              seekerName,
+              companyName,
+              companyStaffName,
+              companyStaffAvatarUrl,
+            });
+            return (
               <div
-                className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
-                  isOwn(msg)
-                    ? "rounded-br-md bg-blue-600 text-white"
-                    : "rounded-bl-md border border-slate-100 bg-white text-slate-700"
-                }`}
+                key={msg.id}
+                className={`chat-message-row ${own ? "chat-message-row--own" : "chat-message-row--other"}`}
               >
-                <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-                <p className={`mt-1 text-[10px] ${isOwn(msg) ? "text-blue-200" : "text-slate-400"}`}>
-                  {formatTimeJST(msg.createdAt)}
-                </p>
+                <ChatAvatar
+                  name={participant.name}
+                  imageUrl={participant.imageUrl}
+                  variant={participant.variant}
+                />
+                <div className="chat-message-stack">
+                  <p className="chat-message-sender">{participant.name}</p>
+                  <div
+                    className={`chat-message-bubble ${
+                      own ? "chat-message-bubble--own" : "chat-message-bubble--other"
+                    }`}
+                  >
+                    <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                  </div>
+                  <p className="chat-message-time">{formatDateTimeFullJST(msg.createdAt)}</p>
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
         <div ref={bottomRef} />
       </div>
 
       <div className="border-t border-slate-200 bg-white px-4 py-3">
-        <Formik
-          initialValues={{ content: "" }}
-          validationSchema={chatMessageSchema}
-          onSubmit={async (values, { resetForm, setSubmitting }) => {
-            setSubmitting(true);
-            try {
-              const res = await apiFetch("/api/chat", {
-                method: "POST",
-                body: JSON.stringify({ applicationId, content: values.content, sender }),
-              });
-              if (res.ok) {
-                resetForm();
-                const data = await res.json();
-                if (!seenIds.current.has(data.message.id)) {
-                  seenIds.current.add(data.message.id);
-                  setMessages((prev) => [...prev, data.message]);
-                }
-                invalidateApiCache("/api/chat");
-                onSent?.();
-              }
-            } finally {
-              setSubmitting(false);
+        <ChatComposer
+          applicationId={applicationId}
+          sender={sender}
+          onSent={onSent}
+          onMessageSent={(message) => {
+            if (!seenIds.current.has(message.id)) {
+              seenIds.current.add(message.id);
+              setMessages((prev) => [...prev, message]);
             }
           }}
-        >
-          {({ isSubmitting, values, submitForm }) => (
-            <Form className="flex flex-col gap-1">
-              <div className="flex items-end gap-2">
-                <ChatInputField onSubmit={submitForm} />
-                <button
-                  type="submit"
-                  disabled={isSubmitting || !values.content.trim()}
-                  className="btn-icon btn-send mb-0.5 shrink-0 disabled:opacity-50"
-                  aria-label="送信"
-                >
-                  {isSubmitting ? <ButtonSpinner /> : <Send className="h-4 w-4" />}
-                </button>
-              </div>
-            </Form>
-          )}
-        </Formik>
+        />
       </div>
     </div>
   );

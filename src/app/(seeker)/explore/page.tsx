@@ -14,9 +14,13 @@ import SeekerAccountMenu from "@/components/seeker/SeekerAccountMenu";
 import Link from "next/link";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
 import type { JobFilters } from "@/lib/types";
-import { FILTER_STORAGE_KEY } from "@/lib/job-filters";
-
-const FILTER_KEY = FILTER_STORAGE_KEY;
+import {
+  DEFAULT_JOB_FILTERS,
+  buildExploreFeedParams,
+  exploreFeedParamsKey,
+  isExploreFeedReady,
+  parseExploreFiltersFromParams,
+} from "@/lib/job-filters";
 
 function ExploreContent() {
   const router = useRouter();
@@ -25,8 +29,11 @@ function ExploreContent() {
   const [chatCount, setChatCount] = useState(0);
   const [authReady, setAuthReady] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [filters, setFilters] = useState<JobFilters>({ areas: [], categories: [] });
-  const [filtersReady, setFiltersReady] = useState(false);
+  const [draftFilters, setDraftFilters] = useState<JobFilters>(DEFAULT_JOB_FILTERS);
+
+  const showFeed = isExploreFeedReady(searchParams);
+  const filters = parseExploreFiltersFromParams(searchParams);
+  const feedParamsKey = exploreFeedParamsKey(searchParams);
 
   const refreshCounts = useCallback(() => {
     void apiFetchCached<{ count?: number }>("/api/saves", 20_000).then((d) =>
@@ -48,31 +55,37 @@ function ExploreContent() {
           });
       }
     });
-
-    const ready = sessionStorage.getItem(FILTER_KEY);
-    if (ready) {
-      try {
-        setFilters(JSON.parse(ready));
-        setFiltersReady(true);
-      } catch {
-        sessionStorage.removeItem(FILTER_KEY);
-      }
-    }
   }, [refreshCounts]);
 
   useEffect(() => {
     if (!authReady || isLoggedIn) return;
 
-    const params = new URLSearchParams({ next: "/explore" });
+    const exploreQuery = searchParams.toString();
+    const nextPath = exploreQuery ? `/explore?${exploreQuery}` : "/explore";
+    const params = new URLSearchParams({ next: nextPath });
     if (searchParams.get("auth") === "required") {
       params.set("reason", "required");
     }
     router.replace(`/login?${params.toString()}`);
   }, [authReady, isLoggedIn, router, searchParams]);
 
+  const navigateToFeed = (nextFilters: JobFilters, options?: { started?: boolean }) => {
+    const params = buildExploreFeedParams(nextFilters, options);
+    const query = params.toString();
+    router.replace(query ? `/explore?${query}` : "/explore");
+  };
+
   const handleContinueFilters = () => {
-    sessionStorage.setItem(FILTER_KEY, JSON.stringify(filters));
-    setFiltersReady(true);
+    navigateToFeed(draftFilters);
+  };
+
+  const handleSkipFilters = () => {
+    navigateToFeed(DEFAULT_JOB_FILTERS, { started: true });
+  };
+
+  const handleOpenFilterScreen = () => {
+    setDraftFilters(filters);
+    router.replace("/explore");
   };
 
   if (!authReady || !isLoggedIn) {
@@ -83,12 +96,13 @@ function ExploreContent() {
     );
   }
 
-  if (!filtersReady) {
+  if (!showFeed) {
     return (
       <FilterScreen
-        filters={filters}
-        onChange={setFilters}
+        filters={draftFilters}
+        onChange={setDraftFilters}
         onContinue={handleContinueFilters}
+        onCancel={handleSkipFilters}
       />
     );
   }
@@ -103,7 +117,7 @@ function ExploreContent() {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setFiltersReady(false)}
+              onClick={handleOpenFilterScreen}
               className="btn-pill-overlay"
             >
               条件変更
@@ -114,7 +128,11 @@ function ExploreContent() {
       </header>
 
       <main className="relative h-full w-full flex-1 overflow-hidden">
-        <VideoFeed filters={filters} onSaveCountChange={setSaveCount} />
+        <VideoFeed
+          filters={filters}
+          fetchKey={feedParamsKey}
+          onSaveCountChange={setSaveCount}
+        />
       </main>
 
       <BottomNav saveCount={saveCount} chatCount={chatCount} theme="overlay" />

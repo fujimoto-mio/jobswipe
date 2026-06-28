@@ -61,9 +61,10 @@ export async function PATCH(
       if (!allowed) {
         return NextResponse.json({ error: "Job not found" }, { status: 404 });
       }
-      if (staff.companyId) {
-        const company = await prisma.company.findUnique({ where: { id: staff.companyId } });
-        if (company) body.company = company.name;
+
+      const existing = await getJobById(id);
+      if (existing?.approvalStatus === "approved") {
+        return NextResponse.json({ error: "承認済みの求人は編集できません" }, { status: 403 });
       }
     }
 
@@ -71,7 +72,9 @@ export async function PATCH(
       return NextResponse.json({ error: "Only admins can change approval status" }, { status: 403 });
     }
 
-    const job = await updateJob(id, body);
+    const job = await updateJob(id, body, {
+      staffCompanyId: staff.role === "company" ? staff.companyId : null,
+    });
     if (!job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }

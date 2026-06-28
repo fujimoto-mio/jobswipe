@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   LayoutDashboard,
   Briefcase,
@@ -10,19 +12,78 @@ import {
   LogOut,
   ShieldCheck,
   User,
+  Menu,
+  X,
 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import Logo from "@/components/ui/Logo";
+import StaffAccountMenu from "@/components/staff/StaffAccountMenu";
 import { useStaffPanel } from "@/components/staff/StaffPanelContext";
 
 type StaffPanelShellProps = {
   children: React.ReactNode;
 };
 
+type NavItem = {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+};
+
+function StaffSidebarContent({
+  nav,
+  title,
+  role,
+  isActive,
+  onNavigate,
+}: {
+  nav: NavItem[];
+  title: string;
+  role: "admin" | "company";
+  isActive: (href: string) => boolean;
+  onNavigate?: () => void;
+}) {
+  return (
+    <>
+      <div className="staff-sidebar-header">
+        <Logo size="sm" />
+        <p>
+          {title} · {role === "admin" ? "管理画面" : "企業パネル"}
+        </p>
+      </div>
+      <nav className="staff-sidebar-nav">
+        {nav.map(({ href, label, icon: Icon }) => (
+          <Link
+            key={href}
+            href={href}
+            onClick={onNavigate}
+            className={`staff-nav-link ${isActive(href) ? "staff-nav-link-active" : ""}`}
+          >
+            <Icon className="h-4 w-4 shrink-0" />
+            {label}
+          </Link>
+        ))}
+      </nav>
+    </>
+  );
+}
+
+function StaffSidebarFooter({ onLogout }: { onLogout: () => void }) {
+  return (
+    <div className="staff-sidebar-footer">
+      <button type="button" onClick={onLogout} className="staff-logout-btn">
+        <LogOut className="h-4 w-4" />
+        ログアウト
+      </button>
+    </div>
+  );
+}
+
 export default function StaffPanelShell({ children }: StaffPanelShellProps) {
   const { basePath, role, loginPath, title } = useStaffPanel();
   const pathname = usePathname();
   const router = useRouter();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const handleLogout = async () => {
     const supabase = createSupabaseBrowserClient();
@@ -31,7 +92,7 @@ export default function StaffPanelShell({ children }: StaffPanelShellProps) {
     router.refresh();
   };
 
-  const nav =
+  const nav: NavItem[] =
     role === "admin"
       ? [
           { href: basePath, label: "ダッシュボード", icon: LayoutDashboard },
@@ -47,70 +108,136 @@ export default function StaffPanelShell({ children }: StaffPanelShellProps) {
           { href: `${basePath}/profile`, label: "プロフィール", icon: User },
         ];
 
-  const isActive = (href: string) =>
-    href === basePath ? pathname === basePath : pathname === href || pathname.startsWith(`${href}/`);
+  const isActive = useCallback(
+    (href: string) =>
+      href === basePath ? pathname === basePath : pathname === href || pathname.startsWith(`${href}/`),
+    [basePath, pathname]
+  );
+
+  const pageTitle = useMemo(() => {
+    const activeNav = nav.find(({ href }) =>
+      href === basePath ? pathname === basePath : pathname === href || pathname.startsWith(`${href}/`)
+    );
+    return activeNav?.label ?? (role === "admin" ? "管理画面" : "企業パネル");
+  }, [nav, pathname, role, basePath]);
+
+  const closeMobileNav = useCallback(() => setMobileNavOpen(false), []);
+
+  useEffect(() => {
+    closeMobileNav();
+  }, [pathname, closeMobileNav]);
+
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeMobileNav();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = prev;
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [mobileNavOpen, closeMobileNav]);
+
+  const isFullWidthPage = pathname === `${basePath}/chat`;
 
   return (
-    <div className="flex h-full min-h-screen overflow-y-auto bg-slate-100">
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-slate-200 bg-white md:flex">
-        <div className="border-b border-slate-100 p-5">
-          <Logo size="sm" />
-          <p className="mt-2 text-xs text-slate-400">
-            {title} · {role === "admin" ? "管理画面" : "企業パネル"}
-          </p>
-        </div>
-        <nav className="flex-1 space-y-1 p-3">
-          {nav.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className={`flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-sm transition ${
-                isActive(href)
-                  ? "bg-blue-50 font-semibold text-blue-700 shadow-sm"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-              }`}
-            >
-              <Icon className="h-4 w-4" />
-              {label}
-            </Link>
-          ))}
-        </nav>
-        <div className="border-t border-slate-100 p-3">
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-sm text-red-600 transition hover:bg-red-50"
-          >
-            <LogOut className="h-4 w-4" />
-            ログアウト
-          </button>
-        </div>
+    <div
+      className={`staff-panel-shell staff-ui flex ${
+        isFullWidthPage ? "h-dvh max-h-dvh min-h-0 overflow-hidden" : "h-full min-h-screen overflow-y-auto"
+      }`}
+    >
+      <aside className="staff-sidebar hidden w-60 shrink-0 flex-col md:flex">
+        <StaffSidebarContent nav={nav} title={title} role={role} isActive={isActive} />
+        <StaffSidebarFooter onLogout={() => void handleLogout()} />
       </aside>
 
-      <div className="flex flex-1 flex-col">
-        <header className="border-b border-slate-200 bg-white px-4 py-3.5 md:hidden">
-          <div className="flex items-center justify-between">
-            <Logo size="sm" />
-            <button type="button" onClick={handleLogout} className="text-sm font-medium text-red-600">
-              ログアウト
-            </button>
+      <AnimatePresence>
+        {mobileNavOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="staff-mobile-nav-backdrop fixed inset-0 z-[60] md:hidden"
+            onClick={closeMobileNav}
+            aria-hidden
+          >
+            <motion.aside
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 32, stiffness: 340 }}
+              className="staff-mobile-nav-panel staff-ui flex h-full w-[min(17rem,85vw)] flex-col"
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-label="ナビゲーションメニュー"
+            >
+              <div className="flex items-center justify-end px-3 py-2">
+                <button
+                  type="button"
+                  onClick={closeMobileNav}
+                  className="btn-icon btn-icon-muted h-10 w-10"
+                  aria-label="メニューを閉じる"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <StaffSidebarContent
+                nav={nav}
+                title={title}
+                role={role}
+                isActive={isActive}
+                onNavigate={closeMobileNav}
+              />
+              <StaffSidebarFooter
+                onLogout={() => {
+                  closeMobileNav();
+                  void handleLogout();
+                }}
+              />
+            </motion.aside>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className={`flex min-h-0 min-w-0 flex-1 flex-col ${isFullWidthPage ? "overflow-hidden" : ""}`}>
+        <header className="staff-desktop-header page-header hidden shrink-0 md:block">
+          <div className="staff-ui flex h-14 items-center justify-between px-6">
+            <p className="text-sm font-bold text-slate-900">{pageTitle}</p>
+            <StaffAccountMenu profileHref={`${basePath}/profile`} onLogout={handleLogout} />
           </div>
-          <nav className="mt-3 flex gap-2 overflow-x-auto">
-            {nav.map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium ${
-                  isActive(href) ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600"
-                }`}
-              >
-                {label}
-              </Link>
-            ))}
-          </nav>
         </header>
-        <main className="flex-1 p-0 md:p-0">
-          <div className="page-container py-4 md:py-8">{children}</div>
+
+        <header className="staff-mobile-header sticky top-0 z-50 shrink-0 md:hidden">
+          <div className="staff-ui flex h-14 items-center gap-3 px-4">
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen(true)}
+              className="btn-icon btn-icon-muted h-10 w-10 shrink-0"
+              aria-label="メニューを開く"
+              aria-expanded={mobileNavOpen}
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <p className="min-w-0 flex-1 truncate text-sm font-bold text-slate-900">{pageTitle}</p>
+            <StaffAccountMenu profileHref={`${basePath}/profile`} onLogout={handleLogout} />
+          </div>
+        </header>
+
+        <main className={`flex-1 p-0 md:p-0 ${isFullWidthPage ? "flex min-h-0 flex-col" : ""}`}>
+          <div
+            className={
+              isFullWidthPage
+                ? "page-container-full company-chat-layout py-3 md:py-4"
+                : "page-container py-4 md:py-8"
+            }
+          >
+            {children}
+          </div>
         </main>
       </div>
     </div>

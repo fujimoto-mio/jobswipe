@@ -1,33 +1,168 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Form, Formik } from "formik";
-import { Building2, Pencil } from "lucide-react";
+import {
+  Briefcase,
+  Building2,
+  ChevronDown,
+  ExternalLink,
+  FileText,
+  MessageCircle,
+  Pencil,
+  Upload,
+  X,
+} from "lucide-react";
+import CompanyLogo from "@/components/chat/CompanyLogo";
+import StaffAvatar from "@/components/chat/StaffAvatar";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
 import { FormTextInput, FormTextarea } from "@/components/form/FormFields";
 import { useStaffPanel } from "@/components/staff/StaffPanelContext";
 import { apiFetch } from "@/lib/api-client";
+import { uploadFile } from "@/lib/upload-client";
 import { companyProfileSchema } from "@/lib/validation/schemas";
 
 type CompanyProfile = {
   role: "company";
   email: string;
   name: string | null;
+  avatarUrl: string | null;
   companyId: string | null;
   companyName: string | null;
   companyLogoUrl: string | null;
+  companyBannerUrl: string | null;
   companyDescription: string | null;
   companyWebsite: string | null;
+  companyPostalCode: string | null;
+  companyAddress: string | null;
 };
+
+const TOC_ITEMS = [
+  { id: "company-overview", label: "企業概要" },
+  { id: "company-business", label: "事業内容" },
+  { id: "company-details", label: "会社情報" },
+] as const;
+
+const EDIT_TOC_ITEMS = [
+  { id: "edit-header", label: "ヘッダー" },
+  { id: "edit-overview", label: "企業概要" },
+  { id: "edit-business", label: "事業内容" },
+  { id: "edit-details", label: "会社情報" },
+  { id: "edit-staff", label: "担当者" },
+] as const;
+
+const DEFAULT_COMPANY_BANNER =
+  "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1400&q=80";
+
+function companyBannerStyle(bannerUrl?: string | null): CSSProperties {
+  const imageUrl = bannerUrl?.trim() || DEFAULT_COMPANY_BANNER;
+  return {
+    backgroundImage: `linear-gradient(135deg, rgb(15 23 42 / 0.35), rgb(15 23 42 / 0.08)), url("${imageUrl}")`,
+  };
+}
+
+function formatWebsiteHref(url: string) {
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
+function formatPostalCodeDisplay(postalCode: string | null | undefined) {
+  const trimmed = postalCode?.trim();
+  if (!trimmed) return "";
+  const digits = trimmed.replace(/\D/g, "");
+  if (digits.length === 7) return `〒${digits.slice(0, 3)}-${digits.slice(3)}`;
+  return trimmed.startsWith("〒") ? trimmed : `〒${trimmed}`;
+}
+
+function buildMapEmbedUrl(address: string) {
+  return `https://maps.google.com/maps?q=${encodeURIComponent(address)}&z=15&output=embed`;
+}
+
+function CompanyAddressMap({ address, companyName }: { address: string; companyName: string }) {
+  const trimmed = address.trim();
+  if (!trimmed) return null;
+
+  return (
+    <div className="company-profile-map mt-3">
+      <iframe
+        title={`${companyName}の所在地`}
+        src={buildMapEmbedUrl(trimmed)}
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+        className="company-profile-map-frame"
+      />
+    </div>
+  );
+}
+
+function splitForForm(description: string | null | undefined) {
+  const text = description?.trim() ?? "";
+  if (!text) return { overview: "", business: "" };
+
+  const blocks = text.split(/\n\n+/).map((part) => part.trim()).filter(Boolean);
+  if (blocks.length >= 2) {
+    return { overview: blocks[0], business: blocks.slice(1).join("\n\n") };
+  }
+
+  return { overview: text, business: "" };
+}
+
+function combineDescription(overview: string, business: string) {
+  const o = overview.trim();
+  const b = business.trim();
+  if (o && b) return `${o}\n\n${b}`;
+  return o || b;
+}
+
+function splitCompanyDescription(description: string | null | undefined) {
+  const text = description?.trim() ?? "";
+  if (!text) return { overview: "", business: "" };
+
+  const blocks = text.split(/\n\n+/).map((part) => part.trim()).filter(Boolean);
+  if (blocks.length >= 2) {
+    return { overview: blocks[0], business: blocks.slice(1).join("\n\n") };
+  }
+
+  if (text.length <= 320) {
+    return { overview: text, business: text };
+  }
+
+  const sentenceBreak = text.lastIndexOf("。", 320);
+  const splitAt = sentenceBreak > 120 ? sentenceBreak + 1 : 320;
+  return {
+    overview: text.slice(0, splitAt).trim(),
+    business: text,
+  };
+}
+
+function shouldCollapseBusiness(text: string) {
+  return text.length > 420 || text.split("\n").length > 8;
+}
 
 export default function CompanyProfilePage() {
   const router = useRouter();
-  const { loginPath } = useStaffPanel();
+  const { basePath, loginPath } = useStaffPanel();
   const [profile, setProfile] = useState<CompanyProfile | null>(null);
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saveError, setSaveError] = useState("");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoUploadError, setLogoUploadError] = useState("");
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const [bannerRemoved, setBannerRemoved] = useState(false);
+  const [bannerUploadError, setBannerUploadError] = useState("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarUploadError, setAvatarUploadError] = useState("");
+  const [businessExpanded, setBusinessExpanded] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     apiFetch("/api/admin/me")
@@ -44,173 +179,701 @@ export default function CompanyProfilePage() {
     return <PageLoading message="プロフィールを読み込み中..." minHeight="min-h-[320px]" />;
   }
 
-  const displayName = profile.name?.trim() || profile.email.split("@")[0];
+  const contactName = profile.name?.trim() || profile.email.split("@")[0];
+  const companyName = profile.companyName?.trim() || "未設定";
+  const websiteHref = profile.companyWebsite ? formatWebsiteHref(profile.companyWebsite) : "";
+  const { overview, business } = splitCompanyDescription(profile.companyDescription);
+  const showBusinessToggle = shouldCollapseBusiness(business);
+  const businessPreview = showBusinessToggle && !businessExpanded ? `${business.slice(0, 420).trim()}…` : business;
+
+  const quickLinks = [
+    { href: `${basePath}/jobs`, label: "求人管理", icon: Briefcase },
+    { href: `${basePath}/applications`, label: "応募管理", icon: FileText },
+    { href: `${basePath}/chat`, label: "チャット", icon: MessageCircle },
+  ];
+
+  const clearLogoSelection = () => {
+    setLogoFile(null);
+    setLogoPreview(null);
+    setLogoUploadError("");
+    if (logoInputRef.current) logoInputRef.current.value = "";
+  };
+
+  const handleLogoFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    setLogoUploadError("");
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setLogoUploadError("画像ファイル（JPEG / PNG / WebP）を選択してください");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setLogoUploadError("ロゴは2MB以下にしてください");
+      return;
+    }
+
+    setLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
+  };
+
+  const clearBannerSelection = () => {
+    setBannerFile(null);
+    setBannerPreview(null);
+    setBannerUploadError("");
+    if (bannerInputRef.current) bannerInputRef.current.value = "";
+  };
+
+  const removeBanner = () => {
+    clearBannerSelection();
+    setBannerRemoved(true);
+  };
+
+  const handleBannerFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    setBannerUploadError("");
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setBannerUploadError("画像ファイル（JPEG / PNG / WebP）を選択してください");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setBannerUploadError("背景画像は5MB以下にしてください");
+      return;
+    }
+
+    setBannerRemoved(false);
+    setBannerFile(file);
+    setBannerPreview(URL.createObjectURL(file));
+  };
+
+  const clearAvatarSelection = () => {
+    setAvatarFile(null);
+    setAvatarPreview(null);
+    setAvatarUploadError("");
+    if (avatarInputRef.current) avatarInputRef.current.value = "";
+  };
+
+  const handleAvatarFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    setAvatarUploadError("");
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setAvatarUploadError("画像ファイル（JPEG / PNG / WebP）を選択してください");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setAvatarUploadError("アバターは2MB以下にしてください");
+      return;
+    }
+
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+  };
+
+  const startEditing = () => {
+    clearLogoSelection();
+    clearBannerSelection();
+    setBannerRemoved(false);
+    clearAvatarSelection();
+    setSaveError("");
+    setEditing(true);
+  };
+
+  const cancelEditing = () => {
+    clearLogoSelection();
+    clearBannerSelection();
+    setBannerRemoved(false);
+    clearAvatarSelection();
+    setSaveError("");
+    setEditing(false);
+  };
+
+  const scrollToSection = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
-    <>
-      <div className="mb-8 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">プロフィール</h1>
-          <p className="mt-1 text-sm text-slate-500">企業担当者アカウント</p>
-        </div>
-        {!editing && (
-          <button type="button" onClick={() => setEditing(true)} className="btn-ghost shrink-0 text-blue-600">
+    <div className="company-profile-page">
+      <div className="company-profile-toolbar">
+        <p className="company-profile-toolbar-note">
+          {editing ? "求職者向けページの編集" : "求職者に表示される企業紹介ページのプレビュー"}
+        </p>
+        {!editing ? (
+          <button type="button" onClick={startEditing} className="btn-ghost shrink-0 text-blue-600">
             <Pencil className="h-4 w-4" />
             編集
+          </button>
+        ) : (
+          <button type="button" onClick={cancelEditing} className="btn-secondary shrink-0 px-4 py-2 text-sm">
+            キャンセル
           </button>
         )}
       </div>
 
-      <div className="mx-auto max-w-lg">
-        <div className="card mb-5 p-6">
-          <div className="mb-6 flex flex-col items-center text-center">
-            {profile.companyLogoUrl ? (
-              <img
-                src={profile.companyLogoUrl}
-                alt=""
-                className="mb-3 h-20 w-20 rounded-full object-cover shadow-lg ring-2 ring-white"
-              />
-            ) : (
-              <div className="mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-lg shadow-emerald-500/25">
-                <Building2 className="h-10 w-10 text-white" />
-              </div>
-            )}
-            <h2 className="text-xl font-bold text-slate-900">{profile.companyName ?? displayName}</h2>
-            <p className="mt-0.5 text-sm text-slate-500">{profile.email}</p>
-            <span className="mt-3 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-              企業担当者
-            </span>
-          </div>
+      {saveError && (
+        <p className="mb-4 rounded-xl border border-red-100 bg-red-50 px-3.5 py-2.5 text-sm text-red-600">
+          {saveError}
+        </p>
+      )}
 
-          {saveError && (
-            <p className="mb-4 rounded-xl border border-red-100 bg-red-50 px-3.5 py-2.5 text-sm text-red-600">
-              {saveError}
-            </p>
-          )}
+      {editing ? (
+        <Formik
+          initialValues={{
+            name: profile.name ?? "",
+            companyName: profile.companyName ?? "",
+            website: profile.companyWebsite ?? "",
+            postalCode: profile.companyPostalCode ?? "",
+            address: profile.companyAddress ?? "",
+            ...splitForForm(profile.companyDescription),
+          }}
+          validationSchema={companyProfileSchema}
+          enableReinitialize
+          onSubmit={async (values, { setSubmitting }) => {
+            setSaveError("");
+            setLogoUploadError("");
+            setBannerUploadError("");
+            setAvatarUploadError("");
+            try {
+              let companyLogoUrl: string | null | undefined;
+              let companyBannerUrl: string | null | undefined;
+              let avatarUrl: string | null | undefined;
+              if (logoFile) {
+                companyLogoUrl = await uploadFile(logoFile, "company-logo");
+              }
+              if (bannerFile) {
+                companyBannerUrl = await uploadFile(bannerFile, "company-banner");
+              } else if (bannerRemoved) {
+                companyBannerUrl = null;
+              }
+              if (avatarFile) {
+                avatarUrl = await uploadFile(avatarFile, "staff-avatar");
+              }
 
-          {editing ? (
-            <Formik
-              initialValues={{
-                name: profile.name ?? "",
-                companyName: profile.companyName ?? "",
-                website: profile.companyWebsite ?? "",
-                description: profile.companyDescription ?? "",
-              }}
-              validationSchema={companyProfileSchema}
-              enableReinitialize
-              onSubmit={async (values, { setSubmitting }) => {
-                setSaveError("");
-                const res = await apiFetch("/api/admin/me", {
-                  method: "PATCH",
-                  body: JSON.stringify(values),
-                });
-                const data = await res.json();
-                if (res.ok) {
-                  setProfile(data);
-                  setEditing(false);
-                } else {
-                  setSaveError(typeof data.error === "string" ? data.error : "保存に失敗しました");
-                }
-                setSubmitting(false);
-              }}
-            >
-              {({ isSubmitting, submitForm }) => (
-                <Form className="space-y-4">
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">担当者情報</h3>
-                  <FormTextInput name="name" label="担当者名" placeholder="採用 太郎" autoComplete="name" />
-                  <label className="block">
-                    <span className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">メールアドレス</span>
-                    <input
-                      type="email"
-                      value={profile.email}
-                      readOnly
-                      className="input-field bg-slate-50 text-slate-500"
+              const payload: Record<string, string | null> = {
+                name: values.name,
+                companyName: values.companyName,
+                website: values.website,
+                postalCode: values.postalCode,
+                address: values.address,
+                description: combineDescription(values.overview, values.business),
+              };
+              if (companyLogoUrl !== undefined) payload.companyLogoUrl = companyLogoUrl;
+              if (companyBannerUrl !== undefined) payload.companyBannerUrl = companyBannerUrl;
+              if (avatarUrl !== undefined) payload.avatarUrl = avatarUrl;
+
+              const res = await apiFetch("/api/admin/me", {
+                method: "PATCH",
+                body: JSON.stringify(payload),
+              });
+              const data = await res.json();
+              if (res.ok) {
+                setProfile(data);
+                clearLogoSelection();
+                clearBannerSelection();
+                setBannerRemoved(false);
+                clearAvatarSelection();
+                setEditing(false);
+              } else {
+                setSaveError(typeof data.error === "string" ? data.error : "保存に失敗しました");
+              }
+            } catch (error) {
+              const message = error instanceof Error ? error.message : "アップロードに失敗しました";
+              if (bannerFile) setBannerUploadError(message);
+              else if (avatarFile && !logoFile) setAvatarUploadError(message);
+              else setLogoUploadError(message);
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        >
+          {({ values, isSubmitting, submitForm }) => {
+            const editCompanyName = values.companyName.trim() || "未設定";
+            const editWebsiteHref = values.website ? formatWebsiteHref(values.website) : "";
+            const editBannerUrl = bannerRemoved ? null : (bannerPreview ?? profile.companyBannerUrl);
+            const hasCustomBanner = Boolean(bannerPreview || (profile.companyBannerUrl && !bannerRemoved));
+
+            return (
+              <Form>
+                <section id="edit-header" className="company-profile-hero company-profile-section">
+                  <div className="company-profile-hero-banner-wrap">
+                    <div
+                      className="company-profile-hero-banner"
+                      style={companyBannerStyle(editBannerUrl)}
+                      aria-hidden
                     />
-                  </label>
-
-                  <h3 className="pt-2 text-xs font-semibold uppercase tracking-wide text-slate-400">企業情報</h3>
-                  <FormTextInput name="companyName" label="会社名" placeholder="株式会社サンプル" />
-                  <FormTextInput name="website" label="企業HP URL" placeholder="https://example.com" />
-                  <FormTextarea
-                    name="description"
-                    label="企業紹介"
-                    rows={4}
-                    placeholder="事業内容や採用方針など"
-                  />
-
-                  <p className="text-xs text-slate-500">
-                    メールアドレスの変更はアカウント設定から行ってください。
-                  </p>
-
-                  <div className="flex gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSaveError("");
-                        setEditing(false);
-                      }}
-                      className="btn-secondary flex-1 py-2.5 text-sm"
-                    >
-                      キャンセル
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => submitForm()}
-                      disabled={isSubmitting}
-                      className="btn-primary flex-1 py-2.5 text-sm"
-                    >
-                      {isSubmitting ? "保存中..." : "保存する"}
-                    </button>
+                    <div className="company-profile-banner-actions">
+                      <button
+                        type="button"
+                        onClick={() => bannerInputRef.current?.click()}
+                        className="company-profile-banner-action-btn"
+                      >
+                        <Upload className="h-3.5 w-3.5" />
+                        背景
+                      </button>
+                      {hasCustomBanner && (
+                        <button
+                          type="button"
+                          onClick={removeBanner}
+                          className="company-profile-banner-action-btn"
+                          aria-label="背景画像を削除"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      ref={bannerInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      className="hidden"
+                      onChange={handleBannerFile}
+                    />
                   </div>
-                </Form>
-              )}
-            </Formik>
-          ) : (
-            <>
-              <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">担当者情報</h3>
-              <dl className="mb-6 divide-y divide-slate-100">
-                <ProfileRow label="担当者名" value={profile.name ?? "—"} />
-                <ProfileRow label="メールアドレス" value={profile.email} />
-                <ProfileRow label="アカウント種別" value="企業担当者" />
-              </dl>
+                  <div className="company-profile-hero-body">
+                    <div className="company-profile-hero-logo-wrap">
+                      {logoPreview ? (
+                        <img
+                          src={logoPreview}
+                          alt=""
+                          className="company-profile-hero-logo object-cover"
+                        />
+                      ) : (
+                        <CompanyLogo
+                          company={editCompanyName}
+                          logoUrl={profile.companyLogoUrl}
+                          size="lg"
+                          className="company-profile-hero-logo"
+                        />
+                      )}
+                      <div className="company-profile-logo-actions">
+                        <button
+                          type="button"
+                          onClick={() => logoInputRef.current?.click()}
+                          className="company-profile-logo-action-btn"
+                        >
+                          <Upload className="h-3.5 w-3.5" />
+                          ロゴ
+                        </button>
+                        {(logoPreview || profile.companyLogoUrl) && (
+                          <button
+                            type="button"
+                            onClick={clearLogoSelection}
+                            className="company-profile-logo-action-btn"
+                            aria-label="ロゴ選択解除"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
+                      <input
+                        ref={logoInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        className="hidden"
+                        onChange={handleLogoFile}
+                      />
+                    </div>
+                    <div className="company-profile-hero-meta company-profile-hero-meta--edit">
+                      <FormTextInput
+                        name="companyName"
+                        label="会社名"
+                        placeholder="株式会社サンプル"
+                        className="company-profile-hero-field"
+                      />
+                      <FormTextInput
+                        name="website"
+                        label="コーポレートサイト"
+                        placeholder="https://example.com"
+                        className="company-profile-hero-field"
+                      />
+                      {editWebsiteHref ? (
+                        <a
+                          href={editWebsiteHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="company-profile-hero-link"
+                        >
+                          プレビューを開く
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                      ) : null}
+                    </div>
+                  </div>
+                  {logoUploadError && (
+                    <p className="px-5 pb-4 text-sm text-red-600">{logoUploadError}</p>
+                  )}
+                  {bannerUploadError && (
+                    <p className="px-5 pb-4 text-sm text-red-600">{bannerUploadError}</p>
+                  )}
+                </section>
 
-              <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">企業情報</h3>
-              <dl className="divide-y divide-slate-100">
-                <ProfileRow label="会社名" value={profile.companyName ?? "—"} />
-                <ProfileRow label="企業HP" value={profile.companyWebsite ?? "—"} />
-                <ProfileRow label="企業紹介" value={profile.companyDescription?.trim() || "—"} multiline />
-              </dl>
-            </>
-          )}
-        </div>
+                <div className="company-profile-layout">
+                  <main>
+                    <section id="edit-overview" className="company-profile-section company-profile-edit-section">
+                      <h2 className="company-profile-section-title">企業概要</h2>
+                      <p className="company-profile-edit-lead">
+                        求職者向けページの「企業概要」に表示されます。
+                      </p>
+                      <FormTextarea
+                        name="overview"
+                        label=" "
+                        rows={5}
+                        placeholder="ミッション・会社の想い・採用方針など"
+                        className="company-profile-edit-textarea"
+                      />
+                    </section>
 
-        <div className="card mb-5 p-5">
-          <h3 className="mb-2 text-sm font-semibold text-slate-800">企業アカウントについて</h3>
-          <p className="text-sm leading-relaxed text-slate-500">
-            求人の投稿・応募管理・求職者とのチャットが利用できます。投稿した求人は管理者承認後に公開されます。
-          </p>
-        </div>
+                    <section id="edit-business" className="company-profile-section company-profile-edit-section">
+                      <h2 className="company-profile-section-title">事業内容</h2>
+                      <p className="company-profile-edit-lead">
+                        求職者向けページの「事業内容」に表示されます。
+                      </p>
+                      <FormTextarea
+                        name="business"
+                        label=" "
+                        rows={8}
+                        placeholder="提供サービス・プロダクト・事業領域など"
+                        className="company-profile-edit-textarea"
+                      />
+                    </section>
 
-      </div>
-    </>
-  );
-}
+                    <section id="edit-details" className="company-profile-section company-profile-edit-section">
+                      <h2 className="company-profile-section-title">会社情報</h2>
+                      <p className="company-profile-edit-lead">
+                        社名とサイトURLはヘッダーで編集できます。郵便番号・所在地は求職者向けページに表示されます。
+                      </p>
+                      <div className="company-profile-info-table mb-4">
+                        <div className="company-profile-info-row">
+                          <div className="company-profile-info-label">社名</div>
+                          <div className="company-profile-info-value">{editCompanyName}</div>
+                        </div>
+                        <div className="company-profile-info-row">
+                          <div className="company-profile-info-label">コーポレートサイト</div>
+                          <div className="company-profile-info-value">
+                            {editWebsiteHref ? (
+                              <span className="break-all text-blue-600">{values.website}</span>
+                            ) : (
+                              <span className="text-slate-400">未設定</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <FormTextInput
+                          name="postalCode"
+                          label="郵便番号"
+                          placeholder="150-0051"
+                          autoComplete="postal-code"
+                        />
+                        <FormTextInput
+                          name="address"
+                          label="所在地"
+                          placeholder="東京都渋谷区..."
+                          autoComplete="street-address"
+                        />
+                        <CompanyAddressMap address={values.address} companyName={editCompanyName} />
+                      </div>
+                    </section>
+                  </main>
 
-function ProfileRow({
-  label,
-  value,
-  multiline = false,
-}: {
-  label: string;
-  value: string;
-  multiline?: boolean;
-}) {
-  return (
-    <div className="flex justify-between gap-4 py-3 text-sm first:pt-0 last:pb-0">
-      <dt className="shrink-0 text-slate-500">{label}</dt>
-      <dd className={`text-right font-medium text-slate-800 ${multiline ? "whitespace-pre-wrap" : ""}`}>
-        {value}
-      </dd>
+                  <aside className="company-profile-sidebar">
+                    <nav className="company-profile-toc" aria-label="編集セクション">
+                      <p className="company-profile-toc-title">目次</p>
+                      {EDIT_TOC_ITEMS.map(({ id, label }) => (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => scrollToSection(id)}
+                          className="company-profile-toc-link text-left"
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </nav>
+
+                    <section id="edit-staff" className="company-profile-side-card company-profile-edit-section">
+                      <h3 className="company-profile-side-card-title">担当者（チャット）</h3>
+                      <p className="company-profile-edit-lead mb-3">
+                        メッセージ送信時に求職者へ表示されます。
+                      </p>
+                      <div className="space-y-4">
+                        <div>
+                          <span className="mb-2 block text-sm font-medium text-slate-700">担当者アバター</span>
+                          <div className="company-profile-staff-row">
+                            {avatarPreview ? (
+                              <img
+                                src={avatarPreview}
+                                alt=""
+                                className="h-12 w-12 shrink-0 rounded-full border border-slate-200 object-cover"
+                              />
+                            ) : (
+                              <StaffAvatar
+                                name={values.name || contactName}
+                                avatarUrl={profile.avatarUrl}
+                                size="lg"
+                              />
+                            )}
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                onClick={() => avatarInputRef.current?.click()}
+                                className="btn-secondary inline-flex items-center gap-1.5 px-3 py-1.5 text-xs"
+                              >
+                                <Upload className="h-3.5 w-3.5" />
+                                写真
+                              </button>
+                              {(avatarPreview || profile.avatarUrl) && (
+                                <button
+                                  type="button"
+                                  onClick={clearAvatarSelection}
+                                  className="btn-ghost inline-flex items-center gap-1 px-2 py-1.5 text-xs text-slate-600"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                          <input
+                            ref={avatarInputRef}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            className="hidden"
+                            onChange={handleAvatarFile}
+                          />
+                          {avatarUploadError && (
+                            <p className="mt-2 text-xs text-red-600">{avatarUploadError}</p>
+                          )}
+                        </div>
+                        <FormTextInput name="name" label="担当者名" placeholder="採用 太郎" autoComplete="name" />
+                        <label className="block">
+                          <span className="mb-1.5 block text-sm font-medium text-slate-700">メールアドレス</span>
+                          <input
+                            type="email"
+                            value={profile.email}
+                            readOnly
+                            className="input-field bg-slate-50 text-sm text-slate-500"
+                          />
+                        </label>
+                      </div>
+                    </section>
+
+                    <div className="company-profile-side-card company-profile-edit-actions">
+                      <button
+                        type="button"
+                        onClick={() => submitForm()}
+                        disabled={isSubmitting}
+                        className="btn-primary w-full py-2.5 text-sm"
+                      >
+                        {isSubmitting ? "保存中..." : "保存する"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={cancelEditing}
+                        className="btn-secondary mt-2 w-full py-2.5 text-sm"
+                      >
+                        キャンセル
+                      </button>
+                    </div>
+
+                    <div className="company-profile-side-card">
+                      <div className="flex items-start gap-2">
+                        <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                        <p className="text-xs leading-relaxed text-slate-500">
+                          保存すると求職者向けの企業紹介・求人・チャットに反映されます。
+                        </p>
+                      </div>
+                    </div>
+                  </aside>
+                </div>
+              </Form>
+            );
+          }}
+        </Formik>
+      ) : (
+        <>
+          <section className="company-profile-hero" aria-label="企業ヘッダー">
+            <div
+              className="company-profile-hero-banner"
+              style={companyBannerStyle(profile.companyBannerUrl)}
+              aria-hidden
+            />
+            <div className="company-profile-hero-body">
+              <CompanyLogo
+                company={companyName}
+                logoUrl={profile.companyLogoUrl}
+                size="lg"
+                className="company-profile-hero-logo"
+              />
+              <div className="company-profile-hero-meta">
+                <h1 className="company-profile-hero-title">{companyName}</h1>
+                {websiteHref ? (
+                  <a
+                    href={websiteHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="company-profile-hero-link"
+                  >
+                    {profile.companyWebsite}
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                ) : (
+                  <p className="text-sm text-slate-400">コーポレートサイト未設定</p>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <div className="company-profile-layout">
+            <main>
+              <section id="company-overview" className="company-profile-section">
+                <h2 className="company-profile-section-title">企業概要</h2>
+                {overview ? (
+                  <p className="company-profile-text">{overview}</p>
+                ) : (
+                  <p className="company-profile-text company-profile-text--muted">
+                    企業概要が未入力です。編集から紹介文の1段落目を追加してください。
+                  </p>
+                )}
+              </section>
+
+              <section id="company-business" className="company-profile-section">
+                <h2 className="company-profile-section-title">事業内容</h2>
+                {business ? (
+                  <>
+                    <p className="company-profile-text">{businessPreview}</p>
+                    {showBusinessToggle && (
+                      <button
+                        type="button"
+                        onClick={() => setBusinessExpanded((prev) => !prev)}
+                        className="company-profile-expand inline-flex items-center gap-1"
+                      >
+                        {businessExpanded ? "閉じる" : "もっと見る"}
+                        <ChevronDown
+                          className={`h-4 w-4 transition-transform ${businessExpanded ? "rotate-180" : ""}`}
+                        />
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <p className="company-profile-text company-profile-text--muted">
+                    事業内容が未入力です。編集から2段落目以降に事業内容を追加してください。
+                  </p>
+                )}
+              </section>
+
+              <section id="company-details" className="company-profile-section">
+                <h2 className="company-profile-section-title">会社情報</h2>
+                <div className="company-profile-info-table">
+                  <div className="company-profile-info-row">
+                    <div className="company-profile-info-label">社名</div>
+                    <div className="company-profile-info-value">{companyName}</div>
+                  </div>
+                  <div className="company-profile-info-row">
+                    <div className="company-profile-info-label">コーポレートサイト</div>
+                    <div className="company-profile-info-value">
+                      {websiteHref ? (
+                        <a
+                          href={websiteHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 font-medium text-blue-600 hover:underline"
+                        >
+                          {profile.companyWebsite}
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                      ) : (
+                        <span className="text-slate-400">未設定</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="company-profile-info-row">
+                    <div className="company-profile-info-label">郵便番号</div>
+                    <div className="company-profile-info-value">
+                      {profile.companyPostalCode ? (
+                        formatPostalCodeDisplay(profile.companyPostalCode)
+                      ) : (
+                        <span className="text-slate-400">未設定</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="company-profile-info-row">
+                    <div className="company-profile-info-label">所在地</div>
+                    <div className="company-profile-info-value">
+                      {profile.companyAddress?.trim() ? (
+                        <>
+                          <p>{profile.companyAddress}</p>
+                          <CompanyAddressMap address={profile.companyAddress} companyName={companyName} />
+                        </>
+                      ) : (
+                        <span className="text-slate-400">未設定</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </main>
+
+            <aside className="company-profile-sidebar">
+              <nav className="company-profile-toc" aria-label="ページ内ナビゲーション">
+                <p className="company-profile-toc-title">目次</p>
+                {TOC_ITEMS.map(({ id, label }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => scrollToSection(id)}
+                    className="company-profile-toc-link text-left"
+                  >
+                    {label}
+                  </button>
+                ))}
+              </nav>
+
+              <div className="company-profile-side-card">
+                <h3 className="company-profile-side-card-title">担当者（チャット）</h3>
+                <div className="company-profile-staff-row">
+                  <StaffAvatar name={contactName} avatarUrl={profile.avatarUrl} size="lg" />
+                  <div className="company-profile-staff-meta">
+                    <p className="company-profile-staff-name">{contactName}</p>
+                    <p className="company-profile-staff-note">メッセージ送信時に表示</p>
+                  </div>
+                </div>
+                <dl className="mt-3 space-y-2 text-xs">
+                  <div>
+                    <dt className="text-slate-500">メール</dt>
+                    <dd className="mt-0.5 break-all font-medium text-slate-800">{profile.email}</dd>
+                  </div>
+                </dl>
+              </div>
+
+              <div className="company-profile-side-card">
+                <h3 className="company-profile-side-card-title">管理メニュー</h3>
+                <ul className="space-y-0.5">
+                  {quickLinks.map(({ href, label, icon: Icon }) => (
+                    <li key={href}>
+                      <Link href={href} className="company-profile-shortcut">
+                        <Icon className="h-4 w-4 text-slate-400" />
+                        {label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="company-profile-side-card">
+                <div className="flex items-start gap-2">
+                  <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                  <p className="text-xs leading-relaxed text-slate-500">
+                    ここで編集した内容は、求職者向けの企業紹介・求人・チャットに反映されます。求人は管理者承認後に公開されます。
+                  </p>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </>
+      )}
     </div>
   );
 }

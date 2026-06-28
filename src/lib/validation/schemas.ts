@@ -1,11 +1,16 @@
 import * as Yup from "yup";
 import {
   AREAS,
+  EDUCATION_LEVELS,
   EMPLOYMENT_TYPES,
   EXPERIENCE_LEVELS,
   GENDERS,
   JOB_CATEGORIES,
+  JOB_SEARCH_INTENTS,
+  SALARY_RANGES,
 } from "@/lib/constants";
+import { NEW_COMPANY_VALUE } from "@/lib/constants";
+import { isValidJobSalaryRange, isValidSalaryMax, isValidSalaryMin } from "@/lib/validation/job-salary";
 
 const email = Yup.string()
   .trim()
@@ -68,15 +73,78 @@ export const seekerAccountSchema = Yup.object({
     .required("確認用パスワードを入力してください"),
 });
 
-const optionalResumeUrl = Yup.string()
-  .trim()
-  .transform((v) => v || "")
-  .test("valid-url", "有効なURLを入力してください", (v) => !v || Yup.string().url().isValidSync(v));
+const workHistoryEntrySchema = Yup.object({
+  company: Yup.string().trim().required("会社名を入力してください"),
+  role: Yup.string().trim().required("職種・役職を入力してください"),
+  startYear: Yup.string().trim().required("開始年を選択してください"),
+  startMonth: Yup.string().trim().required("開始月を選択してください"),
+  startDay: Yup.string().trim().default(""),
+  endYear: Yup.string()
+    .trim()
+    .default("")
+    .when("isCurrent", {
+      is: false,
+      then: (schema) => schema.required("終了年を選択してください"),
+      otherwise: (schema) => schema,
+    }),
+  endMonth: Yup.string()
+    .trim()
+    .default("")
+    .when("isCurrent", {
+      is: false,
+      then: (schema) => schema.required("終了月を選択してください"),
+      otherwise: (schema) => schema,
+    }),
+  endDay: Yup.string()
+    .trim()
+    .default(""),
+  isCurrent: Yup.boolean().default(false),
+  description: Yup.string().trim().max(2000, "2000文字以内で入力してください").default(""),
+});
+
+const skillEntrySchema = Yup.object({
+  name: Yup.string().trim().required("スキル名を入力してください").max(40, "40文字以内で入力してください"),
+  years: Yup.string()
+    .trim()
+    .required("経験年数を選択してください")
+    .oneOf([...EXPERIENCE_LEVELS], "経験年数を選択してください"),
+});
 
 const seekerCareerFields = {
   introSentence: Yup.string().trim().max(500, "500文字以内で入力してください").default(""),
-  summary: Yup.string().trim().max(5000, "5000文字以内で入力してください").default(""),
-  resumeUrl: optionalResumeUrl,
+  futureGoals: Yup.string().trim().max(2000, "2000文字以内で入力してください").default(""),
+  skills: Yup.array().of(skillEntrySchema).max(30, "スキルは30件まで登録できます").default([]),
+  workHistory: Yup.array().of(workHistoryEntrySchema).max(10, "職歴は10件まで登録できます").default([]),
+};
+
+const seekerPreferenceFields = {
+  desiredSalary: Yup.string()
+    .trim()
+    .default("")
+    .test(
+      "valid-salary",
+      "希望年収を選択してください",
+      (v) => !v || (SALARY_RANGES as readonly string[]).includes(v)
+    ),
+  jobSearchIntent: Yup.string()
+    .trim()
+    .default("")
+    .test(
+      "valid-intent",
+      "転職意欲を選択してください",
+      (v) => !v || (JOB_SEARCH_INTENTS as readonly string[]).includes(v)
+    ),
+};
+
+const seekerPersonalFields = {
+  education: Yup.string()
+    .trim()
+    .default("")
+    .test(
+      "valid-education",
+      "最終学歴を選択してください",
+      (v) => !v || (EDUCATION_LEVELS as readonly string[]).includes(v)
+    ),
 };
 
 const seekerProfileFields = {
@@ -127,12 +195,14 @@ export const applySchema = Yup.object({
   area: Yup.string().trim().required("エリアを入力してください"),
   jobType: Yup.string().trim().required("希望職種を入力してください"),
   email,
-  message: Yup.string().trim(),
+  message: Yup.string().trim().max(2000, "2000文字以内で入力してください").default(""),
 });
 
 /** Seeker profile edit — same fields as registration except email (auth-bound). */
 export const profileEditSchema = Yup.object({
   ...seekerProfileFields,
+  ...seekerPersonalFields,
+  ...seekerPreferenceFields,
   ...seekerCareerFields,
 });
 
@@ -143,20 +213,52 @@ export const companyProfileSchema = Yup.object({
   name: Yup.string().trim().required("担当者名を入力してください"),
   companyName: Yup.string().trim().required("会社名を入力してください"),
   website: optionalUrl,
-  description: Yup.string().trim(),
+  postalCode: Yup.string()
+    .trim()
+    .transform((value) => value || undefined)
+    .optional()
+    .matches(/^\d{3}-?\d{4}$/, "郵便番号の形式が正しくありません（例: 150-0051）"),
+  address: Yup.string().trim(),
+  overview: Yup.string().trim(),
+  business: Yup.string().trim(),
 });
 
 export const jobFormSchema = Yup.object({
   title: Yup.string().trim().required("求人タイトルを入力してください"),
-  company: Yup.string().trim().required("会社名を入力してください"),
-  location: Yup.string().trim().required("勤務地を入力してください"),
-  area: Yup.string()
-    .oneOf([...AREAS], "エリアを選択してください")
-    .required("エリアを選択してください"),
+  companyId: Yup.string().when(["$companyLocked", "$hasCompanies"], ([companyLocked, hasCompanies], schema) => {
+    if (companyLocked || !hasCompanies) return schema.optional();
+    return schema.required("企業を選択してください");
+  }),
+  company: Yup.string()
+    .trim()
+    .when(["companyId", "$companyLocked"], ([companyId, companyLocked], schema) => {
+      if (companyLocked) return schema.optional();
+      if (!companyId || companyId === NEW_COMPANY_VALUE) {
+        return schema.required("会社名を入力してください");
+      }
+      return schema.optional();
+    }),
+  location: Yup.string()
+    .required("勤務地を選択してください")
+    .test("valid-location", "勤務地を選択してください", (value) =>
+      Boolean(value && (AREAS as readonly string[]).includes(value))
+    ),
   category: Yup.string()
     .oneOf([...JOB_CATEGORIES], "職種を選択してください")
     .required("職種を選択してください"),
-  salary: Yup.string().trim().required("年収を入力してください"),
+  salaryMin: Yup.string()
+    .required("年収（下限）を選択してください")
+    .test("valid-min", "年収（下限）を選択してください", (value) => isValidSalaryMin(value)),
+  salaryMax: Yup.string().when(["salaryMin"], ([salaryMin], schema) => {
+    if (salaryMin === "応相談") return schema.optional();
+    return schema
+      .required("年収（上限）を選択してください")
+      .test("valid-max", "年収（上限）を選択してください", (value) => isValidSalaryMax(value))
+      .test("salary-order", "上限は下限以上にしてください", function (max) {
+        const min = this.parent.salaryMin as string;
+        return isValidJobSalaryRange(min, max ?? "");
+      });
+  }),
   employmentType: Yup.string().oneOf([...EMPLOYMENT_TYPES]),
   description: Yup.string().trim().required("仕事内容を入力してください"),
   requirements: Yup.string(),

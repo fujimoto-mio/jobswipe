@@ -1,19 +1,23 @@
 import { NextResponse } from "next/server";
 import { requireStaffUser } from "@/lib/auth/admin";
 import { prisma } from "@/lib/prisma";
-import { getCompanyLogoUrl } from "@/lib/job-image";
+import { getCompanyLogoUrl, isGeneratedCompanyLogo } from "@/lib/job-image";
 
 function staffProfileResponse(account: {
   role: string;
   companyId: string | null;
   email: string;
   name: string | null;
+  avatarUrl: string | null;
   company: {
     id: string;
     name: string;
     logoUrl: string | null;
+    bannerUrl: string | null;
     description: string | null;
     website: string | null;
+    postalCode: string | null;
+    address: string | null;
   } | null;
 }) {
   return {
@@ -21,10 +25,14 @@ function staffProfileResponse(account: {
     companyId: account.companyId,
     companyName: account.company?.name ?? null,
     companyLogoUrl: account.company?.logoUrl ?? null,
+    companyBannerUrl: account.company?.bannerUrl ?? null,
     companyDescription: account.company?.description ?? null,
     companyWebsite: account.company?.website ?? null,
+    companyPostalCode: account.company?.postalCode ?? null,
+    companyAddress: account.company?.address ?? null,
     email: account.email,
     name: account.name,
+    avatarUrl: account.avatarUrl,
   };
 }
 
@@ -49,6 +57,11 @@ type StaffProfilePatchBody = {
   companyName?: string;
   website?: string;
   description?: string;
+  postalCode?: string;
+  address?: string;
+  companyLogoUrl?: string | null;
+  companyBannerUrl?: string | null;
+  avatarUrl?: string | null;
 };
 
 export async function PATCH(request: Request) {
@@ -83,6 +96,18 @@ export async function PATCH(request: Request) {
 
       const website = body.website?.trim() || null;
       const description = body.description?.trim() || null;
+      const rawPostal = body.postalCode?.trim();
+      let formattedPostalCode: string | null = null;
+      if (rawPostal) {
+        const digits = rawPostal.replace(/\D/g, "");
+        formattedPostalCode =
+          digits.length === 7 ? `${digits.slice(0, 3)}-${digits.slice(3)}` : rawPostal;
+      }
+      const address = body.address?.trim() || null;
+      const logoFromBody = body.companyLogoUrl === undefined ? undefined : body.companyLogoUrl?.trim() || null;
+      const bannerFromBody =
+        body.companyBannerUrl === undefined ? undefined : body.companyBannerUrl?.trim() || null;
+      const avatarFromBody = body.avatarUrl === undefined ? undefined : body.avatarUrl?.trim() || null;
 
       if (companyName !== existingCompany.name) {
         const conflict = await prisma.company.findUnique({ where: { name: companyName } });
@@ -91,21 +116,43 @@ export async function PATCH(request: Request) {
         }
       }
 
+      const companyData: {
+        name: string;
+        website: string | null;
+        description: string | null;
+        postalCode: string | null;
+        address: string | null;
+        logoUrl?: string | null;
+        bannerUrl?: string | null;
+      } = {
+        name: companyName,
+        website,
+        description,
+        postalCode: formattedPostalCode,
+        address,
+      };
+
+      if (logoFromBody !== undefined) {
+        companyData.logoUrl = logoFromBody;
+      } else if (companyName !== existingCompany.name && isGeneratedCompanyLogo(existingCompany.logoUrl)) {
+        companyData.logoUrl = getCompanyLogoUrl(companyName);
+      }
+
+      if (bannerFromBody !== undefined) {
+        companyData.bannerUrl = bannerFromBody;
+      }
+
       await prisma.$transaction([
         prisma.company.update({
           where: { id: existingCompany.id },
-          data: {
-            name: companyName,
-            website,
-            description,
-            ...(companyName !== existingCompany.name
-              ? { logoUrl: getCompanyLogoUrl(companyName) }
-              : {}),
-          },
+          data: companyData,
         }),
         prisma.account.update({
           where: { id: staff.id },
-          data: { name },
+          data: {
+            name,
+            ...(avatarFromBody !== undefined ? { avatarUrl: avatarFromBody } : {}),
+          },
         }),
       ]);
 
@@ -123,12 +170,17 @@ export async function PATCH(request: Request) {
 
     const account = await prisma.account.update({
       where: { id: staff.id },
-      data: { name },
+      data: {
+        name,
+        ...(body.avatarUrl !== undefined ? { avatarUrl: body.avatarUrl?.trim() || null } : {}),
+      },
       include: { company: true },
     });
 
     return NextResponse.json({ success: true, ...staffProfileResponse(account) });
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  } catch (error) {
+    console.error("[PATCH /api/admin/me]", error);
+    const message = error instanceof Error ? error.message : "Invalid JSON body";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }

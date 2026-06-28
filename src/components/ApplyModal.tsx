@@ -92,12 +92,12 @@ export default function ApplyModal({ job, onClose, onSuccess }: ApplyModalProps)
                       method: "POST",
                       body: JSON.stringify({
                         jobId: job.id,
-                        message: values.message,
-                        applicantName: values.name,
-                        applicantEmail: values.email,
+                        message: values.message.trim(),
+                        applicantName: values.name.trim(),
+                        applicantEmail: values.email.trim(),
                         applicantBirthday: values.birthday,
-                        applicantArea: values.area,
-                        applicantJobType: values.jobType,
+                        applicantArea: values.area.trim(),
+                        applicantJobType: values.jobType.trim(),
                       }),
                     });
                     if (res.ok) {
@@ -122,7 +122,14 @@ export default function ApplyModal({ job, onClose, onSuccess }: ApplyModalProps)
                     <FormTextInput name="jobType" label="希望職種" />
                   </div>
                   <FormTextInput name="email" label="メールアドレス" type="email" />
-                  <FormTextarea name="message" label="志望動機（任意）" rows={3} />
+                  <FormTextarea
+                    name="message"
+                    label="志望動機（任意）"
+                    rows={4}
+                    maxLength={2000}
+                    placeholder="この求人に興味を持った理由や、活かせる経験などを記入してください"
+                    className="textarea-content"
+                  />
                   <button
                     type="submit"
                     disabled={submitting}

@@ -73,6 +73,32 @@ export function formatTimeJST(input: DateInput, fallback = "—"): string {
   return d.toLocaleTimeString("ja-JP", TIME_OPTS);
 }
 
+/** e.g. 2026-06-28 17:56:00 (JST) */
+export function formatDateTimeFullJST(input: DateInput, fallback = "—"): string {
+  const d = toDate(input);
+  if (!isValidDate(d)) return fallback;
+
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: JST_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+    hourCycle: "h23",
+  }).formatToParts(d);
+
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? "00";
+
+  let hour = get("hour");
+  if (hour === "24") hour = "00";
+
+  return `${get("year")}-${get("month")}-${get("day")} ${hour}:${get("minute")}:${get("second")}`;
+}
+
 /** YYYY-MM-DD in JST (for job posted dates, etc.) */
 export function formatDateISOJST(input: DateInput): string {
   const d = toDate(input);

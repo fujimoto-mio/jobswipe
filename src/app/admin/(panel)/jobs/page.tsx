@@ -1,12 +1,24 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
-import { Plus, Check, X, Trash2, Pencil } from "lucide-react";
+import { Plus } from "lucide-react";
 import JobThumbnail from "@/components/JobThumbnail";
-import DataTable, { type ColumnDef } from "@/components/ui/DataTable";
-import { PageLoading } from "@/components/ui/LoadingSpinner";
-import { formatDateJST } from "@/lib/datetime";
+import PaginatedDataTable, {
+  type ColumnDef,
+  type PaginatedDataTableHandle,
+} from "@/components/ui/PaginatedDataTable";
+import PaginatedTableToolbar from "@/components/ui/PaginatedTableToolbar";
+import {
+  TableApproveButton,
+  TableDeleteButton,
+  TableEditLink,
+  TableRejectButton,
+  TableRowActions,
+  TableViewLink,
+} from "@/components/ui/TableRowActions";
+import FormSelectPicker from "@/components/form/FormSelectPicker";
+import { formatDateTimeJST } from "@/lib/datetime";
 import { JOB_APPROVAL_LABELS } from "@/lib/constants";
 import { useStaffPanel } from "@/components/staff/StaffPanelContext";
 import { apiFetch } from "@/lib/api-client";
@@ -18,33 +30,59 @@ const STATUS_COLORS: Record<JobApprovalStatus, string> = {
   rejected: "badge-red",
 };
 
+const APPROVAL_FILTER_OPTIONS: { value: "" | JobApprovalStatus; label: string }[] = [
+  { value: "", label: "すべて" },
+  { value: "pending", label: JOB_APPROVAL_LABELS.pending },
+  { value: "approved", label: JOB_APPROVAL_LABELS.approved },
+  { value: "rejected", label: JOB_APPROVAL_LABELS.rejected },
+];
+
+function FilterSelect<T extends string>({
+  value,
+  options,
+  onChange,
+  title,
+}: {
+  value: T;
+  options: readonly { value: T; label: string }[];
+  onChange: (value: T) => void;
+  title: string;
+}) {
+  const selectedLabel = options.find((option) => option.value === value)?.label ?? options[0]?.label ?? "";
+
+  return (
+    <FormSelectPicker
+      name="filter"
+      title={title}
+      value={selectedLabel}
+      options={options.map((option) => option.label)}
+      placeholder={options[0]?.label ?? "選択"}
+      allowClear={false}
+      onChange={(label) => {
+        const next = options.find((option) => option.label === label);
+        if (next) onChange(next.value);
+      }}
+      onBlur={() => {}}
+    />
+  );
+}
+
 export default function AdminJobsPage() {
   const { basePath, role } = useStaffPanel();
   const isAdmin = role === "admin";
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
+  const tableRef = useRef<PaginatedDataTableHandle>(null);
+  const [approvalFilter, setApprovalFilter] = useState<"" | JobApprovalStatus>("");
 
-  const fetchJobs = useCallback(() => {
-    setLoading(true);
-    Promise.all([
-      apiFetch("/api/jobs?includeUnapproved=true").then((r) => r.json()),
-    ])
-      .then(([jobsData]) => {
-        setJobs(jobsData.jobs ?? []);
-      })
-      .finally(() => setLoading(false));
+  const refetch = useCallback(async () => {
+    await tableRef.current?.refetch();
   }, []);
-
-  useEffect(() => {
-    fetchJobs();
-  }, [fetchJobs]);
 
   const updateApproval = async (id: string, approvalStatus: JobApprovalStatus) => {
     await apiFetch("/api/admin/jobs", {
       method: "PATCH",
       body: JSON.stringify({ id, approvalStatus }),
     });
-    fetchJobs();
+    await refetch();
   };
 
   const handleDelete = async (id: string) => {
@@ -53,41 +91,33 @@ export default function AdminJobsPage() {
       method: "DELETE",
       body: JSON.stringify({ id }),
     });
-    fetchJobs();
+    await refetch();
   };
 
   const columns: ColumnDef<Job>[] = [
     {
       id: "job",
       header: "求人",
+      sortable: true,
       cell: (job) => (
-        <div className="flex min-w-[200px] items-center gap-3">
+        <div className="flex min-w-[220px] items-center gap-3">
           <JobThumbnail job={job} className="h-12 w-12 shrink-0 rounded-lg object-cover" />
           <div className="min-w-0">
             <p className="font-semibold text-[var(--foreground)]">{job.title}</p>
-            <p className="text-xs text-[var(--muted)]">{job.category}</p>
+            <p className="truncate text-xs text-[var(--muted)]">
+              {job.category} · {job.area || job.location}
+            </p>
+            <p className="truncate text-xs text-[var(--muted)]">
+              {job.employmentType} · <span className="font-medium text-emerald-600">{job.salary}</span>
+            </p>
           </div>
         </div>
       ),
     },
     {
-      id: "company",
-      header: "会社",
-      cell: (job) => <span className="whitespace-nowrap">{job.company}</span>,
-    },
-    {
-      id: "location",
-      header: "勤務地",
-      cell: (job) => <span className="max-w-[140px] truncate">{job.location}</span>,
-    },
-    {
-      id: "salary",
-      header: "給与",
-      cell: (job) => <span className="whitespace-nowrap font-medium text-emerald-600">{job.salary}</span>,
-    },
-    {
       id: "status",
       header: "ステータス",
+      sortable: true,
       cell: (job) => (
         <span className={`badge ${STATUS_COLORS[job.approvalStatus]}`}>
           {JOB_APPROVAL_LABELS[job.approvalStatus]}
@@ -95,18 +125,24 @@ export default function AdminJobsPage() {
       ),
     },
     {
-      id: "posted",
+      id: "postedAt",
       header: "掲載日",
+      sortable: true,
       cell: (job) => (
-        <span className="whitespace-nowrap text-xs text-[var(--muted)]">{formatDateJST(job.postedAt)}</span>
+        <span className="whitespace-nowrap text-xs text-[var(--muted)]">
+          {formatDateTimeJST(job.postedAt)}
+        </span>
       ),
     },
     {
-      id: "views",
-      header: "再生",
-      cell: (job) => <span className="tabular-nums">{job.viewCount.toLocaleString()}</span>,
-      className: "text-right",
-      headerClassName: "text-right",
+      id: "approvedAt",
+      header: "承認日",
+      sortable: true,
+      cell: (job) => (
+        <span className="whitespace-nowrap text-xs text-[var(--muted)]">
+          {job.approvedAt ? formatDateTimeJST(job.approvedAt) : "—"}
+        </span>
+      ),
     },
     {
       id: "actions",
@@ -114,81 +150,79 @@ export default function AdminJobsPage() {
       headerClassName: "text-right",
       className: "text-right",
       cell: (job) => (
-        <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+        <TableRowActions>
           {isAdmin && job.approvalStatus === "pending" && (
             <>
-              <button
-                type="button"
-                onClick={() => updateApproval(job.id, "approved")}
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white transition hover:bg-emerald-700"
-                aria-label="承認"
-              >
-                <Check className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => updateApproval(job.id, "rejected")}
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100"
-                aria-label="却下"
-              >
-                <X className="h-4 w-4" />
-              </button>
+              <TableApproveButton onClick={() => updateApproval(job.id, "approved")} />
+              <TableRejectButton onClick={() => updateApproval(job.id, "rejected")} />
             </>
           )}
-          <Link
-            href={`${basePath}/jobs/${job.id}/edit`}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted)] transition hover:bg-[var(--surface)] hover:text-[var(--accent)]"
-            aria-label="編集"
-          >
-            <Pencil className="h-4 w-4" />
-          </Link>
-          <button
-            type="button"
-            onClick={() => handleDelete(job.id)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted)] transition hover:bg-red-50 hover:text-red-600"
-            aria-label="削除"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        </div>
+          <TableViewLink href={`${basePath}/jobs/${job.id}/view`} />
+          {job.approvalStatus !== "approved" && (
+            <>
+              <TableEditLink href={`${basePath}/jobs/${job.id}/edit`} />
+              <TableDeleteButton onClick={() => handleDelete(job.id)} />
+            </>
+          )}
+        </TableRowActions>
       ),
     },
   ];
-
-  if (loading && jobs.length === 0) {
-    return (
-      <>
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">求人管理</h1>
-            <p className="mt-1 text-sm text-slate-500">求人一覧</p>
-          </div>
-        </div>
-        <PageLoading message="求人一覧を読み込み中..." minHeight="min-h-[320px]" />
-      </>
-    );
-  }
 
   return (
     <>
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">求人管理</h1>
-          <p className="mt-1 text-sm text-slate-500">{jobs.length}件の求人</p>
+          <p className="mt-1 text-sm text-slate-500">検索・フィルター・並び替えで求人を管理</p>
         </div>
-        <Link href={`${basePath}/jobs/new`} className="btn-primary">
+        <Link href={`${basePath}/jobs/new`} className="staff-ui btn-primary shrink-0">
           <Plus className="h-4 w-4" />
           求人登録
         </Link>
       </div>
 
-      <DataTable
+      <PaginatedDataTable
+        ref={tableRef}
+        staffStyle
         columns={columns}
-        data={jobs}
-        loading={loading}
         getRowId={(job) => job.id}
-        emptyMessage="求人がまだありません"
-        pageSize={10}
+        fetchUrl="/api/admin/jobs"
+        defaultSort={{ column: "postedAt", order: "desc" }}
+        deps={[approvalFilter]}
+        buildQuery={({ page, pageSize, sort, search }) => ({
+          page: String(page),
+          limit: String(pageSize),
+          search: search || undefined,
+          sort: sort.column || undefined,
+          order: sort.order,
+          ...(approvalFilter ? { approvalStatus: approvalFilter } : {}),
+        })}
+        parseResponse={(data) => {
+          const payload = data as { items?: Job[]; total?: number };
+          return {
+            items: Array.isArray(payload.items) ? payload.items : [],
+            total: typeof payload.total === "number" ? payload.total : 0,
+          };
+        }}
+        emptyMessage={
+          approvalFilter ? "条件に一致する求人がありません" : "求人がまだありません"
+        }
+        toolbar={({ searchInput, setSearchInput }) => (
+          <PaginatedTableToolbar
+            searchValue={searchInput}
+            onSearchChange={setSearchInput}
+            searchPlaceholder="求人名・会社・エリアで検索..."
+            filter={
+              <FilterSelect
+                value={approvalFilter}
+                options={APPROVAL_FILTER_OPTIONS}
+                onChange={setApprovalFilter}
+                title="ステータス"
+              />
+            }
+          />
+        )}
       />
     </>
   );

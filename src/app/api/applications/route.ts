@@ -9,6 +9,7 @@ import {
   updateApplicationStatus,
 } from "@/lib/db";
 import { staffCanAccessApplication } from "@/lib/db/access";
+import { applySchema } from "@/lib/validation/schemas";
 import type { ApplicationStatus } from "@/lib/types";
 
 export async function GET(request: Request) {
@@ -71,22 +72,37 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "jobId is required" }, { status: 400 });
     }
 
-    let application = await createApplication(
+    const validated = await applySchema.validate(
+      {
+        name: applicantName ?? session.profile.name,
+        birthday: applicantBirthday ?? session.profile.birthday,
+        area: applicantArea ?? session.profile.area,
+        jobType: applicantJobType ?? session.profile.desiredJobType,
+        email: applicantEmail ?? session.profile.email,
+        message: message ?? "",
+      },
+      { stripUnknown: true }
+    );
+
+    const application = await createApplication(
       session.seekerId,
       {
         jobId,
-        message,
-        applicantName,
-        applicantEmail,
-        applicantBirthday,
-        applicantArea,
-        applicantJobType,
+        message: validated.message,
+        applicantName: validated.name,
+        applicantEmail: validated.email,
+        applicantBirthday: validated.birthday,
+        applicantArea: validated.area,
+        applicantJobType: validated.jobType,
       },
       session.profile
     );
 
     return NextResponse.json({ success: true, application }, { status: 201 });
   } catch (error) {
+    if (error instanceof Error && error.message === "JOB_NOT_AVAILABLE") {
+      return NextResponse.json({ error: "この求人は現在応募できません" }, { status: 404 });
+    }
     const message = error instanceof Error ? error.message : "Invalid request";
     return NextResponse.json({ error: message }, { status: 400 });
   }

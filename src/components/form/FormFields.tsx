@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { useField } from "formik";
 import { Eye, EyeOff } from "lucide-react";
 import FormSelectPicker from "@/components/form/FormSelectPicker";
@@ -158,10 +158,22 @@ type FormSelectProps = {
   label: string;
   options: readonly string[];
   placeholder?: string;
+  readOnly?: boolean;
 };
 
-export function FormSelect({ name, label, options, placeholder = "選択" }: FormSelectProps) {
+export function FormSelect({ name, label, options, placeholder = "選択", readOnly }: FormSelectProps) {
   const [field, meta, helpers] = useField(name);
+
+  if (readOnly) {
+    return (
+      <FormTextInput
+        name={name}
+        label={label}
+        readOnly
+        className="bg-[#F8FAFC] text-[#64748B]"
+      />
+    );
+  }
 
   return (
     <label className="block">
@@ -188,21 +200,49 @@ type FormTextareaProps = {
   rows?: number;
   placeholder?: string;
   maxLength?: number;
+  className?: string;
+  readOnly?: boolean;
 };
 
-export function FormTextarea({ name, label, rows = 3, placeholder, maxLength }: FormTextareaProps) {
+function adjustTextareaHeight(el: HTMLTextAreaElement | null) {
+  if (!el) return;
+  el.style.height = "auto";
+  const minHeight = parseFloat(getComputedStyle(el).minHeight) || 0;
+  el.style.height = `${Math.max(el.scrollHeight, minHeight)}px`;
+}
+
+export function FormTextarea({
+  name,
+  label,
+  rows = 3,
+  placeholder,
+  maxLength,
+  className = "",
+  readOnly,
+}: FormTextareaProps) {
   const [field, meta] = useField(name);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const length = typeof field.value === "string" ? field.value.length : 0;
+
+  useEffect(() => {
+    adjustTextareaHeight(textareaRef.current);
+  }, [field.value]);
 
   return (
     <label className="block">
       <span className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">{label}</span>
       <textarea
         {...field}
+        ref={textareaRef}
         rows={rows}
         placeholder={placeholder}
         maxLength={maxLength}
-        className={`${fieldClass(meta.error, meta.touched)} resize-none`}
+        readOnly={readOnly}
+        onChange={(e) => {
+          field.onChange(e);
+          adjustTextareaHeight(e.target);
+        }}
+        className={`${fieldClass(meta.error, meta.touched)} resize-none overflow-hidden ${readOnly ? "bg-[#F8FAFC] text-[#64748B]" : ""} ${className}`}
       />
       {maxLength != null && (
         <p className="mt-1.5 text-right text-xs text-slate-400">

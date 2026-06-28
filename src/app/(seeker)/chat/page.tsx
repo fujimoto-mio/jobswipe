@@ -158,18 +158,17 @@ function SeekerChatContent() {
 
   const chatPanel = selectedThread ? (
     <>
-      <div className="flex shrink-0 items-center gap-2 border-b border-slate-100 bg-white px-2 md:px-0">
+      <div className="flex shrink-0 items-center gap-2 border-b border-slate-100 bg-white md:px-0">
         <button
           type="button"
           onClick={backToList}
-          className="btn-icon btn-icon-muted h-10 w-10 shrink-0 md:hidden"
+          className="btn-icon btn-icon-muted h-10 w-10 shrink-0 md:!hidden"
           aria-label="一覧に戻る"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="min-w-0 flex-1 md:hidden">
-          <p className="truncate text-sm font-bold text-slate-900">{selectedThread.job.company}</p>
-          <p className="truncate text-xs text-slate-500">{selectedThread.job.title}</p>
+          <ChatThreadHeader thread={selectedThread} />
         </div>
         <div className="hidden w-full md:block">
           <ChatThreadHeader thread={selectedThread} />
@@ -183,10 +182,23 @@ function SeekerChatContent() {
         <ApplicationChatView
           applicationId={selectedThread.application.id}
           sender="seeker"
+          seekerName={selectedThread.application.applicantName}
+          companyName={selectedThread.job.company}
+          companyStaffName={selectedThread.companyStaff?.name}
+          companyStaffAvatarUrl={selectedThread.companyStaff?.avatarUrl}
           messages={cachedMessages ?? []}
           loading={false}
           onMessagesChange={(msgs) => updateMessages(selectedThread.application.id, msgs)}
           onSent={handleSent}
+          onIncomingMessage={(message) => {
+            setThreads((prev) =>
+              prev.map((thread) =>
+                thread.application.id === message.applicationId
+                  ? { ...thread, lastMessage: message }
+                  : thread
+              )
+            );
+          }}
           emptyHint="企業担当者にメッセージを送って、選考について質問しましょう"
           className="min-h-0 flex-1"
         />

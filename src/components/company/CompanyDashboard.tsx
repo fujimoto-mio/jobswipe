@@ -188,7 +188,7 @@ export default function CompanyDashboard() {
             {threads.map((t) => (
               <li key={t.application.id}>
                 <Link
-                  href={`/company/chat?applicationId=${t.application.id}`}
+                  href={`/company/chat?jobId=${t.job.id}&applicationId=${t.application.id}`}
                   className="flex items-center gap-4 px-5 py-4 transition hover:bg-slate-50"
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">

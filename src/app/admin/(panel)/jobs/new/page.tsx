@@ -4,25 +4,15 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Form, Formik } from "formik";
-import { ArrowLeft, Upload, Video, ImageIcon, AlertCircle, CheckCircle2 } from "lucide-react";
-import JobFormFields from "@/components/form/JobFormFields";
-import { FormTextInput } from "@/components/form/FormFields";
-import { VIDEO_SPECS, validateVideoFileFull, formatFileSize } from "@/lib/video";
+import { ArrowLeft, Upload, ImageIcon } from "lucide-react";
+import JobFormFields, { type CompanyOption } from "@/components/form/JobFormFields";
+import { validateVideoFileFull } from "@/lib/video";
 import { useStaffPanel } from "@/components/staff/StaffPanelContext";
 import { apiFetch } from "@/lib/api-client";
 import { jobFormSchema } from "@/lib/validation/schemas";
 import { emptyJobFormValues, jobFormValuesToBody } from "@/lib/validation/job-form-utils";
-
-async function uploadFile(file: File, type: "video" | "thumbnail"): Promise<string> {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("type", type);
-  const res = await apiFetch("/api/admin/upload", { method: "POST", body: formData });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error ?? "アップロードに失敗しました");
-  return data.url as string;
-}
-
+import JobVideoUploadField from "@/components/staff/JobVideoUploadField";
+import { uploadFile } from "@/lib/upload-client";
 export default function NewJobPage() {
   const router = useRouter();
   const { basePath } = useStaffPanel();
@@ -33,17 +23,29 @@ export default function NewJobPage() {
   const [companyLocked, setCompanyLocked] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [initialCompany, setInitialCompany] = useState("");
+  const [initialCompanyId, setInitialCompanyId] = useState("");
+  const [companies, setCompanies] = useState<CompanyOption[]>([]);
 
   useEffect(() => {
-    apiFetch("/api/admin/me")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.role === "company" && d.companyName) {
-          setInitialCompany(d.companyName);
+    void (async () => {
+      try {
+        const meRes = await apiFetch("/api/admin/me");
+        const me = await meRes.json();
+        if (me.role === "company" && me.companyName) {
+          setInitialCompany(me.companyName);
+          if (me.companyId) setInitialCompanyId(me.companyId);
           setCompanyLocked(true);
+          return;
         }
-      })
-      .catch(() => {});
+        if (me.role === "admin") {
+          const companiesRes = await apiFetch("/api/admin/companies");
+          const data = await companiesRes.json();
+          setCompanies(data.companies ?? []);
+        }
+      } catch {
+        // ignore
+      }
+    })();
   }, []);
 
   const handleThumbnailFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,7 +57,7 @@ export default function NewJobPage() {
     }
     setUploadError(null);
     setThumbnailFile(file);
-    if (thumbnailPreview) URL.revokeObjectURL(thumbnailPreview);
+    if (thumbnailPreview?.startsWith("blob:")) URL.revokeObjectURL(thumbnailPreview);
     setThumbnailPreview(URL.createObjectURL(file));
   };
 
@@ -71,8 +73,16 @@ export default function NewJobPage() {
 
     setUploadError(null);
     setVideoFile(file);
-    if (videoPreview) URL.revokeObjectURL(videoPreview);
+    if (videoPreview?.startsWith("blob:")) URL.revokeObjectURL(videoPreview);
     setVideoPreview(URL.createObjectURL(file));
+  };
+
+  const clearVideo = (setFieldValue: (field: string, value: string) => void) => {
+    if (videoPreview?.startsWith("blob:")) URL.revokeObjectURL(videoPreview);
+    setVideoFile(null);
+    setVideoPreview(null);
+    setFieldValue("videoUrl", "");
+    setUploadError(null);
   };
 
   return (
@@ -86,8 +96,13 @@ export default function NewJobPage() {
       <p className="mb-8 text-sm text-[#64748B]">動画付き求人を新規登録（管理者審査後に公開）</p>
 
       <Formik
-        initialValues={{ ...emptyJobFormValues, company: initialCompany }}
+        initialValues={{
+          ...emptyJobFormValues,
+          company: initialCompany,
+          companyId: initialCompanyId || emptyJobFormValues.companyId,
+        }}
         validationSchema={jobFormSchema}
+        validationContext={{ companyLocked, hasCompanies: companies.length > 0 }}
         enableReinitialize
         onSubmit={async (values, { setSubmitting }) => {
           setUploadError(null);
@@ -98,12 +113,6 @@ export default function NewJobPage() {
 
             if (videoFile) {
               videoUrl = await uploadFile(videoFile, "video");
-            }
-
-            if (!videoUrl) {
-              setUploadError("動画ファイルまたは動画URLを指定してください");
-              setSubmitting(false);
-              return;
             }
 
             let thumbnailUrl: string | undefined;
@@ -129,9 +138,9 @@ export default function NewJobPage() {
           }
         }}
       >
-        {({ isSubmitting }) => (
+        {({ isSubmitting, setFieldValue }) => (
           <Form className="space-y-5">
-            <JobFormFields companyLocked={companyLocked} />
+            <JobFormFields companyLocked={companyLocked} companies={companies} />
 
             <div className="rounded-2xl border border-dashed border-[#E2E8F0] bg-[#F8FAFC] p-6">
               <div className="mb-4 flex items-center gap-2">
@@ -150,40 +159,13 @@ export default function NewJobPage() {
               )}
             </div>
 
-            <div className="rounded-2xl border border-dashed border-[#E2E8F0] bg-[#F8FAFC] p-6">
-              <div className="mb-4 flex items-center gap-2">
-                <Video className="h-5 w-5 text-[#2563EB]" />
-                <h3 className="font-medium text-[#1E293B]">
-                  求人動画（{VIDEO_SPECS.minDurationSec}〜{VIDEO_SPECS.maxDurationSec}秒）
-                </h3>
-              </div>
-
-              <label className="mb-4 flex cursor-pointer flex-col items-center gap-2 rounded-xl border border-[#E2E8F0] bg-white py-8 transition hover:bg-[#F8FAFC]">
-                <Upload className="h-8 w-8 text-[#94A3B8]" />
-                <span className="text-sm text-[#64748B]">MP4/WebM を選択（Supabase Storage にアップロード）</span>
-                <input type="file" accept="video/mp4,video/webm,video/*" className="hidden" onChange={handleVideoFile} />
-              </label>
-
-              {uploadError && (
-                <div className="mb-4 flex items-start gap-2 rounded-xl bg-red-50 p-3 text-sm text-red-600">
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                  {uploadError}
-                </div>
-              )}
-
-              {videoFile && (
-                <div className="mb-4 flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">
-                  <CheckCircle2 className="h-4 w-4 shrink-0" />
-                  {videoFile.name} ({formatFileSize(videoFile.size)})
-                </div>
-              )}
-
-              {videoPreview && (
-                <video src={videoPreview} controls playsInline className="mb-4 w-full rounded-xl" />
-              )}
-
-              <FormTextInput name="videoUrl" label="または動画URL" placeholder="https://..." />
-            </div>
+            <JobVideoUploadField
+              videoPreview={videoPreview}
+              videoFile={videoFile}
+              uploadError={uploadError}
+              onVideoFile={handleVideoFile}
+              onClearVideo={() => clearVideo(setFieldValue)}
+            />
 
             <button type="submit" disabled={isSubmitting} className="btn-primary w-full py-3">
               {isSubmitting ? "登録中..." : "求人を申請（審査待ち）"}

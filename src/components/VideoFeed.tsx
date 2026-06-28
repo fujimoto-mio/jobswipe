@@ -5,16 +5,23 @@ import { AnimatePresence, motion } from "framer-motion";
 import SwipeCard from "./SwipeCard";
 import ApplyModal from "./ApplyModal";
 import { preloadVideoUrl } from "@/lib/video";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, invalidateApiCache } from "@/lib/api-client";
+import {
+  exploreFeedCacheKey,
+  getExploreFeedCache,
+  setExploreFeedCache,
+  updateExploreFeedSaves,
+} from "@/lib/explore-feed-cache";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import type { Job, JobFilters } from "@/lib/types";
 
 type VideoFeedProps = {
   filters: JobFilters;
+  fetchKey?: string;
   onSaveCountChange?: (count: number) => void;
 };
 
-export default function VideoFeed({ filters, onSaveCountChange }: VideoFeedProps) {
+export default function VideoFeed({ filters, fetchKey = "", onSaveCountChange }: VideoFeedProps) {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [index, setIndex] = useState(0);
@@ -31,22 +38,44 @@ export default function VideoFeed({ filters, onSaveCountChange }: VideoFeedProps
   }, [filters]);
 
   const fetchData = useCallback(async () => {
+    const jobsUrl = buildJobsUrl();
+    const cacheKey = exploreFeedCacheKey(filters);
+    const cached = getExploreFeedCache(cacheKey, fetchKey);
+
+    if (cached) {
+      setJobs(cached.jobs);
+      setIndex(0);
+      setSavedIds(new Set(cached.savedIds));
+      onSaveCountChange?.(cached.count);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const [jobsRes, savedRes] = await Promise.all([
-        apiFetch(buildJobsUrl()),
+        apiFetch(jobsUrl),
         apiFetch("/api/saves"),
       ]);
       const jobsData = await jobsRes.json();
       const savedData = await savedRes.json();
-      setJobs(jobsData.jobs);
+      const nextJobs = jobsData.jobs as Job[];
+      const nextSavedIds = savedData.savedIds as string[];
+      const nextCount = savedData.count as number;
+
+      setJobs(nextJobs);
       setIndex(0);
-      setSavedIds(new Set(savedData.savedIds));
-      onSaveCountChange?.(savedData.count);
+      setSavedIds(new Set(nextSavedIds));
+      onSaveCountChange?.(nextCount);
+      setExploreFeedCache(cacheKey, fetchKey, {
+        jobs: nextJobs,
+        savedIds: nextSavedIds,
+        count: nextCount,
+      });
     } finally {
       setLoading(false);
     }
-  }, [buildJobsUrl, onSaveCountChange]);
+  }, [buildJobsUrl, fetchKey, filters, onSaveCountChange]);
 
   useEffect(() => {
     fetchData();
@@ -57,11 +86,12 @@ export default function VideoFeed({ filters, onSaveCountChange }: VideoFeedProps
     if (current) {
       apiFetch(`/api/jobs/${current.id}`).catch(() => {});
     }
-    const next = jobs[index + 1];
     const els: HTMLVideoElement[] = [];
-    if (next) {
-      const el = preloadVideoUrl(next.videoUrl);
-      if (el) els.push(el);
+    for (const neighbor of [jobs[index + 1], jobs[index - 1]]) {
+      if (neighbor) {
+        const el = preloadVideoUrl(neighbor.videoUrl);
+        if (el) els.push(el);
+      }
     }
     return () => els.forEach((el) => { el.src = ""; el.load(); });
   }, [index, jobs]);
@@ -72,6 +102,7 @@ export default function VideoFeed({ filters, onSaveCountChange }: VideoFeedProps
   };
 
   const goNext = () => setIndex((i) => Math.min(i + 1, jobs.length - 1));
+  const goPrev = () => setIndex((i) => Math.max(i - 1, 0));
 
   const handleSave = async (job: Job) => {
     const res = await apiFetch("/api/saves", {
@@ -80,8 +111,17 @@ export default function VideoFeed({ filters, onSaveCountChange }: VideoFeedProps
       body: JSON.stringify({ jobId: job.id }),
     });
     const data = await res.json();
-    setSavedIds(new Set(data.savedIds));
-    onSaveCountChange?.(data.count);
+    const nextSavedIds = data.savedIds as string[];
+    const nextCount = data.count as number;
+    setSavedIds(new Set(nextSavedIds));
+    onSaveCountChange?.(nextCount);
+    invalidateApiCache("/api/saves");
+    updateExploreFeedSaves(
+      exploreFeedCacheKey(filters),
+      fetchKey,
+      nextSavedIds,
+      nextCount
+    );
     showToast(data.saved ? "気になるに保存しました" : "保存を解除しました");
   };
 
@@ -117,7 +157,10 @@ export default function VideoFeed({ filters, onSaveCountChange }: VideoFeedProps
   }
 
   const currentJob = jobs[index];
-  const nextJob = jobs[index + 1];
+  const nextJob = index < jobs.length - 1 ? jobs[index + 1] : null;
+  const prevJob = index > 0 ? jobs[index - 1] : null;
+  const canGoNext = index < jobs.length - 1;
+  const canGoPrev = index > 0;
 
   return (
     <>
@@ -128,9 +171,22 @@ export default function VideoFeed({ filters, onSaveCountChange }: VideoFeedProps
           </span>
         </div>
 
+        {prevJob && (
+          <SwipeCard
+            key={`bg-prev-${prevJob.id}`}
+            job={prevJob}
+            isTop={false}
+            isSaved={savedIds.has(prevJob.id)}
+            onSwipeUp={() => {}}
+            onSwipeDown={() => {}}
+            onSwipeRight={() => {}}
+            onSave={() => handleSave(prevJob)}
+            onApply={() => setApplyJob(prevJob)}
+          />
+        )}
         {nextJob && (
           <SwipeCard
-            key={`bg-${nextJob.id}`}
+            key={`bg-next-${nextJob.id}`}
             job={nextJob}
             isTop={false}
             isSaved={savedIds.has(nextJob.id)}
@@ -148,8 +204,10 @@ export default function VideoFeed({ filters, onSaveCountChange }: VideoFeedProps
               job={currentJob}
               isTop={true}
               isSaved={savedIds.has(currentJob.id)}
+              canSwipeUp={canGoNext}
+              canSwipeDown={canGoPrev}
               onSwipeUp={goNext}
-              onSwipeDown={goNext}
+              onSwipeDown={goPrev}
               onSwipeRight={() => handleSwipeRight(currentJob)}
               onSave={() => handleSave(currentJob)}
               onApply={() => setApplyJob(currentJob)}

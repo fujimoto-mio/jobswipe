@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { mapApplication, mapChatMessage, mapJob, mapSeekerProfile } from "@/lib/db/mappers";
+import { fetchSavedApplyMessages, resolveApplicationMessage } from "@/lib/db/saved-job-message";
 import { now } from "@/lib/datetime";
 import { parseBirthday } from "@/lib/birthday";
-import { getCompanyLogoUrl } from "@/lib/job-image";
+import { resolveCompanyIdForJob } from "@/lib/db/companies";
 import type {
   Application,
   ApplicationStatus,
@@ -19,6 +20,8 @@ import type {
 import { sendMatchNotificationEmail } from "@/lib/email";
 
 const jobInclude = { company: true } as const;
+
+export { listCompanies } from "@/lib/db/companies";
 
 export async function getAllJobs(filters?: JobFilters, includeUnapproved = false): Promise<Job[]> {
   const rows = await prisma.job.findMany({
@@ -46,16 +49,19 @@ export async function incrementJobView(id: string): Promise<void> {
   });
 }
 
-export async function createJob(input: CreateJobInput): Promise<Job> {
-  const company = await prisma.company.upsert({
-    where: { name: input.company },
-    create: { name: input.company, logoUrl: getCompanyLogoUrl(input.company) },
-    update: {},
+export async function createJob(
+  input: CreateJobInput,
+  options?: { staffCompanyId?: string | null }
+): Promise<Job> {
+  const companyId = await resolveCompanyIdForJob({
+    companyId: input.companyId,
+    companyName: input.company,
+    staffCompanyId: options?.staffCompanyId,
   });
 
   const row = await prisma.job.create({
     data: {
-      companyId: company.id,
+      companyId,
       title: input.title,
       location: input.location,
       area: input.area ?? "東京都",
@@ -66,7 +72,7 @@ export async function createJob(input: CreateJobInput): Promise<Job> {
       requirements: input.requirements ?? [],
       benefits: input.benefits ?? [],
       tags: input.tags ?? [],
-      videoUrl: input.videoUrl,
+      videoUrl: input.videoUrl ?? "",
       thumbnailUrl: input.thumbnailUrl,
       links: input.links ?? {},
       approvalStatus: "pending",
@@ -81,7 +87,10 @@ export async function updateJobApproval(id: string, status: JobApprovalStatus): 
   try {
     const row = await prisma.job.update({
       where: { id },
-      data: { approvalStatus: status },
+      data: {
+        approvalStatus: status,
+        approvedAt: status === "approved" ? now() : null,
+      },
       include: jobInclude,
     });
     return mapJob(row);
@@ -90,26 +99,33 @@ export async function updateJobApproval(id: string, status: JobApprovalStatus): 
   }
 }
 
-export async function updateJob(id: string, input: UpdateJobInput): Promise<Job | null> {
+export async function updateJob(
+  id: string,
+  input: UpdateJobInput,
+  options?: { staffCompanyId?: string | null }
+): Promise<Job | null> {
   try {
     const existing = await prisma.job.findUnique({ where: { id }, include: jobInclude });
     if (!existing) return null;
 
     let companyId = existing.companyId;
-    if (input.company && input.company !== existing.company.name) {
-      const company = await prisma.company.upsert({
-        where: { name: input.company },
-        create: { name: input.company, logoUrl: getCompanyLogoUrl(input.company) },
-        update: {},
-      });
-      companyId = company.id;
+
+    if (options?.staffCompanyId) {
+      if (existing.companyId !== options.staffCompanyId) return null;
+      companyId = options.staffCompanyId;
+    } else if (input.companyId !== undefined) {
+      companyId = await resolveCompanyIdForJob({ companyId: input.companyId });
+    } else if (input.company !== undefined && input.company.trim() !== existing.company.name) {
+      companyId = await resolveCompanyIdForJob({ companyName: input.company });
     }
 
     const row = await prisma.job.update({
       where: { id },
       data: {
         ...(input.title !== undefined ? { title: input.title } : {}),
-        ...(input.company !== undefined ? { companyId } : {}),
+        ...(input.company !== undefined || input.companyId !== undefined || options?.staffCompanyId
+          ? { companyId }
+          : {}),
         ...(input.location !== undefined ? { location: input.location } : {}),
         ...(input.area !== undefined ? { area: input.area } : {}),
         ...(input.category !== undefined ? { category: input.category } : {}),
@@ -122,7 +138,12 @@ export async function updateJob(id: string, input: UpdateJobInput): Promise<Job 
         ...(input.requirements !== undefined ? { requirements: input.requirements } : {}),
         ...(input.benefits !== undefined ? { benefits: input.benefits } : {}),
         ...(input.links !== undefined ? { links: input.links } : {}),
-        ...(input.approvalStatus !== undefined ? { approvalStatus: input.approvalStatus } : {}),
+        ...(input.approvalStatus !== undefined
+          ? {
+              approvalStatus: input.approvalStatus,
+              approvedAt: input.approvalStatus === "approved" ? now() : null,
+            }
+          : {}),
       },
       include: jobInclude,
     });
@@ -151,8 +172,11 @@ export async function getApplicationWithSeeker(id: string): Promise<ApplicationW
   });
   if (!row) return null;
 
+  const savedMessages = await fetchSavedApplyMessages([{ seekerId: row.seekerId, jobId: row.jobId }]);
+
   return {
     ...mapApplication(row),
+    message: resolveApplicationMessage(row.seekerId, row.jobId, row.message, savedMessages),
     seeker: row.seeker ? mapSeekerProfile(row.seeker) : undefined,
   };
 }
@@ -193,6 +217,14 @@ export async function toggleSave(seekerId: string, jobId: string): Promise<boole
     return false;
   }
 
+  const job = await prisma.job.findUnique({
+    where: { id: jobId },
+    select: { approvalStatus: true },
+  });
+  if (!job || job.approvalStatus !== "approved") {
+    throw new Error("JOB_NOT_AVAILABLE");
+  }
+
   await prisma.savedJob.create({ data: { seekerId, jobId } });
   return true;
 }
@@ -208,12 +240,34 @@ export async function removeSave(seekerId: string, jobId: string): Promise<boole
 
 export async function getSavedJobs(seekerId: string): Promise<Job[]> {
   const rows = await prisma.savedJob.findMany({
-    where: { seekerId },
+    where: { seekerId, job: { approvalStatus: "approved" } },
     include: { job: { include: jobInclude } },
     orderBy: { createdAt: "desc" },
   });
 
   return rows.map((r) => mapJob(r.job));
+}
+
+async function upsertSavedJobApplyMessage(
+  seekerId: string,
+  jobId: string,
+  message: string | null
+): Promise<void> {
+  const existing = await prisma.savedJob.findUnique({
+    where: { seekerId_jobId: { seekerId, jobId } },
+  });
+
+  if (existing) {
+    await prisma.savedJob.update({
+      where: { id: existing.id },
+      data: { message: message || existing.message || null },
+    });
+    return;
+  }
+
+  await prisma.savedJob.create({
+    data: { seekerId, jobId, message },
+  });
 }
 
 export async function getSavedJobIds(seekerId: string): Promise<string[]> {
@@ -249,8 +303,14 @@ export async function upsertSeekerProfile(
     email: profile.email,
     introSentence: profile.introSentence?.trim() || null,
     profileTitle: profile.profileTitle?.trim() || null,
-    summary: profile.summary?.trim() || null,
     resumeUrl: profile.resumeUrl?.trim() || null,
+    futureGoals: profile.futureGoals?.trim() || null,
+    desiredSalary: profile.desiredSalary?.trim() || null,
+    jobSearchIntent: profile.jobSearchIntent?.trim() || null,
+    education: profile.education?.trim() || null,
+    portfolioUrl: profile.portfolioUrl?.trim() || null,
+    skills: profile.skills ?? [],
+    workHistory: profile.workHistory ?? [],
   };
 
   if (supabaseUserId) {
@@ -308,27 +368,62 @@ export async function createApplication(
   input: CreateApplicationInput,
   profile?: UserProfile
 ): Promise<Application> {
-  const existing = await prisma.application.findUnique({
-    where: { seekerId_jobId: { seekerId, jobId: input.jobId } },
+  const job = await prisma.job.findUnique({
+    where: { id: input.jobId },
+    select: { approvalStatus: true },
   });
-  if (existing) return mapApplication(existing);
+  if (!job || job.approvalStatus !== "approved") {
+    throw new Error("JOB_NOT_AVAILABLE");
+  }
 
   const applicantBirthdayRaw = input.applicantBirthday ?? profile?.birthday;
   const applicantBirthday = applicantBirthdayRaw ? parseBirthday(applicantBirthdayRaw) : null;
+  const trimmedMessage = input.message?.trim() ?? "";
+  const savedJob = await prisma.savedJob.findUnique({
+    where: { seekerId_jobId: { seekerId, jobId: input.jobId } },
+    select: { message: true },
+  });
+  const savedMessage = savedJob?.message?.trim() ?? "";
+  const effectiveMessage = trimmedMessage || savedMessage;
+  const applicantData = {
+    applicantName: input.applicantName ?? profile?.name ?? "ゲストユーザー",
+    applicantEmail: input.applicantEmail ?? profile?.email ?? "guest@jobswipe.app",
+    applicantBirthday,
+    applicantArea: input.applicantArea ?? profile?.area,
+    applicantJobType: input.applicantJobType ?? profile?.desiredJobType,
+  };
+
+  const existing = await prisma.application.findUnique({
+    where: { seekerId_jobId: { seekerId, jobId: input.jobId } },
+  });
+
+  if (existing) {
+    const row = await prisma.application.update({
+      where: { id: existing.id },
+      data: {
+        ...applicantData,
+        message: effectiveMessage || existing.message || null,
+      },
+    });
+    await upsertSavedJobApplyMessage(
+      seekerId,
+      input.jobId,
+      effectiveMessage || row.message || null
+    );
+    return mapApplication(row);
+  }
 
   const row = await prisma.application.create({
     data: {
       seekerId,
       jobId: input.jobId,
-      applicantName: input.applicantName ?? profile?.name ?? "ゲストユーザー",
-      applicantEmail: input.applicantEmail ?? profile?.email ?? "guest@jobswipe.app",
-      applicantBirthday,
-      applicantArea: input.applicantArea ?? profile?.area,
-      applicantJobType: input.applicantJobType ?? profile?.desiredJobType,
-      message: input.message,
+      ...applicantData,
+      message: effectiveMessage || null,
       status: "new",
     },
   });
+
+  await upsertSavedJobApplyMessage(seekerId, input.jobId, effectiveMessage || null);
 
   return mapApplication(row);
 }
@@ -370,7 +465,13 @@ export async function updateApplicationStatus(
       (status === "scheduling" || status === "hired") && !row.matchEmailSentAt;
 
     if (status === "hired") {
-      await addChatMessage(id, "company", "おめでとうございます！採用が決定しました。今後の手続きについてご連絡いたします。");
+      const staffMeta = await getCompanyStaffMeta(existing.job.companyId);
+      await addChatMessage(
+        id,
+        "company",
+        "おめでとうございます！採用が決定しました。今後の手続きについてご連絡いたします。",
+        staffMeta ?? undefined
+      );
     }
 
     if (shouldNotify) {
@@ -400,11 +501,22 @@ export async function updateApplicationStatus(
 export async function addChatMessage(
   applicationId: string,
   sender: "seeker" | "company",
-  content: string
+  content: string,
+  senderMeta?: { name?: string | null; avatarUrl?: string | null }
 ): Promise<ChatMessage> {
   const sentAt = now();
   const row = await prisma.chatMessage.create({
-    data: { applicationId, sender, content },
+    data: {
+      applicationId,
+      sender,
+      content,
+      ...(sender === "company" && senderMeta
+        ? {
+            senderName: senderMeta.name?.trim() || null,
+            senderAvatarUrl: senderMeta.avatarUrl?.trim() || null,
+          }
+        : {}),
+    },
   });
 
   if (sender === "seeker") {
@@ -472,8 +584,47 @@ async function getSeekerUnreadByApplication(
   return map;
 }
 
+export async function getCompanyStaffMeta(
+  companyId: string | null | undefined
+): Promise<{ name: string; avatarUrl: string | null } | null> {
+  if (!companyId) return null;
+
+  const account = await prisma.account.findFirst({
+    where: { companyId, role: "company" },
+    orderBy: { updatedAt: "desc" },
+    select: { name: true, avatarUrl: true, company: { select: { name: true } } },
+  });
+
+  if (!account) return null;
+
+  return {
+    name: account.name?.trim() || account.company?.name || "担当者",
+    avatarUrl: account.avatarUrl,
+  };
+}
+
+async function getCompanyStaffMap(companyIds: string[]) {
+  if (companyIds.length === 0) return new Map<string, { name: string; avatarUrl: string | null }>();
+
+  const rows = await prisma.account.findMany({
+    where: { companyId: { in: companyIds }, role: "company" },
+    orderBy: { updatedAt: "desc" },
+    select: { companyId: true, name: true, avatarUrl: true, company: { select: { name: true } } },
+  });
+
+  const map = new Map<string, { name: string; avatarUrl: string | null }>();
+  for (const row of rows) {
+    if (!row.companyId || map.has(row.companyId)) continue;
+    map.set(row.companyId, {
+      name: row.name?.trim() || row.company?.name || "担当者",
+      avatarUrl: row.avatarUrl,
+    });
+  }
+  return map;
+}
+
 export async function getChatThreadsForSeeker(seekerId: string): Promise<
-  { application: Application; job: Job; lastMessage?: ChatMessage; unreadCount: number }[]
+  { application: Application; job: Job; companyStaff?: { name: string; avatarUrl: string | null }; lastMessage?: ChatMessage; unreadCount: number }[]
 > {
   const [apps, unreadMap] = await Promise.all([
     prisma.application.findMany({
@@ -486,9 +637,12 @@ export async function getChatThreadsForSeeker(seekerId: string): Promise<
     getSeekerUnreadByApplication(seekerId),
   ]);
 
+  const staffMap = await getCompanyStaffMap([...new Set(apps.map((app) => app.job.companyId))]);
+
   const threads = apps.map((app) => ({
     application: mapApplication(app),
     job: mapJob(app.job),
+    companyStaff: staffMap.get(app.job.companyId),
     lastMessage: app.messages[0] ? mapChatMessage(app.messages[0]) : undefined,
     unreadCount: unreadMap.get(app.id) ?? 0,
   }));

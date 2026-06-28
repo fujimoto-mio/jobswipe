@@ -45,6 +45,57 @@ export const EMPLOYMENT_TYPES = [
   "インターン",
 ] as const;
 
+export const SALARY_RANGES = [
+  "200万円未満",
+  "200〜300万円",
+  "300〜400万円",
+  "400〜500万円",
+  "500〜600万円",
+  "600〜800万円",
+  "800〜1000万円",
+  "1000万円以上",
+  "応相談",
+] as const;
+
+/** Job form: annual salary lower bound */
+export const JOB_SALARY_MIN_OPTIONS = [
+  "200万円",
+  "300万円",
+  "400万円",
+  "500万円",
+  "600万円",
+  "800万円",
+  "1000万円",
+  "応相談",
+] as const;
+
+/** Job form: annual salary upper bound */
+export const JOB_SALARY_MAX_OPTIONS = [
+  "300万円",
+  "400万円",
+  "500万円",
+  "600万円",
+  "800万円",
+  "1000万円",
+  "1000万円以上",
+] as const;
+
+export const JOB_SEARCH_INTENTS = [
+  "積極的に探している",
+  "良い求人があれば",
+  "今は探していない",
+] as const;
+
+export const EDUCATION_LEVELS = [
+  "中学校卒",
+  "高等学校卒",
+  "専門学校卒",
+  "短大卒",
+  "大学卒",
+  "大学院卒",
+  "その他",
+] as const;
+
 export const APPLICATION_STATUS_LABELS = {
   new: "新規受付",
   scheduling: "面談設定中",
@@ -58,6 +109,9 @@ export const JOB_APPROVAL_LABELS = {
   approved: "公開中",
   rejected: "却下",
 } as const;
+
+/** Sentinel value for admin job form — create a new company row instead of linking an existing one. */
+export const NEW_COMPANY_VALUE = "__new__";
 
 export const SUPPORT_EMAIL =
   process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "support@jobswipe.app";

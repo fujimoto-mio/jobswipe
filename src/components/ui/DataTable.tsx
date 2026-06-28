@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from "lucide-react";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export type ColumnDef<T> = {
@@ -10,6 +10,12 @@ export type ColumnDef<T> = {
   cell: (row: T) => React.ReactNode;
   className?: string;
   headerClassName?: string;
+  sortable?: boolean;
+};
+
+export type DataTableSort = {
+  column: string;
+  order: "asc" | "desc";
 };
 
 export type DataTableProps<T> = {
@@ -23,6 +29,18 @@ export type DataTableProps<T> = {
   onRowClick?: (row: T) => void;
   selectedRowId?: string | null;
   className?: string;
+  toolbar?: ReactNode;
+  /** When this value changes, the table resets to page 1 (client mode only). */
+  paginationKey?: string | number;
+  /** Server-side pagination */
+  totalCount?: number;
+  page?: number;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  sort?: DataTableSort;
+  onSortChange?: (sort: DataTableSort) => void;
+  /** Staff panel UI (blue accent) */
+  staffStyle?: boolean;
 };
 
 function getPageNumbers(current: number, total: number): (number | "...")[] {
@@ -51,46 +69,133 @@ export default function DataTable<T>({
   onRowClick,
   selectedRowId,
   className = "",
+  toolbar,
+  paginationKey,
+  totalCount,
+  page: controlledPage,
+  onPageChange,
+  onPageSizeChange,
+  sort,
+  onSortChange,
+  staffStyle = false,
 }: DataTableProps<T>) {
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(initialPageSize);
+  const isServerMode = totalCount !== undefined && onPageChange !== undefined;
 
-  const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
+  const [internalPage, setInternalPage] = useState(1);
+  const [internalPageSize, setInternalPageSize] = useState(initialPageSize);
+
+  const page = isServerMode ? (controlledPage ?? 1) : internalPage;
+  const pageSize = isServerMode ? initialPageSize : internalPageSize;
+
+  const rowIds = useMemo(() => data.map(getRowId).join("\0"), [data, getRowId]);
+  const totalItems = isServerMode ? totalCount : data.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
 
   useEffect(() => {
-    setPage(1);
-  }, [data.length, pageSize]);
+    if (!isServerMode) setInternalPageSize(initialPageSize);
+  }, [initialPageSize, isServerMode]);
 
   useEffect(() => {
-    if (page > totalPages) setPage(totalPages);
-  }, [page, totalPages]);
+    if (isServerMode) return;
+    setInternalPage(1);
+  }, [rowIds, internalPageSize, paginationKey, isServerMode]);
+
+  useEffect(() => {
+    if (isServerMode) return;
+    if (internalPage > totalPages) setInternalPage(totalPages);
+  }, [internalPage, totalPages, isServerMode]);
 
   const pageData = useMemo(() => {
+    if (isServerMode) return data;
     const start = (page - 1) * pageSize;
     return data.slice(start, start + pageSize);
-  }, [data, page, pageSize]);
+  }, [data, page, pageSize, isServerMode]);
 
-  const rangeStart = data.length === 0 ? 0 : (page - 1) * pageSize + 1;
-  const rangeEnd = Math.min(page * pageSize, data.length);
+  const rangeStart = totalItems === 0 ? 0 : (page - 1) * pageSize + 1;
+  const rangeEnd = Math.min(page * pageSize, totalItems);
+
+  const setPage = (next: number) => {
+    if (isServerMode) onPageChange?.(next);
+    else setInternalPage(next);
+  };
+
+  const setPageSize = (next: number) => {
+    if (isServerMode) onPageSizeChange?.(next);
+    else setInternalPageSize(next);
+  };
+
+  const handleSort = (columnId: string) => {
+    if (!onSortChange) return;
+    if (sort?.column === columnId) {
+      onSortChange({ column: columnId, order: sort.order === "asc" ? "desc" : "asc" });
+      return;
+    }
+    onSortChange({ column: columnId, order: "desc" });
+  };
+
+  const pageBtnClass = (active: boolean) =>
+    staffStyle
+      ? `data-table-page-btn flex items-center justify-center ${active ? "data-table-page-btn-active" : ""} h-8 min-w-8 px-2 text-xs disabled:cursor-not-allowed disabled:opacity-40`
+      : `flex h-8 min-w-8 items-center justify-center rounded-lg px-2 text-xs font-medium transition disabled:opacity-40 ${
+          active
+            ? "bg-[var(--accent)] text-white"
+            : "border border-[var(--border)] bg-white text-[var(--muted)] hover:text-[var(--foreground)]"
+        }`;
+
+  const navBtnClass = staffStyle
+    ? "data-table-page-btn flex h-8 w-8 items-center justify-center disabled:cursor-not-allowed disabled:opacity-40"
+    : "flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] bg-white text-[var(--muted)] transition hover:bg-white hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-40";
+
+  const compactNavBtnClass = staffStyle
+    ? "data-table-page-btn flex h-9 flex-1 items-center justify-center gap-1 text-xs disabled:cursor-not-allowed disabled:opacity-40"
+    : "flex h-9 flex-1 items-center justify-center gap-1 rounded-lg border border-[var(--border)] bg-white text-xs font-medium text-[var(--muted)] transition hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-40";
+
+  const pageSizeClass = staffStyle
+    ? "data-table-page-size text-xs"
+    : "rounded-lg border border-[var(--border)] bg-white px-2 py-1.5 text-xs text-[var(--foreground)]";
+
+  const selectedRowClass = staffStyle ? "bg-blue-50" : "bg-[var(--accent-light)]";
 
   return (
-    <div className={`card overflow-hidden ${className}`}>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] border-collapse text-left text-sm">
+    <div className={`data-table-card ${staffStyle ? "staff-ui" : ""} ${className}`}>
+      {toolbar && (
+        <div className="border-b border-[var(--border)] bg-white">{toolbar}</div>
+      )}
+      <div className="data-table-scroll">
+        <table className="border-collapse text-left text-sm">
           <thead>
             <tr className="border-b border-[var(--border)] bg-[var(--surface)]">
               {columns.map((col) => (
                 <th
                   key={col.id}
-                  className={`px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--muted)] ${col.headerClassName ?? ""}`}
+                  className={`px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-[var(--muted)] sm:px-4 sm:py-3 ${col.headerClassName ?? ""}`}
                 >
-                  {col.header}
+                  {col.sortable && onSortChange ? (
+                    <button
+                      type="button"
+                      onClick={() => handleSort(col.id)}
+                      className="inline-flex items-center gap-1 transition hover:text-[var(--foreground)]"
+                    >
+                      {col.header}
+                      {sort?.column === col.id ? (
+                        sort.order === "asc" ? (
+                          <ChevronUp className="h-3.5 w-3.5" />
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5" />
+                        )
+                      ) : (
+                        <ChevronDown className="h-3.5 w-3.5 opacity-30" />
+                      )}
+                    </button>
+                  ) : (
+                    col.header
+                  )}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {loading ? (
+            {loading && pageData.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="px-4 py-16">
                   <LoadingSpinner message="データを読み込み中..." />
@@ -112,10 +217,13 @@ export default function DataTable<T>({
                     onClick={onRowClick ? () => onRowClick(row) : undefined}
                     className={`border-b border-[var(--border)] transition last:border-b-0 ${
                       onRowClick ? "cursor-pointer hover:bg-[var(--surface)]" : ""
-                    } ${selected ? "bg-[var(--accent-light)]" : "bg-white"}`}
+                    } ${selected ? selectedRowClass : "bg-white"}`}
                   >
                     {columns.map((col) => (
-                      <td key={col.id} className={`px-4 py-3 align-middle text-[var(--body)] ${col.className ?? ""}`}>
+                      <td
+                        key={col.id}
+                        className={`px-3 py-2.5 align-middle text-[var(--body)] sm:px-4 sm:py-3 ${col.className ?? ""}`}
+                      >
                         {col.cell(row)}
                       </td>
                     ))}
@@ -127,18 +235,19 @@ export default function DataTable<T>({
         </table>
       </div>
 
-      {!loading && data.length > 0 && (
-        <div className="flex flex-col gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--muted)]">
+      {totalItems > 0 && (
+        <div className="data-table-pagination">
+          <div className="data-table-pagination-meta">
             <span>
-              {rangeStart}–{rangeEnd} / 全{data.length}件
+              {rangeStart}–{rangeEnd} / 全{totalItems}件
+              {loading ? " · 更新中..." : ""}
             </span>
-            <label className="flex items-center gap-2">
+            <label className="flex items-center gap-2 whitespace-nowrap">
               表示件数
               <select
                 value={pageSize}
                 onChange={(e) => setPageSize(Number(e.target.value))}
-                className="rounded-lg border border-[var(--border)] bg-white px-2 py-1 text-xs text-[var(--foreground)]"
+                className={pageSizeClass}
               >
                 {pageSizeOptions.map((n) => (
                   <option key={n} value={n}>
@@ -149,12 +258,38 @@ export default function DataTable<T>({
             </label>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="data-table-pagination-nav-compact">
             <button
               type="button"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page <= 1}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] bg-white text-[var(--muted)] transition hover:bg-white hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-40"
+              onClick={() => setPage(Math.max(1, page - 1))}
+              disabled={page <= 1 || loading}
+              className={compactNavBtnClass}
+              aria-label="前のページ"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              前へ
+            </button>
+            <span className="shrink-0 px-2 text-xs font-medium text-[var(--muted)]">
+              {page} / {totalPages}
+            </span>
+            <button
+              type="button"
+              onClick={() => setPage(Math.min(totalPages, page + 1))}
+              disabled={page >= totalPages || loading}
+              className={compactNavBtnClass}
+              aria-label="次のページ"
+            >
+              次へ
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="data-table-pagination-nav data-table-pagination-nav-full">
+            <button
+              type="button"
+              onClick={() => setPage(Math.max(1, page - 1))}
+              disabled={page <= 1 || loading}
+              className={navBtnClass}
               aria-label="前のページ"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -170,11 +305,8 @@ export default function DataTable<T>({
                   key={p}
                   type="button"
                   onClick={() => setPage(p)}
-                  className={`flex h-8 min-w-8 items-center justify-center rounded-lg px-2 text-xs font-medium transition ${
-                    page === p
-                      ? "bg-[var(--accent)] text-white"
-                      : "border border-[var(--border)] bg-white text-[var(--muted)] hover:text-[var(--foreground)]"
-                  }`}
+                  disabled={loading}
+                  className={pageBtnClass(page === p)}
                 >
                   {p}
                 </button>
@@ -183,9 +315,9 @@ export default function DataTable<T>({
 
             <button
               type="button"
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] bg-white text-[var(--muted)] transition hover:bg-white hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-40"
+              onClick={() => setPage(Math.min(totalPages, page + 1))}
+              disabled={page >= totalPages || loading}
+              className={navBtnClass}
               aria-label="次のページ"
             >
               <ChevronRight className="h-4 w-4" />

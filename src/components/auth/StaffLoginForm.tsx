@@ -67,7 +67,7 @@ export default function StaffLoginForm({ mode }: StaffLoginFormProps) {
             <p className="mt-2 text-sm text-[var(--muted)]">{cfg.subtitle}</p>
           </div>
 
-          <div className="card-elevated p-6 sm:p-8">
+          <div className="staff-ui card-elevated p-6 sm:p-8">
             {staffOnlyError && mode === "company" && (
               <p className="mb-5 rounded-xl border border-amber-100 bg-amber-50 px-3.5 py-2.5 text-sm text-amber-800">
                 管理画面のご利用にはログインが必要です。求職者の方は

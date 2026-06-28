@@ -1,4 +1,5 @@
 import type { UserProfile } from "./types";
+import { normalizeSeekerProfileFields } from "./profile-fields";
 
 const PROFILE_KEY = "jobswipe_profile";
 
@@ -11,10 +12,7 @@ export const DEFAULT_PROFILE: UserProfile = {
   experience: "",
   employmentType: "",
   email: "",
-  introSentence: "",
-  profileTitle: "",
-  summary: "",
-  resumeUrl: "",
+  ...normalizeSeekerProfileFields(null),
 };
 
 export type StoredProfile = UserProfile & { id?: string };
@@ -31,10 +29,7 @@ export function getProfile(): StoredProfile | null {
     }
     return {
       ...parsed,
-      introSentence: parsed.introSentence ?? "",
-      profileTitle: parsed.profileTitle ?? "",
-      summary: parsed.summary ?? "",
-      resumeUrl: parsed.resumeUrl ?? "",
+      ...normalizeSeekerProfileFields(parsed),
     };
   } catch {
     return null;

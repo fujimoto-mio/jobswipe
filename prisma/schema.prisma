@@ -12,8 +12,11 @@ model Company {
   id          String   @id @default(uuid())
   name        String   @unique
   logoUrl     String?  @map("logo_url")
+  bannerUrl   String?  @map("banner_url")
   description String?
   website     String?
+  postalCode  String?  @map("postal_code")
+  address     String?
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   jobs        Job[]
   accounts    Account[]
@@ -39,6 +42,7 @@ model Job {
   thumbnailUrl   String?  @map("thumbnail_url")
   links          Json     @default("{}")
   approvalStatus String   @default("pending") @map("approval_status")
+  approvedAt     DateTime? @map("approved_at") @db.Timestamptz(3)
   viewCount      Int      @default(0) @map("view_count")
   postedAt       DateTime @default(now()) @map("posted_at") @db.Timestamptz(3)
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
@@ -47,6 +51,7 @@ model Job {
   savedJobs    SavedJob[]
   applications Application[]
 
+  @@index([companyId])
   @@index([approvalStatus, postedAt(sort: Desc)])
   @@map("jobs")
 }
@@ -56,6 +61,7 @@ model Account {
   id        String   @id
   email     String   @unique
   name      String?
+  avatarUrl String?  @map("avatar_url")
   role      String   // admin | company
   companyId String?  @map("company_id")
   company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
@@ -63,6 +69,7 @@ model Account {
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@index([role])
+  @@index([companyId])
   @@map("accounts")
 }
 
@@ -78,8 +85,14 @@ model SeekerProfile {
   employmentType String   @map("employment_type")
   introSentence  String?  @map("intro_sentence")
   profileTitle   String?  @map("profile_title")
-  summary        String?  @db.Text
   resumeUrl      String?  @map("resume_url")
+  futureGoals    String?  @map("future_goals") @db.Text
+  desiredSalary  String?  @map("desired_salary")
+  jobSearchIntent String? @map("job_search_intent")
+  education      String?
+  portfolioUrl   String?  @map("portfolio_url")
+  skills         Json     @default("[]")
+  workHistory    Json     @default("[]") @map("work_history")
   supabaseUserId String   @unique @map("supabase_user_id")
   notifyHiredEmail Boolean @default(true) @map("notify_hired_email")
   notifyChatEmail  Boolean @default(true) @map("notify_chat_email")
@@ -96,6 +109,7 @@ model SavedJob {
   id        String        @id @default(uuid())
   seekerId  String        @map("seeker_id")
   jobId     String        @map("job_id")
+  message   String?       @db.Text
   seeker    SeekerProfile @relation(fields: [seekerId], references: [id], onDelete: Cascade)
   job       Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
   createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
@@ -135,11 +149,13 @@ model Application {
 }
 
 model ChatMessage {
-  id            String      @id @default(uuid())
-  applicationId String      @map("application_id")
-  sender        String
-  content       String
-  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  id              String      @id @default(uuid())
+  applicationId   String      @map("application_id")
+  sender          String
+  senderName      String?     @map("sender_name")
+  senderAvatarUrl String?     @map("sender_avatar_url")
+  content         String
+  createdAt       DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
 
   application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 

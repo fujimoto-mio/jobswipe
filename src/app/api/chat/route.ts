@@ -10,6 +10,8 @@ import {
 import { requireSeekerSession, getSeekerSession } from "@/lib/auth/seeker";
 import { requireStaffUser, getStaffUser } from "@/lib/auth/admin";
 import { seekerCanAccessApplication, staffCanAccessApplication } from "@/lib/db/access";
+import { broadcastChatMessage } from "@/lib/chat/realtime";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -74,8 +76,10 @@ export async function PATCH(request: Request) {
     await markSeekerChatRead(applicationId, session.seekerId);
     const unreadTotal = await getSeekerUnreadTotal(session.seekerId);
     return NextResponse.json({ success: true, unreadTotal });
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  } catch (error) {
+    console.error("[PATCH /api/chat]", error);
+    const message = error instanceof Error ? error.message : "Invalid JSON body";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }
 
@@ -94,6 +98,8 @@ export async function POST(request: Request) {
       );
     }
 
+    let senderMeta: { name: string; avatarUrl: string | null } | undefined;
+
     if (sender === "company") {
       const staff = await requireStaffUser();
       if (staff instanceof NextResponse) return staff;
@@ -101,6 +107,15 @@ export async function POST(request: Request) {
       if (!allowed) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
+
+      const account = await prisma.account.findUnique({
+        where: { id: staff.id },
+        include: { company: true },
+      });
+      senderMeta = {
+        name: account?.name?.trim() || account?.company?.name || "担当者",
+        avatarUrl: account?.avatarUrl ?? null,
+      };
     } else {
       const session = await requireSeekerSession();
       if (session instanceof NextResponse) return session;
@@ -110,9 +125,17 @@ export async function POST(request: Request) {
       }
     }
 
-    const message = await addChatMessage(applicationId, sender ?? "seeker", content.trim());
+    const message = await addChatMessage(
+      applicationId,
+      sender ?? "seeker",
+      content.trim(),
+      senderMeta
+    );
+    void broadcastChatMessage(applicationId, message);
     return NextResponse.json({ success: true, message }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  } catch (error) {
+    console.error("[POST /api/chat]", error);
+    const message = error instanceof Error ? error.message : "Invalid JSON body";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }

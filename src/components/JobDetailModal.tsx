@@ -12,13 +12,20 @@ import {
   Heart,
   ExternalLink,
   FileText,
+  MessageCircle,
+  Play,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { formatDateJST } from "@/lib/datetime";
+import { useVideoPlayback } from "@/hooks/useVideoPlayback";
 import type { Job } from "@/lib/types";
 
 type JobDetailModalProps = {
   job: Job;
   isSaved?: boolean;
+  applied?: boolean;
+  chatHref?: string;
   onClose: () => void;
   onSave?: () => void;
   onApply: () => void;
@@ -42,11 +49,19 @@ function LinkItem({ href, label }: { href?: string; label: string }) {
 export default function JobDetailModal({
   job,
   isSaved,
+  applied = false,
+  chatHref,
   onClose,
   onSave,
   onApply,
 }: JobDetailModalProps) {
   const links = job.links ?? {};
+  const { videoRef, isPlaying, isBuffering, isMuted, togglePlay, toggleMute } = useVideoPlayback({
+    src: job.videoUrl,
+    isActive: true,
+    muted: true,
+  });
+  const showPoster = isBuffering || !isPlaying;
 
   return (
     <motion.div
@@ -64,16 +79,56 @@ export default function JobDetailModal({
         className="max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-t-3xl bg-white sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="relative h-48">
-          <img src={job.thumbnailUrl} alt={job.title} className="h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-white to-transparent" />
+        <div className="relative aspect-video bg-black">
+          <img
+            src={job.thumbnailUrl}
+            alt=""
+            aria-hidden
+            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
+              showPoster ? "opacity-100" : "opacity-0"
+            }`}
+          />
+          <video
+            ref={videoRef}
+            poster={job.thumbnailUrl}
+            className="h-full w-full object-cover"
+            loop
+            muted={isMuted}
+            playsInline
+            preload="auto"
+            onClick={togglePlay}
+          />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30" />
           <button
+            type="button"
             onClick={onClose}
-            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm"
+            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm"
             aria-label="閉じる"
           >
             <X className="h-5 w-5 text-white" />
           </button>
+          <button
+            type="button"
+            onClick={toggleMute}
+            className="absolute left-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm"
+            aria-label={isMuted ? "ミュート解除" : "ミュート"}
+          >
+            {isMuted ? (
+              <VolumeX className="h-4 w-4 text-white" />
+            ) : (
+              <Volume2 className="h-4 w-4 text-white" />
+            )}
+          </button>
+          {!isPlaying && !isBuffering && (
+            <button
+              type="button"
+              onClick={togglePlay}
+              className="absolute left-1/2 top-1/2 z-10 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/35 ring-1 ring-white/20 backdrop-blur-sm transition active:scale-95"
+              aria-label="再生"
+            >
+              <Play className="ml-1 h-8 w-8 fill-white text-white" />
+            </button>
+          )}
         </div>
 
         <div className="p-6">
@@ -165,10 +220,17 @@ export default function JobDetailModal({
                 気になる
               </button>
             )}
-            <button onClick={onApply} className="btn-primary flex-1">
-              <Send className="h-4 w-4" />
-              応募する
-            </button>
+            {applied && chatHref ? (
+              <Link href={chatHref} className="btn-primary flex-1">
+                <MessageCircle className="h-4 w-4" />
+                チャット
+              </Link>
+            ) : (
+              <button onClick={onApply} disabled={applied} className="btn-primary flex-1 disabled:opacity-50">
+                <Send className="h-4 w-4" />
+                {applied ? "応募済み" : "応募する"}
+              </button>
+            )}
           </div>
 
           <Link
