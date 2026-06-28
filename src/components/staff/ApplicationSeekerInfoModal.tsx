@@ -3,12 +3,7 @@
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
-import {
-  APPLICATION_STATUS_CHIP_COLORS,
-  ApplicationDetailBody,
-} from "@/components/staff/ApplicationSeekerDetail";
-import { APPLICATION_STATUS_LABELS } from "@/lib/constants";
-import { formatDateJST } from "@/lib/datetime";
+import { ApplicationDetailBody } from "@/components/staff/ApplicationSeekerDetail";
 import type { ApplicationStatus, ApplicationWithSeeker } from "@/lib/types";
 
 type ApplicationSeekerInfoModalProps = {
@@ -50,29 +45,14 @@ export default function ApplicationSeekerInfoModal({
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 30, stiffness: 300 }}
-        className="modal-sheet application-seeker-info-modal staff-ui max-h-[92vh] w-full overflow-y-auto p-6"
+        className="modal-sheet application-seeker-info-modal staff-ui max-h-[92vh] w-full overflow-y-auto p-0"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="application-seeker-info-title"
+        aria-label="応募者プロフィール"
       >
-        <div className="mb-1 flex justify-center sm:hidden">
-          <div className="h-1 w-10 rounded-full bg-slate-200" />
-        </div>
-
-        <div className="mb-5 mt-2 flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 id="application-seeker-info-title" className="text-lg font-bold text-slate-900">
-                {application.applicantName}
-              </h2>
-              <span className={`badge ${APPLICATION_STATUS_CHIP_COLORS[application.status]}`}>
-                {APPLICATION_STATUS_LABELS[application.status]}
-              </span>
-            </div>
-            <p className="mt-1 truncate text-sm text-slate-500">{application.applicantEmail}</p>
-            <p className="mt-1 text-xs text-slate-400">応募日: {formatDateJST(application.createdAt)}</p>
-          </div>
+        <div className="sticky top-0 z-10 flex items-center justify-end bg-white px-4 py-3 sm:px-5">
+          <div className="absolute left-1/2 top-2.5 h-1 w-10 -translate-x-1/2 rounded-full bg-slate-200 sm:hidden" />
           <button type="button" onClick={onClose} className="btn-icon btn-icon-muted shrink-0" aria-label="閉じる">
             <X className="h-5 w-5" />
           </button>
@@ -85,6 +65,7 @@ export default function ApplicationSeekerInfoModal({
           isCompany
           onUpdateStatus={onUpdateStatus}
           showChatLink={false}
+          layout="modal"
         />
       </motion.div>
     </motion.div>

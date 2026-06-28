@@ -125,7 +125,7 @@ function ApplicationSeekerAccordionItem({
   onUpdateStatus: (id: string, status: ApplicationStatus) => void;
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white">
+    <div className={`overflow-hidden rounded-xl border border-[var(--border)] ${expanded ? "bg-[#f1f1f2]" : "bg-white"}`}>
       <div
         className={`flex items-center gap-2 sm:gap-3 ${expanded ? "bg-blue-50/60" : ""}`}
       >
@@ -171,13 +171,16 @@ function ApplicationSeekerAccordionItem({
       </div>
 
       {expanded && (
-        <div className="border-t border-[var(--border)] px-4 py-4 sm:px-5">
+        <div className="border-t border-[var(--border)]">
           <ApplicationDetailBody
             application={application}
             seeker={seeker}
             basePath={basePath}
             isCompany
             onUpdateStatus={onUpdateStatus}
+            layout="embedded"
+            showHero={false}
+            showChatLink={false}
           />
         </div>
       )}
@@ -228,6 +231,7 @@ function ApplicationDetailCard({
           basePath={basePath}
           isCompany={isCompany}
           onUpdateStatus={onUpdateStatus}
+          showHero={false}
         />
       </div>
     </div>
@@ -566,7 +570,6 @@ export default function StaffApplicationsPage() {
                 {selectedJobMeta.applicantCount}件の応募
               </span>
             </h2>
-            <p className="text-xs text-slate-400">応募者をクリックして詳細を開く</p>
           </div>
 
           {jobApplicationsLoading ? (

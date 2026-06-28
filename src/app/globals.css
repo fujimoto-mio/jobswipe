@@ -2568,6 +2568,123 @@ body {
 .application-seeker-info-modal {
   max-width: 42rem;
 }
+
+.application-seeker-detail {
+  background: #f1f1f2;
+}
+
+.application-seeker-detail--embedded {
+  margin-inline: 0;
+}
+
+.application-seeker-detail--modal {
+  padding-bottom: 1rem;
+}
+
+.application-seeker-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #fff;
+  padding: 1.25rem 1rem 1.25rem;
+  text-align: center;
+}
+
+.application-seeker-avatar {
+  display: flex;
+  height: 5rem;
+  width: 5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: linear-gradient(to bottom right, #3b82f6, #1d4ed8);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  box-shadow:
+    0 10px 15px -3px rgb(59 130 246 / 0.25),
+    0 0 0 4px #fff;
+}
+
+.application-seeker-name {
+  margin-top: 1rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #0f172a;
+}
+
+.application-seeker-email {
+  margin-top: 0.125rem;
+  max-width: 16rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.application-seeker-meta {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.application-seeker-status-pill {
+  border-radius: 9999px;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.application-seeker-applied-date {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.application-seeker-status-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.application-seeker-status-chip {
+  border-radius: 9999px;
+  border: 1px solid rgba(22, 24, 35, 0.12);
+  background: #fff;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: rgba(22, 24, 35, 0.75);
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.application-seeker-status-chip:hover {
+  background: rgba(22, 24, 35, 0.04);
+}
+
+.application-seeker-status-chip-active {
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.application-seeker-detail .profile-section:first-of-type {
+  margin-top: 8px;
+}
+
+.application-seeker-detail:not(:has(.application-seeker-hero)) .profile-section:first-of-type {
+  margin-top: 0;
+}
+
+.application-seeker-detail-actions .profile-section-content {
+  padding-top: 12px;
+  padding-bottom: 16px;
+}
+
 @media (min-width: 640px) {
   .modal-sheet {
     border-radius: 1.25rem;

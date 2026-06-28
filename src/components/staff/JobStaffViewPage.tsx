@@ -9,7 +9,6 @@ import {
   Briefcase,
   CheckCircle,
   Gift,
-  ExternalLink,
   Pencil,
   Play,
 } from "lucide-react";
@@ -25,21 +24,6 @@ const APPROVAL_BADGE: Record<Job["approvalStatus"], string> = {
   approved: "badge-green",
   rejected: "badge-red",
 };
-
-function LinkItem({ href, label }: { href?: string; label: string }) {
-  if (!href) return null;
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex items-center gap-2.5 rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition active:scale-[0.98] hover:bg-slate-50"
-    >
-      <ExternalLink className="h-4 w-4 shrink-0" />
-      {label}
-    </a>
-  );
-}
 
 function JobViewHero({
   job,
@@ -142,13 +126,7 @@ export default function JobStaffViewPage({ jobId }: JobStaffViewPageProps) {
     return <PageLoading message="求人詳細を読み込み中..." minHeight="min-h-[320px]" />;
   }
 
-  const links = job.links ?? {};
   const canEdit = job.approvalStatus !== "approved";
-  const hasLinks =
-    links.careersPage ||
-    links.twitter ||
-    links.instagram ||
-    links.linkedin;
 
   return (
     <div className="company-profile-page staff-ui">
@@ -250,22 +228,6 @@ export default function JobStaffViewPage({ jobId }: JobStaffViewPageProps) {
                   </li>
                 ))}
               </ul>
-            </div>
-          </section>
-        )}
-
-        {hasLinks && (
-          <section className="company-profile-section">
-            <div className="company-profile-section-header">
-              <h2 className="company-profile-section-title">リンク</h2>
-            </div>
-            <div className="company-profile-section-body">
-              <div className="grid gap-2">
-                <LinkItem href={links.careersPage} label="採用ページ" />
-                <LinkItem href={links.twitter} label="Twitter / X" />
-                <LinkItem href={links.instagram} label="Instagram" />
-                <LinkItem href={links.linkedin} label="LinkedIn" />
-              </div>
             </div>
           </section>
         )}
