@@ -1958,6 +1958,10 @@ body {
   .company-dashboard-sections .company-profile-section:nth-child(2) .company-dashboard-metric-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+
+  .admin-dashboard-page .company-dashboard-sections .company-profile-section:nth-child(2) .company-dashboard-metric-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
 }
 
 .company-dashboard-metric {
@@ -2542,10 +2546,46 @@ body {
 .data-table-scroll > table {
   width: max-content;
   min-width: 100%;
+  table-layout: auto;
+}
+
+/* Staff jobs table: first column flexible, others fixed */
+.data-table-card.data-table-jobs-layout .data-table-scroll > table {
+  width: 100%;
+  max-width: 100%;
+  min-width: 100%;
+  table-layout: fixed;
+}
+
+.data-table-card.data-table-jobs-layout .data-table-col-job {
+  width: auto;
+  overflow: hidden;
+}
+
+.data-table-card.data-table-jobs-layout .data-table-col-company {
+  width: 9rem;
+  overflow: hidden;
+}
+
+.data-table-card.data-table-jobs-layout .data-table-col-status {
+  width: 6.5rem;
+}
+
+.data-table-card.data-table-jobs-layout .data-table-col-date {
+  width: 8.75rem;
+}
+
+.data-table-card.data-table-jobs-layout .data-table-col-actions {
+  width: 10rem;
 }
 
 @media (max-width: 639px) {
   .data-table-scroll > table {
+    min-width: 44rem;
+  }
+
+  .data-table-card.data-table-jobs-layout .data-table-scroll > table {
+    width: max-content;
     min-width: 44rem;
   }
 

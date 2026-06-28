@@ -1,0 +1,194 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { ArrowLeft, Briefcase, ExternalLink, Users } from "lucide-react";
+import CompanyLogo from "@/components/chat/CompanyLogo";
+import JobThumbnail from "@/components/JobThumbnail";
+import { PageLoading } from "@/components/ui/LoadingSpinner";
+import { APPLICATION_STATUS_LABELS, JOB_APPROVAL_LABELS } from "@/lib/constants";
+import { apiFetch } from "@/lib/api-client";
+import { companyLinkFormValues } from "@/lib/company-links";
+import type { AdminCompanyDetail } from "@/lib/db/admin-companies";
+
+function InfoRow({ label, value }: { label: string; value?: string | null }) {
+  return (
+    <div className="company-profile-info-row">
+      <div className="company-profile-info-label">{label}</div>
+      <div className="company-profile-info-value">
+        {value?.trim() ? value : <span className="text-slate-400">未設定</span>}
+      </div>
+    </div>
+  );
+}
+
+export default function AdminCompanyDetailPage() {
+  const params = useParams();
+  const companyId = params.id as string;
+  const [company, setCompany] = useState<AdminCompanyDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    apiFetch(`/api/admin/companies/${encodeURIComponent(companyId)}`)
+      .then(async (r) => {
+        if (!r.ok) throw new Error("not found");
+        return r.json();
+      })
+      .then((data) => setCompany(data.company ?? null))
+      .catch(() => setCompany(null))
+      .finally(() => setLoading(false));
+  }, [companyId]);
+
+  if (loading) {
+    return <PageLoading message="企業情報を読み込み中..." minHeight="min-h-[320px]" />;
+  }
+
+  if (!company) {
+    return (
+      <div className="company-dashboard-page">
+        <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+          企業が見つかりませんでした
+        </p>
+        <Link href="/admin/companies" className="btn-secondary mt-4 inline-flex items-center gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          企業一覧に戻る
+        </Link>
+      </div>
+    );
+  }
+
+  const links = companyLinkFormValues(company.links);
+  const linkRows = [
+    { label: "採用ページ", value: links.careersPage },
+    { label: "Twitter / X", value: links.twitter },
+    { label: "Instagram", value: links.instagram },
+    { label: "LinkedIn", value: links.linkedin },
+  ].filter((row) => row.value);
+
+  return (
+    <div className="company-dashboard-page">
+      <div className="mb-6">
+        <Link href="/admin/companies" className="btn-ghost mb-4 inline-flex items-center gap-1.5 text-sm text-slate-600">
+          <ArrowLeft className="h-4 w-4" />
+          企業一覧
+        </Link>
+        <div className="flex items-start gap-4">
+          <CompanyLogo company={company.name} logoUrl={company.logoUrl} size="lg" />
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">{company.name}</h1>
+            <p className="mt-1 text-sm text-slate-500">
+              登録日 {company.createdAt} · 求人 {company.jobCount}件 · 応募 {company.applicationCount}件
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="company-dashboard-sections">
+        <section className="company-profile-section">
+          <div className="company-profile-section-header">
+            <h2 className="company-profile-section-title">企業概要</h2>
+          </div>
+          <div className="company-profile-section-body">
+            <p className="company-profile-text">
+              {company.description?.trim() || "企業概要が未設定です"}
+            </p>
+          </div>
+        </section>
+
+        <section className="company-profile-section">
+          <div className="company-profile-section-header">
+            <h2 className="company-profile-section-title">会社情報</h2>
+          </div>
+          <div className="company-profile-section-body">
+            <div className="company-profile-info-table">
+              <InfoRow label="コーポレートサイト" value={company.website} />
+              <InfoRow label="郵便番号" value={company.postalCode} />
+              <InfoRow label="所在地" value={company.address} />
+              {linkRows.map((row) => (
+                <div key={row.label} className="company-profile-info-row">
+                  <div className="company-profile-info-label">{row.label}</div>
+                  <div className="company-profile-info-value">
+                    <a
+                      href={row.value}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 break-all font-medium text-blue-600 hover:underline"
+                    >
+                      {row.value}
+                      <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="company-profile-section">
+          <div className="company-profile-section-header">
+            <h2 className="company-profile-section-title">担当者アカウント</h2>
+          </div>
+          <div className="company-profile-section-body company-profile-section-body--flush">
+            {company.accounts.length === 0 ? (
+              <p className="company-profile-text company-profile-text--muted px-4 py-6 text-center">
+                担当者アカウントがありません
+              </p>
+            ) : (
+              <ul className="company-dashboard-action-list">
+                {company.accounts.map((account) => (
+                  <li key={account.id} className="company-dashboard-action-row">
+                    <div className="company-dashboard-action-icon">
+                      <Users className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="company-dashboard-action-title">{account.name || "未設定"}</p>
+                      <p className="company-dashboard-action-desc">{account.email}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </section>
+
+        <section className="company-profile-section">
+          <div className="company-profile-section-header company-dashboard-section-header-row">
+            <h2 className="company-profile-section-title">求人</h2>
+            <Link href="/admin/jobs" className="company-dashboard-link">
+              求人審査へ
+              <Briefcase className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+          <div className="company-profile-section-body company-profile-section-body--flush">
+            {company.recentJobs.length === 0 ? (
+              <p className="company-profile-text company-profile-text--muted px-4 py-6 text-center">
+                求人がありません
+              </p>
+            ) : (
+              <ul className="company-dashboard-action-list">
+                {company.recentJobs.map((job) => (
+                  <li key={job.id}>
+                    <Link href={`/admin/jobs/${job.id}/view`} className="company-dashboard-action-row">
+                      <JobThumbnail job={job} className="h-11 w-11 shrink-0 rounded-lg object-cover" showLogoBadge={false} />
+                      <div className="min-w-0 flex-1">
+                        <p className="company-dashboard-action-title">{job.title}</p>
+                        <p className="company-dashboard-action-desc">
+                          {job.category} · {JOB_APPROVAL_LABELS[job.approvalStatus]}
+                        </p>
+                      </div>
+                      <span className={`badge shrink-0 ${job.approvalStatus === "approved" ? "badge-green" : job.approvalStatus === "pending" ? "badge-amber" : "badge-red"}`}>
+                        {JOB_APPROVAL_LABELS[job.approvalStatus]}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </section>
+
+      </div>
+    </div>
+  );
+}

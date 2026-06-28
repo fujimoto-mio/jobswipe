@@ -107,7 +107,7 @@ type JobStaffViewPageProps = {
 
 export default function JobStaffViewPage({ jobId }: JobStaffViewPageProps) {
   const router = useRouter();
-  const { basePath } = useStaffPanel();
+  const { basePath, role } = useStaffPanel();
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -126,7 +126,7 @@ export default function JobStaffViewPage({ jobId }: JobStaffViewPageProps) {
     return <PageLoading message="求人詳細を読み込み中..." minHeight="min-h-[320px]" />;
   }
 
-  const canEdit = job.approvalStatus !== "approved";
+  const canEdit = role !== "admin" && job.approvalStatus !== "approved";
 
   return (
     <div className="company-profile-page staff-ui">

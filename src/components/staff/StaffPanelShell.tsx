@@ -14,6 +14,8 @@ import {
   User,
   Menu,
   X,
+  Building2,
+  Users,
 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import Logo from "@/components/ui/Logo";
@@ -96,8 +98,9 @@ export default function StaffPanelShell({ children }: StaffPanelShellProps) {
     role === "admin"
       ? [
           { href: basePath, label: "ダッシュボード", icon: LayoutDashboard },
+          { href: `${basePath}/companies`, label: "企業管理", icon: Building2 },
+          { href: `${basePath}/seekers`, label: "求職者管理", icon: Users },
           { href: `${basePath}/jobs`, label: "求人審査", icon: ShieldCheck },
-          { href: `${basePath}/applications`, label: "応募一覧", icon: FileText },
           { href: `${basePath}/profile`, label: "プロフィール", icon: User },
         ]
       : [

@@ -3,6 +3,8 @@
 import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
+import JobApprovalConfirmModal from "@/components/admin/JobApprovalConfirmModal";
 import JobThumbnail from "@/components/JobThumbnail";
 import PaginatedDataTable, {
   type ColumnDef,
@@ -72,16 +74,23 @@ export default function AdminJobsPage() {
   const isAdmin = role === "admin";
   const tableRef = useRef<PaginatedDataTableHandle>(null);
   const [approvalFilter, setApprovalFilter] = useState<"" | JobApprovalStatus>("");
+  const [pendingApproval, setPendingApproval] = useState<{
+    job: Job;
+    action: Extract<JobApprovalStatus, "approved" | "rejected">;
+  } | null>(null);
 
   const refetch = useCallback(async () => {
     await tableRef.current?.refetch();
   }, []);
 
   const updateApproval = async (id: string, approvalStatus: JobApprovalStatus) => {
-    await apiFetch("/api/admin/jobs", {
+    const res = await apiFetch("/api/admin/jobs", {
       method: "PATCH",
       body: JSON.stringify({ id, approvalStatus }),
     });
+    if (!res.ok) {
+      throw new Error("approval update failed");
+    }
     await refetch();
   };
 
@@ -99,11 +108,15 @@ export default function AdminJobsPage() {
       id: "job",
       header: "求人",
       sortable: true,
+      className: "data-table-col-job",
+      headerClassName: "data-table-col-job",
       cell: (job) => (
-        <div className="flex min-w-[220px] items-center gap-4">
+        <div className="flex w-full items-center gap-3">
           <JobThumbnail job={job} className="h-12 w-12 shrink-0 rounded-lg object-cover" />
-          <div className="min-w-0 space-y-1">
-            <p className="font-semibold text-[var(--foreground)]">{job.title}</p>
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5 overflow-hidden">
+            <p className="truncate font-semibold text-[var(--foreground)]" title={job.title}>
+              {job.title}
+            </p>
             <p className="truncate text-xs text-[var(--muted)]">
               {job.category} · {job.area || job.location}
             </p>
@@ -114,10 +127,31 @@ export default function AdminJobsPage() {
         </div>
       ),
     },
+    ...(isAdmin
+      ? [
+          {
+            id: "company",
+            header: "企業",
+            sortable: true,
+            className: "data-table-col-company",
+            headerClassName: "data-table-col-company",
+            cell: (job: Job) => (
+              <span
+                className="block truncate text-sm font-medium text-[var(--foreground)]"
+                title={job.company}
+              >
+                {job.company}
+              </span>
+            ),
+          } satisfies ColumnDef<Job>,
+        ]
+      : []),
     {
       id: "status",
       header: "ステータス",
       sortable: true,
+      className: "data-table-col-status",
+      headerClassName: "data-table-col-status",
       cell: (job) => (
         <span className={`badge ${STATUS_COLORS[job.approvalStatus]}`}>
           {JOB_APPROVAL_LABELS[job.approvalStatus]}
@@ -128,6 +162,8 @@ export default function AdminJobsPage() {
       id: "postedAt",
       header: "掲載日",
       sortable: true,
+      className: "data-table-col-date",
+      headerClassName: "data-table-col-date",
       cell: (job) => (
         <span className="whitespace-nowrap text-xs text-[var(--muted)]">
           {formatDateTimeJST(job.postedAt)}
@@ -138,6 +174,8 @@ export default function AdminJobsPage() {
       id: "approvedAt",
       header: "承認日",
       sortable: true,
+      className: "data-table-col-date",
+      headerClassName: "data-table-col-date",
       cell: (job) => (
         <span className="whitespace-nowrap text-xs text-[var(--muted)]">
           {job.approvedAt ? formatDateTimeJST(job.approvedAt) : "—"}
@@ -147,25 +185,35 @@ export default function AdminJobsPage() {
     {
       id: "actions",
       header: "操作",
-      headerClassName: "text-right",
-      className: "text-right",
-      cell: (job) => (
-        <TableRowActions>
-          {isAdmin && job.approvalStatus === "pending" && (
-            <>
-              <TableApproveButton onClick={() => updateApproval(job.id, "approved")} />
-              <TableRejectButton onClick={() => updateApproval(job.id, "rejected")} />
-            </>
-          )}
-          <TableViewLink href={`${basePath}/jobs/${job.id}/view`} />
-          {job.approvalStatus !== "approved" && (
-            <>
-              <TableEditLink href={`${basePath}/jobs/${job.id}/edit`} />
-              <TableDeleteButton onClick={() => handleDelete(job.id)} />
-            </>
-          )}
-        </TableRowActions>
-      ),
+      headerClassName: "data-table-col-actions text-right",
+      className: "data-table-col-actions text-right",
+      cell: (job) => {
+        if (isAdmin) {
+          return (
+            <TableRowActions>
+              <TableViewLink href={`${basePath}/jobs/${job.id}/view`} />
+              {job.approvalStatus === "pending" && (
+                <>
+                  <TableApproveButton onClick={() => setPendingApproval({ job, action: "approved" })} />
+                  <TableRejectButton onClick={() => setPendingApproval({ job, action: "rejected" })} />
+                </>
+              )}
+            </TableRowActions>
+          );
+        }
+
+        return (
+          <TableRowActions>
+            <TableViewLink href={`${basePath}/jobs/${job.id}/view`} />
+            {job.approvalStatus !== "approved" && (
+              <>
+                <TableEditLink href={`${basePath}/jobs/${job.id}/edit`} />
+                <TableDeleteButton onClick={() => handleDelete(job.id)} />
+              </>
+            )}
+          </TableRowActions>
+        );
+      },
     },
   ];
 
@@ -173,18 +221,27 @@ export default function AdminJobsPage() {
     <>
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">求人管理</h1>
-          <p className="mt-1 text-sm text-slate-500">検索・フィルター・並び替えで求人を管理</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            {isAdmin ? "求人審査" : "求人管理"}
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            {isAdmin
+              ? "求人内容の確認と承認・却下"
+              : "検索・フィルター・並び替えで求人を管理"}
+          </p>
         </div>
-        <Link href={`${basePath}/jobs/new`} className="staff-ui btn-primary shrink-0">
-          <Plus className="h-4 w-4" />
-          求人登録
-        </Link>
+        {!isAdmin && (
+          <Link href={`${basePath}/jobs/new`} className="staff-ui btn-primary shrink-0">
+            <Plus className="h-4 w-4" />
+            求人登録
+          </Link>
+        )}
       </div>
 
       <PaginatedDataTable
         ref={tableRef}
         staffStyle
+        className="data-table-jobs-layout"
         columns={columns}
         getRowId={(job) => job.id}
         fetchUrl="/api/admin/jobs"
@@ -224,6 +281,20 @@ export default function AdminJobsPage() {
           />
         )}
       />
+
+      <AnimatePresence>
+        {pendingApproval && (
+          <JobApprovalConfirmModal
+            key={`${pendingApproval.job.id}-${pendingApproval.action}`}
+            job={pendingApproval.job}
+            action={pendingApproval.action}
+            onClose={() => setPendingApproval(null)}
+            onConfirm={() =>
+              updateApproval(pendingApproval.job.id, pendingApproval.action)
+            }
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }
