@@ -23,17 +23,10 @@ export const emptyJobFormValues: JobFormValues = {
   requirements: "",
   benefits: "",
   tags: "",
-  website: "",
-  careersPage: "",
-  twitter: "",
-  instagram: "",
-  linkedin: "",
-  jobPdf: "",
   videoUrl: "",
 };
 
 export function jobToFormValues(job: Job): JobFormValues {
-  const links = job.links ?? {};
   const { salaryMin, salaryMax } = parseJobSalary(job.salary);
   return {
     title: job.title,
@@ -48,12 +41,6 @@ export function jobToFormValues(job: Job): JobFormValues {
     requirements: job.requirements.join("\n"),
     benefits: job.benefits.join("\n"),
     tags: job.tags.join(", "),
-    website: links.website ?? "",
-    careersPage: links.careersPage ?? "",
-    twitter: links.twitter ?? "",
-    instagram: links.instagram ?? "",
-    linkedin: links.linkedin ?? "",
-    jobPdf: links.jobPdf ?? "",
     videoUrl: job.videoUrl,
   };
 }
@@ -84,13 +71,5 @@ export function jobFormValuesToBody(values: JobFormValues, videoUrl?: string, th
       .split(",")
       .map((t) => t.trim())
       .filter(Boolean),
-    links: {
-      website: values.website || undefined,
-      careersPage: values.careersPage || undefined,
-      twitter: values.twitter || undefined,
-      instagram: values.instagram || undefined,
-      linkedin: values.linkedin || undefined,
-      jobPdf: values.jobPdf || undefined,
-    },
   };
 }

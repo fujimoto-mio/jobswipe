@@ -2,6 +2,7 @@ import type { Job as PrismaJob, Company, Application as PrismaApplication, ChatM
 import { birthdayToInputValue } from "@/lib/birthday";
 import { asStringArray as parseNonEmptyStrings, asWorkHistory, asSkills } from "@/lib/profile-fields";
 import { getCompanyLogoUrl } from "@/lib/job-image";
+import { resolveJobLinks } from "@/lib/company-links";
 import { formatDateISOJST, serializeTimestamp } from "@/lib/datetime";
 import type {
   Application,
@@ -9,7 +10,6 @@ import type {
   ChatMessage,
   Job,
   JobApprovalStatus,
-  JobLinks,
   UserProfile,
 } from "@/lib/types";
 
@@ -17,11 +17,6 @@ type JobWithCompany = PrismaJob & { company: Company };
 
 function asJsonStringArray(value: unknown): string[] {
   return Array.isArray(value) ? (value as string[]) : [];
-}
-
-function asJobLinks(value: unknown): JobLinks {
-  if (!value || typeof value !== "object") return {};
-  return value as JobLinks;
 }
 
 export function mapJob(row: JobWithCompany): Job {
@@ -44,7 +39,7 @@ export function mapJob(row: JobWithCompany): Job {
     thumbnailUrl: row.thumbnailUrl ?? getCompanyLogoUrl(row.company.name),
     postedAt: formatDateISOJST(row.postedAt),
     approvedAt: row.approvedAt ? serializeTimestamp(row.approvedAt) : null,
-    links: asJobLinks(row.links),
+    links: resolveJobLinks(row.company, row.links),
     approvalStatus: row.approvalStatus as JobApprovalStatus,
     viewCount: row.viewCount,
   };

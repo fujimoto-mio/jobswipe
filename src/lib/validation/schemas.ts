@@ -221,6 +221,10 @@ export const companyProfileSchema = Yup.object({
   address: Yup.string().trim(),
   overview: Yup.string().trim(),
   business: Yup.string().trim(),
+  careersPage: optionalUrl,
+  twitter: optionalUrl,
+  instagram: optionalUrl,
+  linkedin: optionalUrl,
 });
 
 export const jobFormSchema = Yup.object({
@@ -248,7 +252,12 @@ export const jobFormSchema = Yup.object({
     .required("職種を選択してください"),
   salaryMin: Yup.string()
     .required("年収（下限）を選択してください")
-    .test("valid-min", "年収（下限）を選択してください", (value) => isValidSalaryMin(value)),
+    .test("valid-min", "年収（下限）を選択してください", (value) => isValidSalaryMin(value))
+    .test("salary-order", "下限は上限以下にしてください", function (min) {
+      const max = this.parent.salaryMax as string;
+      if (!min || min === "応相談" || !max) return true;
+      return isValidJobSalaryRange(min, max);
+    }),
   salaryMax: Yup.string().when(["salaryMin"], ([salaryMin], schema) => {
     if (salaryMin === "応相談") return schema.optional();
     return schema
@@ -264,12 +273,6 @@ export const jobFormSchema = Yup.object({
   requirements: Yup.string(),
   benefits: Yup.string(),
   tags: Yup.string(),
-  website: optionalUrl,
-  careersPage: optionalUrl,
-  twitter: optionalUrl,
-  instagram: optionalUrl,
-  linkedin: optionalUrl,
-  jobPdf: optionalUrl,
   videoUrl: Yup.string()
     .trim()
     .transform((v) => (v ? v : undefined))

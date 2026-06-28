@@ -132,6 +132,13 @@ export function parseJobSalary(salary: string): { salaryMin: string; salaryMax: 
   return { salaryMin: "", salaryMax: "" };
 }
 
+export function defaultMaxForMin(min: string): string {
+  if (!min || min === "応相談") return "";
+  const minAmount = salaryAmount(min);
+  const match = JOB_SALARY_MAX_OPTIONS.find((option) => salaryAmount(option) >= minAmount);
+  return match ?? JOB_SALARY_MAX_OPTIONS[JOB_SALARY_MAX_OPTIONS.length - 1] ?? "";
+}
+
 export function isValidJobSalaryRange(min: string, max: string): boolean {
   if (min === "応相談") return true;
   if (!min || !max) return false;

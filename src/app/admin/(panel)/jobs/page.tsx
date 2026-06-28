@@ -100,9 +100,9 @@ export default function AdminJobsPage() {
       header: "求人",
       sortable: true,
       cell: (job) => (
-        <div className="flex min-w-[220px] items-center gap-3">
+        <div className="flex min-w-[220px] items-center gap-4">
           <JobThumbnail job={job} className="h-12 w-12 shrink-0 rounded-lg object-cover" />
-          <div className="min-w-0">
+          <div className="min-w-0 space-y-1">
             <p className="font-semibold text-[var(--foreground)]">{job.title}</p>
             <p className="truncate text-xs text-[var(--muted)]">
               {job.category} · {job.area || job.location}

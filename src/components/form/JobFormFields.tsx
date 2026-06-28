@@ -13,7 +13,7 @@ import {
 import { FormError, FormSelect, FormTextInput, FormTextarea } from "@/components/form/FormFields";
 import FormSelectPicker from "@/components/form/FormSelectPicker";
 import type { JobFormValues } from "@/lib/validation/schemas";
-import { formatJobSalary } from "@/lib/validation/job-salary";
+import { formatJobSalary, defaultMaxForMin, isValidJobSalaryRange } from "@/lib/validation/job-salary";
 
 export type CompanyOption = {
   id: string;
@@ -79,16 +79,56 @@ function CompanyFields({ companyLocked, companies, readOnly }: JobFormFieldsProp
 }
 
 function FormJobSalaryField({ readOnly }: { readOnly?: boolean }) {
-  const { values, setFieldValue } = useFormikContext<JobFormValues>();
-  const [salaryMinField, salaryMinMeta, salaryMinHelpers] = useField("salaryMin");
-  const [salaryMaxField, salaryMaxMeta, salaryMaxHelpers] = useField("salaryMax");
+  const { values, setFieldValue, validateField, setFieldTouched } = useFormikContext<JobFormValues>();
+  const [salaryMinField, salaryMinMeta] = useField("salaryMin");
+  const [salaryMaxField, salaryMaxMeta] = useField("salaryMax");
   const isNegotiable = values.salaryMin === "応相談";
 
   useEffect(() => {
     if (isNegotiable) {
-      setFieldValue("salaryMax", "");
+      void setFieldValue("salaryMax", "", false);
     }
   }, [isNegotiable, setFieldValue]);
+
+  const revalidateSalary = async () => {
+    await validateField("salaryMin");
+    await validateField("salaryMax");
+  };
+
+  const handleSalaryMinChange = async (value: string) => {
+    let nextMax = values.salaryMax ?? "";
+
+    if (value === "応相談") {
+      nextMax = "";
+    } else if (value && nextMax && !isValidJobSalaryRange(value, nextMax)) {
+      nextMax = defaultMaxForMin(value);
+    }
+
+    await setFieldValue("salaryMin", value, false);
+    await setFieldValue("salaryMax", nextMax, false);
+    await setFieldTouched("salaryMin", true, false);
+    if (nextMax || value === "応相談") {
+      await setFieldTouched("salaryMax", true, false);
+    }
+    await revalidateSalary();
+  };
+
+  const handleSalaryMaxChange = async (value: string) => {
+    await setFieldValue("salaryMax", value, false);
+    await setFieldTouched("salaryMax", true, false);
+    await setFieldTouched("salaryMin", true, false);
+    await revalidateSalary();
+  };
+
+  const handleSalaryMinBlur = () => {
+    void setFieldTouched("salaryMin", true);
+    void revalidateSalary();
+  };
+
+  const handleSalaryMaxBlur = () => {
+    void setFieldTouched("salaryMax", true);
+    void revalidateSalary();
+  };
 
   if (readOnly) {
     return (
@@ -103,9 +143,13 @@ function FormJobSalaryField({ readOnly }: { readOnly?: boolean }) {
     );
   }
 
-  const pickerProps = {
-    error: Boolean(salaryMinMeta.error || salaryMaxMeta.error),
-    touched: Boolean(salaryMinMeta.touched || salaryMaxMeta.touched),
+  const minPickerProps = {
+    error: Boolean(salaryMinMeta.error),
+    touched: Boolean(salaryMinMeta.touched),
+  };
+  const maxPickerProps = {
+    error: Boolean(salaryMaxMeta.error),
+    touched: Boolean(salaryMaxMeta.touched),
   };
 
   return (
@@ -113,25 +157,25 @@ function FormJobSalaryField({ readOnly }: { readOnly?: boolean }) {
       <span className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">年収 *</span>
       <div className={`grid gap-3 ${isNegotiable ? "grid-cols-1" : "grid-cols-2"}`}>
         <FormSelectPicker
-          {...pickerProps}
+          {...minPickerProps}
           name={salaryMinField.name}
           value={salaryMinField.value ?? ""}
           options={JOB_SALARY_MIN_OPTIONS}
           placeholder="下限"
           title="年収（下限）"
-          onChange={(value) => salaryMinHelpers.setValue(value)}
-          onBlur={() => salaryMinHelpers.setTouched(true)}
+          onChange={(value) => void handleSalaryMinChange(value)}
+          onBlur={handleSalaryMinBlur}
         />
         {!isNegotiable && (
           <FormSelectPicker
-            {...pickerProps}
+            {...maxPickerProps}
             name={salaryMaxField.name}
             value={salaryMaxField.value ?? ""}
             options={JOB_SALARY_MAX_OPTIONS}
             placeholder="上限"
             title="年収（上限）"
-            onChange={(value) => salaryMaxHelpers.setValue(value)}
-            onBlur={() => salaryMaxHelpers.setTouched(true)}
+            onChange={(value) => void handleSalaryMaxChange(value)}
+            onBlur={handleSalaryMaxBlur}
           />
         )}
       </div>
@@ -194,18 +238,6 @@ export default function JobFormFields({
         readOnly={readOnly}
       />
       <FormTextInput name="tags" label="タグ（カンマ区切り）" placeholder="React, リモート可, フレックス" readOnly={readOnly} />
-
-      <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-5">
-        <h3 className="mb-3 font-medium text-[#1E293B]">リンク設定</h3>
-        <div className="grid gap-3 md:grid-cols-2">
-          <FormTextInput name="website" label="企業HP URL" placeholder="https://..." readOnly={readOnly} />
-          <FormTextInput name="careersPage" label="採用ページ URL" placeholder="https://..." readOnly={readOnly} />
-          <FormTextInput name="twitter" label="Twitter / X URL" placeholder="https://..." readOnly={readOnly} />
-          <FormTextInput name="instagram" label="Instagram URL" placeholder="https://..." readOnly={readOnly} />
-          <FormTextInput name="linkedin" label="LinkedIn URL" placeholder="https://..." readOnly={readOnly} />
-          <FormTextInput name="jobPdf" label="求人票PDF URL" placeholder="https://..." readOnly={readOnly} />
-        </div>
-      </div>
     </>
   );
 }

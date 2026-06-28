@@ -196,16 +196,14 @@ export default function JobDetailModal({
             </ul>
           </section>
 
-          {(links.website || links.careersPage || links.twitter || links.instagram || links.linkedin || links.jobPdf) && (
+          {(links.careersPage || links.twitter || links.instagram || links.linkedin) && (
             <section className="mb-6">
               <h3 className="mb-2 text-sm font-semibold text-[#64748B]">リンク</h3>
               <div className="grid gap-2">
-                <LinkItem href={links.website} label="企業HP" />
                 <LinkItem href={links.careersPage} label="採用ページ" />
                 <LinkItem href={links.twitter} label="Twitter / X" />
                 <LinkItem href={links.instagram} label="Instagram" />
                 <LinkItem href={links.linkedin} label="LinkedIn" />
-                <LinkItem href={links.jobPdf} label="求人票・募集要項PDF" />
               </div>
             </section>
           )}

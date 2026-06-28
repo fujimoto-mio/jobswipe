@@ -19,6 +19,7 @@ import { useStaffPanel } from "@/components/staff/StaffPanelContext";
 import { apiFetch } from "@/lib/api-client";
 import { uploadFile } from "@/lib/upload-client";
 import { companyProfileSchema } from "@/lib/validation/schemas";
+import type { JobLinks } from "@/lib/types";
 
 type CompanyProfile = {
   role: "company";
@@ -33,6 +34,10 @@ type CompanyProfile = {
   companyWebsite: string | null;
   companyPostalCode: string | null;
   companyAddress: string | null;
+  companyCareersPage: string | null;
+  companyTwitter: string | null;
+  companyInstagram: string | null;
+  companyLinkedin: string | null;
 };
 
 const EDIT_TOC_ITEMS = [
@@ -132,6 +137,22 @@ function shouldCollapseBusiness(text: string) {
   return text.length > 420 || text.split("\n").length > 8;
 }
 
+const PROFILE_LINK_ITEMS = [
+  { key: "careersPage", label: "採用ページ" },
+  { key: "twitter", label: "Twitter / X" },
+  { key: "instagram", label: "Instagram" },
+  { key: "linkedin", label: "LinkedIn" },
+] as const satisfies ReadonlyArray<{ key: keyof JobLinks; label: string }>;
+
+function profileToLinks(profile: CompanyProfile): JobLinks {
+  return {
+    careersPage: profile.companyCareersPage ?? undefined,
+    twitter: profile.companyTwitter ?? undefined,
+    instagram: profile.companyInstagram ?? undefined,
+    linkedin: profile.companyLinkedin ?? undefined,
+  };
+}
+
 export default function CompanyProfilePage() {
   const router = useRouter();
   const { loginPath } = useStaffPanel();
@@ -166,7 +187,15 @@ export default function CompanyProfilePage() {
   }, [router, loginPath]);
 
   if (loading || !profile) {
-    return <PageLoading message="プロフィールを読み込み中..." minHeight="min-h-[320px]" />;
+    return (
+      <>
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">プロフィール</h1>
+          <p className="mt-1 text-sm text-slate-500">求職者に表示される企業紹介ページ</p>
+        </div>
+        <PageLoading message="プロフィールを読み込み中..." minHeight="min-h-[320px]" />
+      </>
+    );
   }
 
   const contactName = profile.name?.trim() || profile.email.split("@")[0];
@@ -175,6 +204,7 @@ export default function CompanyProfilePage() {
   const { overview, business } = splitCompanyDescription(profile.companyDescription);
   const showBusinessToggle = shouldCollapseBusiness(business);
   const businessPreview = showBusinessToggle && !businessExpanded ? `${business.slice(0, 420).trim()}…` : business;
+  const profileLinks = profileToLinks(profile);
 
   const clearLogoSelection = () => {
     setLogoFile(null);
@@ -281,20 +311,11 @@ export default function CompanyProfilePage() {
 
   return (
     <div className="company-profile-page">
-      <div className="company-profile-toolbar">
-        <p className="company-profile-toolbar-note">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">プロフィール</h1>
+        <p className="mt-1 text-sm text-slate-500">
           {editing ? "求職者向けページの編集" : "求職者に表示される企業紹介ページのプレビュー"}
         </p>
-        {!editing ? (
-          <button type="button" onClick={startEditing} className="btn-ghost shrink-0 text-blue-600">
-            <Pencil className="h-4 w-4" />
-            編集
-          </button>
-        ) : (
-          <button type="button" onClick={cancelEditing} className="btn-secondary shrink-0 px-4 py-2 text-sm">
-            キャンセル
-          </button>
-        )}
       </div>
 
       {saveError && (
@@ -311,6 +332,10 @@ export default function CompanyProfilePage() {
             website: profile.companyWebsite ?? "",
             postalCode: profile.companyPostalCode ?? "",
             address: profile.companyAddress ?? "",
+            careersPage: profile.companyCareersPage ?? "",
+            twitter: profile.companyTwitter ?? "",
+            instagram: profile.companyInstagram ?? "",
+            linkedin: profile.companyLinkedin ?? "",
             ...splitForForm(profile.companyDescription),
           }}
           validationSchema={companyProfileSchema}
@@ -342,6 +367,10 @@ export default function CompanyProfilePage() {
                 website: values.website,
                 postalCode: values.postalCode,
                 address: values.address,
+                careersPage: values.careersPage,
+                twitter: values.twitter,
+                instagram: values.instagram,
+                linkedin: values.linkedin,
                 description: combineDescription(values.overview, values.business),
               };
               if (companyLogoUrl !== undefined) payload.companyLogoUrl = companyLogoUrl;
@@ -536,7 +565,7 @@ export default function CompanyProfilePage() {
                       <div className="company-profile-section-header">
                         <h2 className="company-profile-section-title">会社情報</h2>
                         <p className="company-profile-edit-lead">
-                          社名とサイトURLはヘッダーで編集できます。郵便番号・所在地は求職者向けページに表示されます。
+                          社名とサイトURLはヘッダーで編集できます。郵便番号・所在地・採用ページやSNSのリンクは求職者向けページに表示されます。
                         </p>
                       </div>
                       <div className="company-profile-section-body">
@@ -570,26 +599,22 @@ export default function CompanyProfilePage() {
                           autoComplete="street-address"
                         />
                         <CompanyAddressMap address={values.address} companyName={editCompanyName} />
+                        <div className="grid gap-4 border-t border-slate-200 pt-4 md:grid-cols-2">
+                          <FormTextInput
+                            name="careersPage"
+                            label="採用ページ URL"
+                            placeholder="https://..."
+                          />
+                          <FormTextInput name="twitter" label="Twitter / X URL" placeholder="https://..." />
+                          <FormTextInput name="instagram" label="Instagram URL" placeholder="https://..." />
+                          <FormTextInput name="linkedin" label="LinkedIn URL" placeholder="https://..." />
+                        </div>
                       </div>
                       </div>
                     </section>
                   </main>
 
                   <aside className="company-profile-sidebar">
-                    <nav className="company-profile-toc" aria-label="編集セクション">
-                      <p className="company-profile-toc-title">目次</p>
-                      {EDIT_TOC_ITEMS.map(({ id, label }) => (
-                        <button
-                          key={id}
-                          type="button"
-                          onClick={() => scrollToSection(id)}
-                          className="company-profile-toc-link text-left"
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </nav>
-
                     <section id="edit-staff" className="company-profile-side-card company-profile-edit-section">
                       <h3 className="company-profile-side-card-title">担当者（チャット）</h3>
                       <p className="company-profile-edit-lead mb-3">
@@ -673,15 +698,6 @@ export default function CompanyProfilePage() {
                         キャンセル
                       </button>
                     </div>
-
-                    <div className="company-profile-side-card">
-                      <div className="flex items-start gap-2">
-                        <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-                        <p className="text-xs leading-relaxed text-slate-500">
-                          保存すると求職者向けの企業紹介・求人・チャットに反映されます。
-                        </p>
-                      </div>
-                    </div>
                   </aside>
                 </div>
               </Form>
@@ -718,6 +734,12 @@ export default function CompanyProfilePage() {
                 ) : (
                   <p className="text-sm text-slate-400">コーポレートサイト未設定</p>
                 )}
+              </div>
+              <div className="company-profile-hero-actions">
+                <button type="button" onClick={startEditing} className="btn-ghost shrink-0 text-blue-600">
+                  <Pencil className="h-4 w-4" />
+                  編集
+                </button>
               </div>
             </div>
           </section>
@@ -819,6 +841,26 @@ export default function CompanyProfilePage() {
                       )}
                     </div>
                   </div>
+                  {PROFILE_LINK_ITEMS.map(({ key, label }) => {
+                    const href = profileLinks[key];
+                    if (!href) return null;
+                    return (
+                      <div key={key} className="company-profile-info-row">
+                        <div className="company-profile-info-label">{label}</div>
+                        <div className="company-profile-info-value">
+                          <a
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-start gap-1.5 break-all font-medium text-blue-600 hover:underline"
+                          >
+                            <span>{href}</span>
+                            <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
                 </div>
               </section>

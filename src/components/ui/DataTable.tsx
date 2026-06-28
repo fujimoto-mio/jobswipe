@@ -168,7 +168,7 @@ export default function DataTable<T>({
               {columns.map((col) => (
                 <th
                   key={col.id}
-                  className={`px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-[var(--muted)] sm:px-4 sm:py-3 ${col.headerClassName ?? ""}`}
+                  className={`px-3 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--muted)] sm:px-4 sm:py-3.5 ${col.headerClassName ?? ""}`}
                 >
                   {col.sortable && onSortChange ? (
                     <button
@@ -222,7 +222,7 @@ export default function DataTable<T>({
                     {columns.map((col) => (
                       <td
                         key={col.id}
-                        className={`px-3 py-2.5 align-middle text-[var(--body)] sm:px-4 sm:py-3 ${col.className ?? ""}`}
+                        className={`px-3 py-4 align-middle text-[var(--body)] sm:px-4 sm:py-5 ${col.className ?? ""}`}
                       >
                         {col.cell(row)}
                       </td>

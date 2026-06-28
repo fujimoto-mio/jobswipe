@@ -1776,7 +1776,7 @@ body {
 @media (min-width: 640px) {
   .company-profile-hero-body {
     flex-direction: row;
-    align-items: center;
+    align-items: flex-start;
     gap: 1.25rem;
     padding: 0.875rem 1.75rem 1.75rem;
   }
@@ -1802,9 +1802,22 @@ body {
 .company-profile-hero-meta {
   display: flex;
   min-width: 0;
+  flex: 1;
   flex-direction: column;
   gap: 0.5rem;
   padding-top: 0.25rem;
+}
+
+.company-profile-hero-actions {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding-top: 0.25rem;
+}
+
+@media (min-width: 640px) {
+  .company-profile-hero-actions {
+    padding-top: 0.5rem;
+  }
 }
 
 @media (min-width: 640px) {
@@ -1848,7 +1861,7 @@ body {
 
 @media (min-width: 1024px) {
   .company-profile-layout {
-    grid-template-columns: minmax(0, 1fr) 220px;
+    grid-template-columns: minmax(0, 1fr) 300px;
     align-items: start;
   }
 }
@@ -1911,6 +1924,16 @@ body {
   border-radius: 0.75rem;
 }
 
+.company-profile-section-body > .company-profile-info-table {
+  border: none;
+  border-radius: 0;
+}
+
+.company-profile-section-body > .company-profile-info-table .company-profile-info-label,
+.company-profile-section-body > .company-profile-info-table .company-profile-info-value {
+  padding-inline: 0;
+}
+
 .company-profile-info-row {
   display: grid;
   align-items: center;
@@ -1929,7 +1952,6 @@ body {
 
 .company-profile-info-label {
   padding: 0.875rem 1rem;
-  background: #f8fafc;
   font-size: 0.8125rem;
   font-weight: 600;
   color: #64748b;
@@ -1944,6 +1966,10 @@ body {
 }
 
 .company-profile-info-row:has(.company-profile-map) {
+  align-items: start;
+}
+
+.company-profile-info-table--links .company-profile-info-row {
   align-items: start;
 }
 

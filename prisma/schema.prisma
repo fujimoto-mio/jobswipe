@@ -17,6 +17,7 @@ model Company {
   website     String?
   postalCode  String?  @map("postal_code")
   address     String?
+  links       Json     @default("{}")
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   jobs        Job[]
   accounts    Account[]

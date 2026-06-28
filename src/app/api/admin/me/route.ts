@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireStaffUser } from "@/lib/auth/admin";
+import { companyLinkFormValues, companyLinksFromForm } from "@/lib/company-links";
 import { prisma } from "@/lib/prisma";
 import { getCompanyLogoUrl, isGeneratedCompanyLogo } from "@/lib/job-image";
 
@@ -18,8 +19,10 @@ function staffProfileResponse(account: {
     website: string | null;
     postalCode: string | null;
     address: string | null;
+    links: unknown;
   } | null;
 }) {
+  const linkFields = companyLinkFormValues(account.company?.links);
   return {
     role: account.role,
     companyId: account.companyId,
@@ -30,6 +33,10 @@ function staffProfileResponse(account: {
     companyWebsite: account.company?.website ?? null,
     companyPostalCode: account.company?.postalCode ?? null,
     companyAddress: account.company?.address ?? null,
+    companyCareersPage: linkFields.careersPage || null,
+    companyTwitter: linkFields.twitter || null,
+    companyInstagram: linkFields.instagram || null,
+    companyLinkedin: linkFields.linkedin || null,
     email: account.email,
     name: account.name,
     avatarUrl: account.avatarUrl,
@@ -59,6 +66,10 @@ type StaffProfilePatchBody = {
   description?: string;
   postalCode?: string;
   address?: string;
+  careersPage?: string;
+  twitter?: string;
+  instagram?: string;
+  linkedin?: string;
   companyLogoUrl?: string | null;
   companyBannerUrl?: string | null;
   avatarUrl?: string | null;
@@ -122,6 +133,7 @@ export async function PATCH(request: Request) {
         description: string | null;
         postalCode: string | null;
         address: string | null;
+        links: ReturnType<typeof companyLinksFromForm>;
         logoUrl?: string | null;
         bannerUrl?: string | null;
       } = {
@@ -130,6 +142,7 @@ export async function PATCH(request: Request) {
         description,
         postalCode: formattedPostalCode,
         address,
+        links: companyLinksFromForm(body),
       };
 
       if (logoFromBody !== undefined) {

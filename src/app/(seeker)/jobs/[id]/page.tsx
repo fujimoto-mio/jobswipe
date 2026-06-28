@@ -170,12 +170,10 @@ export default function JobDetailPage() {
         <section className="mb-4">
           <h2 className="mb-2.5 px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">リンク</h2>
           <div className="grid gap-2">
-            <LinkItem href={links.website} label="企業HP" />
             <LinkItem href={links.careersPage} label="採用ページ" />
             <LinkItem href={links.twitter} label="Twitter / X" />
             <LinkItem href={links.instagram} label="Instagram" />
             <LinkItem href={links.linkedin} label="LinkedIn" />
-            <LinkItem href={links.jobPdf} label="求人票・募集要項PDF" />
           </div>
         </section>
       </div>
