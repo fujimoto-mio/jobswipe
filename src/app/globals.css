@@ -1924,6 +1924,177 @@ body {
   border-radius: 0.75rem;
 }
 
+.company-profile-section-body--flush {
+  padding-top: 4px;
+  padding-bottom: 8px;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Company dashboard — aligned with company profile sections */
+.company-dashboard-page {
+  max-width: 1120px;
+  margin-inline: auto;
+}
+
+.company-dashboard-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.company-dashboard-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+@media (min-width: 1024px) {
+  .company-dashboard-metric-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .company-dashboard-sections .company-profile-section:nth-child(2) .company-dashboard-metric-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.company-dashboard-metric {
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+}
+
+.company-dashboard-metric-icon {
+  display: flex;
+  height: 2rem;
+  width: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #2563eb;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.05);
+}
+
+.company-dashboard-metric-value {
+  margin-top: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #0f172a;
+}
+
+.company-dashboard-metric-label {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.company-dashboard-action-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.company-dashboard-action-row {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 1rem 1.5rem;
+  transition: background-color 0.15s ease;
+}
+
+.company-dashboard-action-row:last-child {
+  border-bottom: none;
+}
+
+.company-dashboard-action-row:hover {
+  background: #f8fafc;
+}
+
+.company-dashboard-action-icon {
+  display: flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.625rem;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.company-dashboard-action-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.company-dashboard-action-desc {
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.company-dashboard-section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.company-dashboard-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.company-dashboard-link:hover {
+  text-decoration: underline;
+}
+
+.company-dashboard-chat-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.company-dashboard-chat-row {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 1rem 1.5rem;
+  transition: background-color 0.15s ease;
+}
+
+.company-dashboard-chat-row:last-child {
+  border-bottom: none;
+}
+
+.company-dashboard-chat-row:hover {
+  background: #f8fafc;
+}
+
+.company-dashboard-chat-avatar {
+  display: flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: #dbeafe;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
 .company-profile-section-body > .company-profile-info-table {
   border: none;
   border-radius: 0;
