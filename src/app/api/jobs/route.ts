@@ -33,7 +33,14 @@ export async function GET(request: Request) {
   }
 
   const jobs = await getAllJobs(filters, false);
-  return NextResponse.json({ jobs, total: jobs.length });
+  return NextResponse.json(
+    { jobs, total: jobs.length },
+    {
+      headers: {
+        "Cache-Control": "private, max-age=30, stale-while-revalidate=60",
+      },
+    }
+  );
 }
 
 export async function POST(request: Request) {

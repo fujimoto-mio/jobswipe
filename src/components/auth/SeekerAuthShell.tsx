@@ -1,14 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import Logo from "@/components/ui/Logo";
 
 type SeekerAuthShellProps = {
   title: string;
   subtitle: string;
-  backHref?: string;
-  backLabel?: string;
   footer?: React.ReactNode;
   children: React.ReactNode;
 };
@@ -16,24 +13,15 @@ type SeekerAuthShellProps = {
 export default function SeekerAuthShell({
   title,
   subtitle,
-  backHref = "/",
-  backLabel = "トップへ戻る",
   footer,
   children,
 }: SeekerAuthShellProps) {
   return (
     <div className="min-h-[100dvh] bg-[var(--surface)]">
       <header className="page-header">
-        <div className="page-container flex h-14 items-center justify-between sm:h-16">
+        <div className="page-container flex h-14 items-center sm:h-16">
           <Link href="/" className="shrink-0">
             <Logo inTopbar />
-          </Link>
-          <Link
-            href={backHref}
-            className="flex items-center gap-1.5 text-sm font-medium text-[var(--muted)] transition hover:text-[var(--foreground)]"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            {backLabel}
           </Link>
         </div>
       </header>

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Form, Formik } from "formik";
-import { ArrowLeft, Building2, LogIn, Shield } from "lucide-react";
+import { Building2, LogIn, Shield } from "lucide-react";
 import Logo from "@/components/ui/Logo";
 import { FormPassword, FormTextInput } from "@/components/form/FormFields";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -50,16 +50,9 @@ export default function StaffLoginForm({ mode }: StaffLoginFormProps) {
   return (
     <div className="min-h-[100dvh] bg-[var(--surface)]">
       <header className="page-header">
-        <div className="page-container flex h-14 items-center justify-between sm:h-16">
+        <div className="page-container flex h-14 items-center sm:h-16">
           <Link href="/" className="shrink-0">
             <Logo inTopbar />
-          </Link>
-          <Link
-            href="/"
-            className="flex items-center gap-1.5 text-sm font-medium text-[var(--muted)] transition hover:text-[var(--foreground)]"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            トップへ戻る
           </Link>
         </div>
       </header>

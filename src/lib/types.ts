@@ -74,7 +74,7 @@ export type Application = {
   seekerId?: string;
   applicantName: string;
   applicantEmail: string;
-  applicantAge?: number;
+  applicantBirthday?: string;
   applicantArea?: string;
   applicantJobType?: string;
   message?: string;
@@ -82,6 +82,8 @@ export type Application = {
   interviewSlot?: string;
   interviewBookedAt?: string;
   createdAt: string;
+  jobTitle?: string;
+  companyName?: string;
 };
 
 export type SeekerProfileDetail = UserProfile & {
@@ -99,7 +101,7 @@ export type CreateApplicationInput = {
   jobId: string;
   applicantName?: string;
   applicantEmail?: string;
-  applicantAge?: number;
+  applicantBirthday?: string;
   applicantArea?: string;
   applicantJobType?: string;
   message?: string;
@@ -108,7 +110,7 @@ export type CreateApplicationInput = {
 export type UserProfile = {
   name: string;
   gender: string;
-  age: number;
+  birthday: string;
   area: string;
   desiredJobType: string;
   experience: string;

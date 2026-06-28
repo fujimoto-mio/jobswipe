@@ -4,32 +4,24 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Form, Formik } from "formik";
-import { User, LogOut, Pencil, Briefcase } from "lucide-react";
+import { User, Pencil, Briefcase } from "lucide-react";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
 import BottomNav from "@/components/BottomNav";
 import { AppHeader, AppPage, AppBadge, AppCard } from "@/components/ui/AppShell";
 import EmptyState from "@/components/ui/EmptyState";
-import {
-  AREAS,
-  JOB_CATEGORIES,
-  GENDERS,
-  EXPERIENCE_LEVELS,
-  EMPLOYMENT_TYPES,
-  APPLICATION_STATUS_LABELS,
-} from "@/lib/constants";
-import { getProfile, saveProfile, clearProfile, isProfileComplete } from "@/lib/profile";
+import { APPLICATION_STATUS_LABELS } from "@/lib/constants";
+import { getProfile, saveProfile, isProfileComplete } from "@/lib/profile";
 import { apiFetch } from "@/lib/api-client";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { FormSelect, FormTextInput } from "@/components/form/FormFields";
-import { profileSchema } from "@/lib/validation/schemas";
-import type { Application, Job, UserProfile } from "@/lib/types";
+import SeekerProfileFormFields from "@/components/form/SeekerProfileFormFields";
+import { formatBirthdayDisplay } from "@/lib/birthday";
+import { profileEditSchema } from "@/lib/validation/schemas";
+import type { Application, UserProfile } from "@/lib/types";
 
 export default function ProfilePage() {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editing, setEditing] = useState(false);
   const [applications, setApplications] = useState<Application[]>([]);
-  const [jobs, setJobs] = useState<Record<string, Job>>({});
   const [saveCount, setSaveCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -37,55 +29,56 @@ export default function ProfilePage() {
     let cancelled = false;
 
     void (async () => {
-      setLoading(true);
       let p = getProfile();
-      if (!isProfileComplete(p)) {
-        const res = await apiFetch("/api/profile");
-        const data = await res.json();
-        if (cancelled) return;
-        p = data.profile ?? null;
-        if (!isProfileComplete(p)) {
-          router.replace("/explore");
-          return;
-        }
-        saveProfile(p);
+      const cachedComplete = isProfileComplete(p);
+
+      if (cachedComplete) {
+        setProfile(p);
+        setLoading(false);
       }
 
-      if (!isProfileComplete(p)) return;
+      const tasks: Promise<void>[] = [];
 
-      setProfile(p);
+      if (!cachedComplete) {
+        tasks.push(
+          apiFetch("/api/profile")
+            .then((r) => r.json())
+            .then((data) => {
+              if (cancelled) return;
+              p = data.profile ?? null;
+              if (!isProfileComplete(p)) {
+                router.replace("/explore");
+                return;
+              }
+              saveProfile(p);
+              setProfile(p);
+              setLoading(false);
+            })
+        );
+      }
 
-      const [appsRes, jobsRes, savesRes] = await Promise.all([
-        apiFetch("/api/applications"),
-        apiFetch("/api/jobs"),
-        apiFetch("/api/saves"),
-      ]);
-      if (cancelled) return;
+      tasks.push(
+        apiFetch("/api/applications")
+          .then((r) => r.json())
+          .then((data) => {
+            if (!cancelled) setApplications(data.applications ?? []);
+          }),
+        apiFetch("/api/saves")
+          .then((r) => r.json())
+          .then((data) => {
+            if (!cancelled) setSaveCount(data.count ?? 0);
+          })
+      );
 
-      const appsData = await appsRes.json();
-      const jobsData = await jobsRes.json();
-      const savesData = await savesRes.json();
-      setApplications(appsData.applications);
-      const map: Record<string, Job> = {};
-      jobsData.jobs.forEach((j: Job) => {
-        map[j.id] = j;
-      });
-      setJobs(map);
-      setSaveCount(savesData.count);
-      setLoading(false);
+      await Promise.all(tasks);
+      if (!cancelled && !cachedComplete && !isProfileComplete(p)) return;
+      if (!cancelled) setLoading(false);
     })();
 
     return () => {
       cancelled = true;
     };
   }, [router]);
-
-  const handleLogout = async () => {
-    const supabase = createSupabaseBrowserClient();
-    if (supabase) await supabase.auth.signOut();
-    clearProfile();
-    router.replace("/");
-  };
 
   if (loading || !profile) {
     return (
@@ -100,7 +93,7 @@ export default function ProfilePage() {
   const profileFormValues = {
     name: profile.name,
     gender: profile.gender,
-    age: profile.age,
+    birthday: profile.birthday,
     area: profile.area,
     desiredJobType: profile.desiredJobType,
     experience: profile.experience,
@@ -139,7 +132,7 @@ export default function ProfilePage() {
           {editing ? (
             <Formik
               initialValues={profileFormValues}
-              validationSchema={profileSchema}
+              validationSchema={profileEditSchema}
               enableReinitialize
               onSubmit={async (values, { setSubmitting }) => {
                 const res = await apiFetch("/api/profile", {
@@ -156,16 +149,12 @@ export default function ProfilePage() {
               }}
             >
               {({ isSubmitting, submitForm }) => (
-                <Form className="space-y-3">
-                  <FormTextInput name="name" label="氏名" />
-                  <FormSelect name="gender" label="性別" options={GENDERS} />
-                  <FormTextInput name="age" label="年齢" type="number" />
-                  <FormSelect name="area" label="エリア" options={AREAS} />
-                  <FormSelect name="desiredJobType" label="希望職種" options={JOB_CATEGORIES} />
-                  <FormSelect name="experience" label="経験歴" options={EXPERIENCE_LEVELS} />
-                  <FormSelect name="employmentType" label="雇用形態" options={EMPLOYMENT_TYPES} />
-                  <FormTextInput name="email" label="メール" type="email" />
-                  <div className="mt-2 flex gap-2">
+                <Form className="space-y-4">
+                  <SeekerProfileFormFields showEmail emailReadOnly />
+                  <p className="text-xs text-slate-500">
+                    メールアドレスの変更はアカウント設定から行ってください。
+                  </p>
+                  <div className="flex gap-2 pt-1">
                     <button
                       type="button"
                       onClick={() => setEditing(false)}
@@ -188,12 +177,14 @@ export default function ProfilePage() {
           ) : (
             <dl className="divide-y divide-slate-100">
               <Row label="アカウント種別" value="求職者" />
+              <Row label="氏名" value={profile.name} />
+              <Row label="メールアドレス" value={profile.email} />
               <Row label="性別" value={profile.gender} />
-              <Row label="年齢" value={`${profile.age}歳`} />
-              <Row label="エリア" value={profile.area} />
+              <Row label="生年月日" value={formatBirthdayDisplay(profile.birthday)} />
+              <Row label="希望エリア" value={profile.area} />
               <Row label="希望職種" value={profile.desiredJobType} />
-              <Row label="経験歴" value={profile.experience} />
-              <Row label="雇用形態" value={profile.employmentType} />
+              <Row label="社会人経験" value={profile.experience} />
+              <Row label="希望雇用形態" value={profile.employmentType} />
             </dl>
           )}
         </AppCard>
@@ -211,8 +202,8 @@ export default function ProfilePage() {
             <div className="space-y-2.5">
               {applications.map((app) => (
                 <AppCard key={app.id}>
-                  <p className="font-semibold text-slate-900">{jobs[app.jobId]?.title ?? app.jobId}</p>
-                  <p className="mt-0.5 text-xs text-slate-500">{jobs[app.jobId]?.company}</p>
+                  <p className="font-semibold text-slate-900">{app.jobTitle ?? app.jobId}</p>
+                  <p className="mt-0.5 text-xs text-slate-500">{app.companyName ?? ""}</p>
                   <div className="mt-3 flex items-center justify-between">
                     <AppBadge>{APPLICATION_STATUS_LABELS[app.status]}</AppBadge>
                     <Link href="/chat" className="text-xs font-semibold text-blue-600 hover:underline">
@@ -224,14 +215,6 @@ export default function ProfilePage() {
             </div>
           )}
         </section>
-
-        <button
-          onClick={handleLogout}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-3 text-sm font-medium text-red-500 transition hover:bg-red-50"
-        >
-          <LogOut className="h-4 w-4" />
-          ログアウト
-        </button>
       </main>
 
       <BottomNav saveCount={saveCount} chatCount={applications.length} />

@@ -11,13 +11,8 @@ export const config = {
     "/admin/:path*",
     "/company",
     "/company/:path*",
-    "/api/admin/:path*",
     "/liked",
     "/profile",
     "/chat",
-    "/api/saves",
-    "/api/applications",
-    "/api/chat",
-    "/api/profile",
   ],
 };

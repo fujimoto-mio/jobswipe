@@ -5,8 +5,9 @@ import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import { APPLICATION_STATUS_LABELS } from "@/lib/constants";
 import { useStaffPanel } from "@/components/staff/StaffPanelContext";
-import { formatDateJST, formatDateTimeJST } from "@/lib/datetime";
+import { formatDateJST } from "@/lib/datetime";
 import DataTable, { type ColumnDef } from "@/components/ui/DataTable";
+import { formatBirthdayDisplay } from "@/lib/birthday";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
 import { apiFetch } from "@/lib/api-client";
 import type { ApplicationStatus, ApplicationWithSeeker, Job } from "@/lib/types";
@@ -201,11 +202,9 @@ export default function StaffApplicationsPage() {
               <dd className="font-medium text-[var(--body)]">{seeker?.gender ?? "—"}</dd>
             </div>
             <div>
-              <dt className="text-[var(--muted)]">年齢</dt>
+              <dt className="text-[var(--muted)]">生年月日</dt>
               <dd className="font-medium text-[var(--body)]">
-                {(selected.applicantAge ?? seeker?.age) != null
-                  ? `${selected.applicantAge ?? seeker?.age}歳`
-                  : "—"}
+                {formatBirthdayDisplay(selected.applicantBirthday ?? seeker?.birthday)}
               </dd>
             </div>
             <div>
@@ -225,14 +224,6 @@ export default function StaffApplicationsPage() {
               <dd className="font-medium text-[var(--body)]">{seeker?.employmentType ?? "—"}</dd>
             </div>
           </dl>
-
-          {selected.interviewSlot && (
-            <p className="mt-3 rounded-lg bg-[var(--accent-light)] px-3 py-2 text-xs text-[var(--accent)]">
-              面談予約: {selected.interviewSlot}
-              {selected.interviewBookedAt &&
-                ` · 登録 ${formatDateTimeJST(selected.interviewBookedAt)}`}
-            </p>
-          )}
 
           {selected.message && (
             <p className="mt-3 rounded-lg bg-[var(--surface)] p-3 text-sm text-[var(--body)]">{selected.message}</p>

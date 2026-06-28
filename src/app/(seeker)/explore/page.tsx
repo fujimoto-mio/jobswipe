@@ -5,8 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import VideoFeed from "@/components/VideoFeed";
 import BottomNav from "@/components/BottomNav";
 import FilterScreen from "@/components/FilterScreen";
-import { apiFetch } from "@/lib/api-client";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { apiFetch, apiFetchCached } from "@/lib/api-client";
+import { getCachedClientSession } from "@/lib/auth/client-session";
 import { saveProfile } from "@/lib/profile";
 import Logo from "@/components/ui/Logo";
 import Link from "next/link";
@@ -26,27 +26,21 @@ function ExploreContent() {
   const [filtersReady, setFiltersReady] = useState(false);
 
   const refreshCounts = useCallback(() => {
-    apiFetch("/api/saves")
-      .then((r) => r.json())
-      .then((d) => setSaveCount(d.count ?? 0));
-    apiFetch("/api/chat")
-      .then((r) => r.json())
-      .then((d) => setChatCount(d.threads?.length ?? 0));
+    void apiFetchCached<{ count?: number }>("/api/saves", 20_000).then((d) =>
+      setSaveCount(d.count ?? 0)
+    );
+    void apiFetchCached<{ threads?: unknown[] }>("/api/chat", 20_000).then((d) =>
+      setChatCount(d.threads?.length ?? 0)
+    );
   }, []);
 
   useEffect(() => {
-    const supabase = createSupabaseBrowserClient();
-    if (!supabase) {
+    void getCachedClientSession().then((loggedIn) => {
+      setIsLoggedIn(loggedIn);
       setAuthReady(true);
-      return;
-    }
-
-    supabase.auth.getSession().then(({ data }) => {
-      setIsLoggedIn(Boolean(data.session));
-      setAuthReady(true);
-      if (data.session) {
+      if (loggedIn) {
         refreshCounts();
-        apiFetch("/api/profile")
+        void apiFetch("/api/profile")
           .then((r) => r.json())
           .then((d) => {
             if (d.profile) saveProfile(d.profile);

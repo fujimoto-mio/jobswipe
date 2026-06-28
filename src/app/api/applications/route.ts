@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
-import { requireSeekerSession } from "@/lib/auth/seeker";
-import { requireStaffUser, requireAdminUser } from "@/lib/auth/admin";
+import { requireSeekerSession, getSeekerSession } from "@/lib/auth/seeker";
+import { requireStaffUser, getStaffUser } from "@/lib/auth/admin";
 import {
   createApplication,
   getApplicationsForSeeker,
   getApplicationsForStaff,
   getApplicationWithSeeker,
   updateApplicationStatus,
-  bookInterview,
 } from "@/lib/db";
 import { staffCanAccessApplication } from "@/lib/db/access";
 import type { ApplicationStatus } from "@/lib/types";
@@ -17,8 +16,8 @@ export async function GET(request: Request) {
   const id = searchParams.get("id");
 
   try {
-    const staff = await requireStaffUser();
-    if (!(staff instanceof NextResponse)) {
+    const staff = await getStaffUser();
+    if (staff) {
       if (id) {
         const app = await getApplicationWithSeeker(id);
         if (!app) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -36,8 +35,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ applications, total: applications.length });
     }
 
-    const session = await requireSeekerSession();
-    if (session instanceof NextResponse) return session;
+    const session = await getSeekerSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const applications = await getApplicationsForSeeker(session.seekerId);
     return NextResponse.json({ applications, total: applications.length });
@@ -61,7 +62,7 @@ export async function POST(request: Request) {
       message,
       applicantName,
       applicantEmail,
-      applicantAge,
+      applicantBirthday,
       applicantArea,
       applicantJobType,
     } = body;
@@ -77,7 +78,7 @@ export async function POST(request: Request) {
         message,
         applicantName,
         applicantEmail,
-        applicantAge,
+        applicantBirthday,
         applicantArea,
         applicantJobType,
       },
@@ -110,34 +111,6 @@ export async function PATCH(request: Request) {
       status,
       staff.role === "company" ? staff.companyId : null
     );
-    if (!application) {
-      return NextResponse.json({ error: "Application not found" }, { status: 404 });
-    }
-
-    return NextResponse.json({ success: true, application });
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-  }
-}
-
-export async function PUT(request: Request) {
-  const session = await requireSeekerSession();
-  if (session instanceof NextResponse) return session;
-
-  try {
-    const { applicationId, interviewSlot } = (await request.json()) as {
-      applicationId: string;
-      interviewSlot: string;
-    };
-
-    if (!applicationId || !interviewSlot) {
-      return NextResponse.json(
-        { error: "applicationId and interviewSlot are required" },
-        { status: 400 }
-      );
-    }
-
-    const application = await bookInterview(applicationId, session.seekerId, interviewSlot);
     if (!application) {
       return NextResponse.json({ error: "Application not found" }, { status: 404 });
     }

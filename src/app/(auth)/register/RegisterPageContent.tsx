@@ -6,14 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Form, Formik } from "formik";
 import { Building2, ChevronLeft, ChevronRight, UserPlus, Users } from "lucide-react";
 import SeekerAuthShell from "@/components/auth/SeekerAuthShell";
-import { FormPassword, FormSelect, FormTextInput } from "@/components/form/FormFields";
-import {
-  AREAS,
-  JOB_CATEGORIES,
-  GENDERS,
-  EXPERIENCE_LEVELS,
-  EMPLOYMENT_TYPES,
-} from "@/lib/constants";
+import { FormPassword, FormTextInput } from "@/components/form/FormFields";
+import SeekerProfileFormFields from "@/components/form/SeekerProfileFormFields";
 import { saveProfile } from "@/lib/profile";
 import { apiFetch } from "@/lib/api-client";
 import { mapAuthError } from "@/lib/auth/errors";
@@ -197,7 +191,7 @@ export default function RegisterPageContent() {
           initialValues={{
             name: "",
             gender: "",
-            age: "",
+            birthday: "",
             area: "",
             desiredJobType: "",
             experience: "",
@@ -215,32 +209,34 @@ export default function RegisterPageContent() {
                 return;
               }
 
-              const { error: authError } = await supabase.auth.signUp({
-                email: account.email.trim(),
-                password: account.password,
-                options: {
-                  data: { name: values.name, role: "seeker" },
-                },
-              });
-
-              if (authError) {
-                setError(mapAuthError(authError.message));
-                if (authError.message.toLowerCase().includes("already")) setStep("seeker-1");
-                return;
-              }
-
-              const res = await apiFetch("/api/profile", {
+              const res = await apiFetch("/api/auth/register/seeker", {
                 method: "POST",
-                body: JSON.stringify(values),
+                body: JSON.stringify({
+                  ...values,
+                  email: account.email.trim(),
+                  password: account.password,
+                }),
               });
 
               if (!res.ok) {
                 const data = await res.json();
-                setError(data.error ?? "プロフィールの保存に失敗しました");
+                setError(data.error ?? "登録に失敗しました");
+                if (res.status === 409) setStep("seeker-1");
                 return;
               }
 
               const data = await res.json();
+
+              const { error: signInError } = await supabase.auth.signInWithPassword({
+                email: account.email.trim(),
+                password: account.password,
+              });
+
+              if (signInError) {
+                setError(mapAuthError(signInError.message));
+                return;
+              }
+
               saveProfile(data.profile);
               router.replace(next);
               router.refresh();
@@ -265,20 +261,7 @@ export default function RegisterPageContent() {
                 </button>
               )}
 
-              <FormTextInput name="name" label="氏名" placeholder="山田 太郎" autoComplete="name" />
-
-              <div className="grid grid-cols-2 gap-3">
-                <FormSelect name="gender" label="性別" options={GENDERS} />
-                <FormTextInput name="age" label="年齢" type="number" placeholder="25" />
-              </div>
-
-              <FormSelect name="area" label="希望エリア" options={AREAS} />
-              <FormSelect name="desiredJobType" label="希望職種" options={JOB_CATEGORIES} />
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <FormSelect name="experience" label="社会人経験" options={EXPERIENCE_LEVELS} />
-                <FormSelect name="employmentType" label="希望雇用形態" options={EMPLOYMENT_TYPES} />
-              </div>
+              <SeekerProfileFormFields />
 
               <input type="hidden" name="email" value={account.email} readOnly />
 
@@ -315,22 +298,11 @@ export default function RegisterPageContent() {
                 return;
               }
 
-              const { error: authError } = await supabase.auth.signUp({
-                email: values.email.trim(),
-                password: values.password,
-                options: {
-                  data: { name: values.contactName, role: "company" },
-                },
-              });
-
-              if (authError) {
-                setError(mapAuthError(authError.message));
-                return;
-              }
-
-              const res = await apiFetch("/api/company/register", {
+              const res = await apiFetch("/api/auth/register/company", {
                 method: "POST",
                 body: JSON.stringify({
+                  email: values.email.trim(),
+                  password: values.password,
                   companyName: values.companyName.trim(),
                   contactName: values.contactName.trim(),
                 }),
@@ -342,7 +314,16 @@ export default function RegisterPageContent() {
                 return;
               }
 
-              await apiFetch("/api/admin/auth/sync", { method: "POST" });
+              const { error: signInError } = await supabase.auth.signInWithPassword({
+                email: values.email.trim(),
+                password: values.password,
+              });
+
+              if (signInError) {
+                setError(mapAuthError(signInError.message));
+                return;
+              }
+
               router.replace("/company");
               router.refresh();
             } finally {

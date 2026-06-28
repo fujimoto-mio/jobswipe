@@ -5,8 +5,8 @@ import {
   getChatThreadsForSeeker,
   getChatThreadsForStaff,
 } from "@/lib/db";
-import { requireSeekerSession } from "@/lib/auth/seeker";
-import { requireStaffUser } from "@/lib/auth/admin";
+import { requireSeekerSession, getSeekerSession } from "@/lib/auth/seeker";
+import { requireStaffUser, getStaffUser } from "@/lib/auth/admin";
 import { seekerCanAccessApplication, staffCanAccessApplication } from "@/lib/db/access";
 
 export async function GET(request: Request) {
@@ -14,8 +14,8 @@ export async function GET(request: Request) {
   const applicationId = searchParams.get("applicationId");
 
   if (applicationId) {
-    const staff = await requireStaffUser();
-    if (!(staff instanceof NextResponse)) {
+    const staff = await getStaffUser();
+    if (staff) {
       const allowed = await staffCanAccessApplication(applicationId, staff);
       if (!allowed) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -23,8 +23,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ messages: await getChatMessages(applicationId) });
     }
 
-    const session = await requireSeekerSession();
-    if (session instanceof NextResponse) return session;
+    const session = await getSeekerSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const allowed = await seekerCanAccessApplication(applicationId, session.seekerId);
     if (!allowed) {
@@ -34,18 +36,18 @@ export async function GET(request: Request) {
     return NextResponse.json({ messages: await getChatMessages(applicationId) });
   }
 
-  const session = await requireSeekerSession();
-  if (session instanceof NextResponse) {
-    const staff = await requireStaffUser();
-    if (staff instanceof NextResponse) return staff;
-
-    const threads = await getChatThreadsForStaff(
-      staff.role === "company" ? staff.companyId : null
-    );
-    return NextResponse.json({ threads });
+  const session = await getSeekerSession();
+  if (session) {
+    return NextResponse.json({ threads: await getChatThreadsForSeeker(session.seekerId) });
   }
 
-  return NextResponse.json({ threads: await getChatThreadsForSeeker(session.seekerId) });
+  const staff = await getStaffUser();
+  if (!staff) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const threads = await getChatThreadsForStaff(staff.role === "company" ? staff.companyId : null);
+  return NextResponse.json({ threads });
 }
 
 export async function POST(request: Request) {

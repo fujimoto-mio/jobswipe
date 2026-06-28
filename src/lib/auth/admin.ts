@@ -1,7 +1,8 @@
+import { cache } from "react";
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { getRoleFromUser, isStaffRole, type StaffRole } from "@/lib/auth/roles";
+import { getSupabaseUser } from "@/lib/auth/supabase-user";
 
 export type StaffUser = {
   id: string;
@@ -11,14 +12,8 @@ export type StaffUser = {
   companyId: string | null;
 };
 
-export async function getStaffUser(): Promise<StaffUser | null> {
-  const supabase = await createSupabaseServerClient();
-  if (!supabase) return null;
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+export const getStaffUser = cache(async (): Promise<StaffUser | null> => {
+  const user = await getSupabaseUser();
   if (!user?.email) return null;
 
   const role = getRoleFromUser(user);
@@ -34,7 +29,7 @@ export async function getStaffUser(): Promise<StaffUser | null> {
     role,
     companyId,
   };
-}
+});
 
 export async function requireStaffUser(): Promise<StaffUser | NextResponse> {
   const staff = await getStaffUser();

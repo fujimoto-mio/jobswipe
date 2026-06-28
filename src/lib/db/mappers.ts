@@ -1,4 +1,5 @@
 import type { Job as PrismaJob, Company, Application as PrismaApplication, ChatMessage as PrismaChatMessage } from "@prisma/client";
+import { birthdayToInputValue } from "@/lib/birthday";
 import { getCompanyLogoUrl } from "@/lib/job-image";
 import { formatDateISOJST, toISOStringJST } from "@/lib/datetime";
 import type {
@@ -46,14 +47,17 @@ export function mapJob(row: JobWithCompany): Job {
   };
 }
 
-export function mapApplication(row: PrismaApplication): Application {
+export function mapApplication(
+  row: PrismaApplication,
+  job?: { title: string; company: { name: string } }
+): Application {
   return {
     id: row.id,
     jobId: row.jobId,
     seekerId: row.seekerId,
     applicantName: row.applicantName,
     applicantEmail: row.applicantEmail,
-    applicantAge: row.applicantAge ?? undefined,
+    applicantBirthday: row.applicantBirthday ? birthdayToInputValue(row.applicantBirthday) : undefined,
     applicantArea: row.applicantArea ?? undefined,
     applicantJobType: row.applicantJobType ?? undefined,
     message: row.message ?? undefined,
@@ -61,6 +65,7 @@ export function mapApplication(row: PrismaApplication): Application {
     interviewSlot: row.interviewSlot ?? undefined,
     interviewBookedAt: row.interviewBookedAt ? toISOStringJST(row.interviewBookedAt) : undefined,
     createdAt: toISOStringJST(row.createdAt),
+    ...(job ? { jobTitle: job.title, companyName: job.company.name } : {}),
   };
 }
 
@@ -79,7 +84,7 @@ export function mapSeekerProfile(row: {
   email: string;
   name: string;
   gender: string;
-  age: number;
+  birthday: Date;
   area: string;
   desiredJobType: string;
   experience: string;
@@ -89,7 +94,7 @@ export function mapSeekerProfile(row: {
     id: row.id,
     name: row.name,
     gender: row.gender,
-    age: row.age,
+    birthday: birthdayToInputValue(row.birthday),
     area: row.area,
     desiredJobType: row.desiredJobType,
     experience: row.experience,

@@ -1,23 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getStaffUser } from "@/lib/auth/admin";
+import { getSupabaseUserFromRequest } from "@/lib/auth/supabase-user";
 import { getRoleFromUser, isStaffRole } from "@/lib/auth/roles";
 
-export async function POST() {
-  const staff = await getStaffUser();
-  if (!staff) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const supabase = await import("@/lib/supabase/server").then((m) => m.createSupabaseServerClient());
-  if (!supabase) {
-    return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
-  }
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+export async function POST(request: Request) {
+  const user = await getSupabaseUserFromRequest(request);
   if (!user?.email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

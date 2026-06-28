@@ -7,7 +7,8 @@ import { Form, Formik } from "formik";
 import { LogIn } from "lucide-react";
 import SeekerAuthShell from "@/components/auth/SeekerAuthShell";
 import { FormPassword, FormTextInput } from "@/components/form/FormFields";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, invalidateApiCache } from "@/lib/api-client";
+import { clearClientSessionCache } from "@/lib/auth/client-session";
 import { mapAuthError } from "@/lib/auth/errors";
 import { saveProfile } from "@/lib/profile";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -75,6 +76,8 @@ export default function LoginPageContent() {
             const data = await res.json();
 
             if (data.profile) {
+              clearClientSessionCache();
+              invalidateApiCache();
               saveProfile(data.profile);
               router.replace(next);
               router.refresh();

@@ -101,17 +101,17 @@ export default function VideoFeed({ filters, onSaveCountChange }: VideoFeedProps
 
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center bg-black">
-        <LoadingSpinner size="lg" message="求人動画を読み込み中..." dark />
+      <div className="flex h-full items-center justify-center bg-white">
+        <LoadingSpinner size="lg" message="求人動画を読み込み中..." />
       </div>
     );
   }
 
   if (jobs.length === 0) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-4 bg-black px-6 text-center">
-        <p className="text-lg font-medium text-white">条件に合う求人がありません</p>
-        <p className="text-sm text-white/60">絞り込み条件を変更してください</p>
+      <div className="flex h-full flex-col items-center justify-center gap-4 bg-white px-6 text-center">
+        <p className="text-lg font-medium text-slate-800">条件に合う求人がありません</p>
+        <p className="text-sm text-slate-500">絞り込み条件を変更してください</p>
       </div>
     );
   }

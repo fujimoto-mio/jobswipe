@@ -37,7 +37,7 @@ const FEATURES = [
 const STEPS = [
   { num: "01", title: "無料登録", desc: "メールアドレスで1分登録" },
   { num: "02", title: "動画をスワイプ", desc: "エリア・職種で絞り込み" },
-  { num: "03", title: "気になる求人に応募", desc: "ワンタップで応募・面談予約" },
+  { num: "03", title: "気になる求人に応募", desc: "ワンタップで応募" },
 ];
 
 const SECTION_IDS = ["features", "flow", "company"] as const;

@@ -71,12 +71,12 @@ model SeekerProfile {
   email          String   @unique
   name           String
   gender         String
-  age            Int
+  birthday       DateTime @db.Date
   area           String
   desiredJobType String   @map("desired_job_type")
   experience     String
   employmentType String   @map("employment_type")
-  supabaseUserId String?  @unique @map("supabase_user_id")
+  supabaseUserId String   @unique @map("supabase_user_id")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
@@ -105,7 +105,7 @@ model Application {
   jobId            String        @map("job_id")
   applicantName    String        @map("applicant_name")
   applicantEmail   String        @map("applicant_email")
-  applicantAge     Int?          @map("applicant_age")
+  applicantBirthday DateTime?     @map("applicant_birthday") @db.Date
   applicantArea    String?       @map("applicant_area")
   applicantJobType String?       @map("applicant_job_type")
   message          String?

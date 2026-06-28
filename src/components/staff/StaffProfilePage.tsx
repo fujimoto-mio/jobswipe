@@ -3,12 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Form, Formik } from "formik";
-import { Building2, LogOut, Pencil, Shield } from "lucide-react";
+import { Building2, Pencil, Shield } from "lucide-react";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
 import { FormTextInput } from "@/components/form/FormFields";
 import { useStaffPanel } from "@/components/staff/StaffPanelContext";
 import { apiFetch } from "@/lib/api-client";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { staffProfileSchema } from "@/lib/validation/schemas";
 
 type StaffProfile = {
@@ -41,13 +40,6 @@ export default function StaffProfilePage() {
       .catch(() => router.replace(loginPath))
       .finally(() => setLoading(false));
   }, [router, loginPath]);
-
-  const handleLogout = async () => {
-    const supabase = createSupabaseBrowserClient();
-    if (supabase) await supabase.auth.signOut();
-    router.push(loginPath);
-    router.refresh();
-  };
 
   if (loading || !profile) {
     return <PageLoading message="プロフィールを読み込み中..." minHeight="min-h-[320px]" />;
@@ -157,14 +149,6 @@ export default function StaffProfilePage() {
           </div>
         )}
 
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-sm font-medium text-red-500 transition hover:bg-red-50"
-        >
-          <LogOut className="h-4 w-4" />
-          ログアウト
-        </button>
       </div>
     </>
   );

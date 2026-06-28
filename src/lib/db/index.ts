@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { mapApplication, mapChatMessage, mapJob, mapSeekerProfile } from "@/lib/db/mappers";
+import { parseBirthday } from "@/lib/birthday";
 import { getCompanyLogoUrl } from "@/lib/job-image";
 import type {
   Application,
@@ -142,26 +143,6 @@ export async function getJobsForStaff(companyId?: string | null, includeUnapprov
   return rows.map(mapJob);
 }
 
-export async function bookInterview(
-  applicationId: string,
-  seekerId: string,
-  interviewSlot: string
-): Promise<Application | null> {
-  try {
-    const row = await prisma.application.update({
-      where: { id: applicationId, seekerId },
-      data: {
-        interviewSlot,
-        interviewBookedAt: new Date(),
-        status: "scheduling",
-      },
-    });
-    return mapApplication(row);
-  } catch {
-    return null;
-  }
-}
-
 export async function getApplicationWithSeeker(id: string): Promise<ApplicationWithSeeker | null> {
   const row = await prisma.application.findUnique({
     where: { id },
@@ -251,22 +232,28 @@ export async function upsertSeekerProfile(
   options?: { id?: string; supabaseUserId?: string }
 ): Promise<UserProfile & { id: string }> {
   const { id, supabaseUserId } = options ?? {};
+  const birthday = parseBirthday(profile.birthday);
+  if (!birthday) {
+    throw new Error("Invalid birthday");
+  }
+
+  const data = {
+    name: profile.name,
+    gender: profile.gender,
+    birthday,
+    area: profile.area,
+    desiredJobType: profile.desiredJobType,
+    experience: profile.experience,
+    employmentType: profile.employmentType,
+    email: profile.email,
+  };
 
   if (supabaseUserId) {
     const byAuth = await prisma.seekerProfile.findUnique({ where: { supabaseUserId } });
     if (byAuth) {
       const row = await prisma.seekerProfile.update({
         where: { id: byAuth.id },
-        data: {
-          name: profile.name,
-          gender: profile.gender,
-          age: profile.age,
-          area: profile.area,
-          desiredJobType: profile.desiredJobType,
-          experience: profile.experience,
-          employmentType: profile.employmentType,
-          email: profile.email,
-        },
+        data,
       });
       return mapSeekerProfile(row);
     }
@@ -277,14 +264,7 @@ export async function upsertSeekerProfile(
       const row = await prisma.seekerProfile.update({
         where: { id },
         data: {
-          name: profile.name,
-          gender: profile.gender,
-          age: profile.age,
-          area: profile.area,
-          desiredJobType: profile.desiredJobType,
-          experience: profile.experience,
-          employmentType: profile.employmentType,
-          email: profile.email,
+          ...data,
           ...(supabaseUserId ? { supabaseUserId } : {}),
         },
       });
@@ -294,28 +274,19 @@ export async function upsertSeekerProfile(
     }
   }
 
+  if (!supabaseUserId) {
+    throw new Error("supabaseUserId is required to create a seeker profile");
+  }
+
   const row = await prisma.seekerProfile.upsert({
     where: { email: profile.email },
     create: {
-      email: profile.email,
-      name: profile.name,
-      gender: profile.gender,
-      age: profile.age,
-      area: profile.area,
-      desiredJobType: profile.desiredJobType,
-      experience: profile.experience,
-      employmentType: profile.employmentType,
-      supabaseUserId: supabaseUserId ?? null,
+      ...data,
+      supabaseUserId,
     },
     update: {
-      name: profile.name,
-      gender: profile.gender,
-      age: profile.age,
-      area: profile.area,
-      desiredJobType: profile.desiredJobType,
-      experience: profile.experience,
-      employmentType: profile.employmentType,
-      ...(supabaseUserId ? { supabaseUserId } : {}),
+      ...data,
+      supabaseUserId,
     },
   });
 
@@ -337,13 +308,16 @@ export async function createApplication(
   });
   if (existing) return mapApplication(existing);
 
+  const applicantBirthdayRaw = input.applicantBirthday ?? profile?.birthday;
+  const applicantBirthday = applicantBirthdayRaw ? parseBirthday(applicantBirthdayRaw) : null;
+
   const row = await prisma.application.create({
     data: {
       seekerId,
       jobId: input.jobId,
       applicantName: input.applicantName ?? profile?.name ?? "ゲストユーザー",
       applicantEmail: input.applicantEmail ?? profile?.email ?? "guest@jobswipe.app",
-      applicantAge: input.applicantAge ?? profile?.age,
+      applicantBirthday,
       applicantArea: input.applicantArea ?? profile?.area,
       applicantJobType: input.applicantJobType ?? profile?.desiredJobType,
       message: input.message,
@@ -356,15 +330,16 @@ export async function createApplication(
 
 export async function getAllApplications(): Promise<Application[]> {
   const rows = await prisma.application.findMany({ orderBy: { createdAt: "desc" } });
-  return rows.map(mapApplication);
+  return rows.map((row) => mapApplication(row));
 }
 
 export async function getApplicationsForSeeker(seekerId: string): Promise<Application[]> {
   const rows = await prisma.application.findMany({
     where: { seekerId },
     orderBy: { createdAt: "desc" },
+    include: { job: { select: { title: true, company: { select: { name: true } } } } },
   });
-  return rows.map(mapApplication);
+  return rows.map((row) => mapApplication(row, row.job));
 }
 
 export async function updateApplicationStatus(

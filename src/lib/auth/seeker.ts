@@ -1,7 +1,8 @@
+import { cache } from "react";
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { mapSeekerProfile } from "@/lib/db/mappers";
+import { getSupabaseUser } from "@/lib/auth/supabase-user";
 import type { UserProfile } from "@/lib/types";
 
 export type SeekerSession = {
@@ -10,14 +11,8 @@ export type SeekerSession = {
   profile: UserProfile & { id: string };
 };
 
-export async function getSeekerSession(): Promise<SeekerSession | null> {
-  const supabase = await createSupabaseServerClient();
-  if (!supabase) return null;
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+export const getSeekerSession = cache(async (): Promise<SeekerSession | null> => {
+  const user = await getSupabaseUser();
   if (!user?.email) return null;
 
   const role = user.app_metadata?.role as string | undefined;
@@ -41,7 +36,7 @@ export async function getSeekerSession(): Promise<SeekerSession | null> {
     seekerId: row.id,
     profile: mapSeekerProfile(row),
   };
-}
+});
 
 export async function requireSeekerSession(): Promise<SeekerSession | NextResponse> {
   const session = await getSeekerSession();

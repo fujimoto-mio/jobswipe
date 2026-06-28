@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { upsertSeekerProfile, getSeekerProfile } from "@/lib/db";
+import { upsertSeekerProfile } from "@/lib/db";
 import { getSeekerSession } from "@/lib/auth/seeker";
+import { getSupabaseUserFromRequest } from "@/lib/auth/supabase-user";
+import { profileEditSchema, seekerProfileSchema } from "@/lib/validation/schemas";
+import { validateBody } from "@/lib/validation/validate-body";
 import type { UserProfile } from "@/lib/types";
 
 export async function GET() {
@@ -13,33 +15,23 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const supabase = await createSupabaseServerClient();
-  if (!supabase) {
-    return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
-  }
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getSupabaseUserFromRequest(request);
   if (!user?.email) {
     return NextResponse.json({ error: "Unauthorized — sign up or sign in first" }, { status: 401 });
   }
 
   try {
-    const body = (await request.json()) as UserProfile;
-
-    if (!body.name || !body.email) {
-      return NextResponse.json({ error: "name and email are required" }, { status: 400 });
+    const raw = await request.json();
+    const validated = await validateBody(seekerProfileSchema, { ...raw, email: user.email });
+    if (!validated.ok) {
+      return NextResponse.json({ error: validated.error }, { status: validated.status });
     }
 
-    const profile = await upsertSeekerProfile(
-      { ...body, email: user.email },
-      { supabaseUserId: user.id }
-    );
+    const profile = await upsertSeekerProfile(validated.data, { supabaseUserId: user.id });
     return NextResponse.json({ success: true, profile }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Invalid JSON body";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }
 
@@ -50,13 +42,35 @@ export async function PATCH(request: Request) {
   }
 
   try {
-    const body = (await request.json()) as UserProfile;
-    const profile = await upsertSeekerProfile(body, {
-      id: session.seekerId,
-      supabaseUserId: session.authUserId,
-    });
+    const raw = (await request.json()) as Partial<UserProfile>;
+    const merged = {
+      name: raw.name ?? session.profile.name,
+      gender: raw.gender ?? session.profile.gender,
+      birthday: raw.birthday ?? session.profile.birthday,
+      area: raw.area ?? session.profile.area,
+      desiredJobType: raw.desiredJobType ?? session.profile.desiredJobType,
+      experience: raw.experience ?? session.profile.experience,
+      employmentType: raw.employmentType ?? session.profile.employmentType,
+    };
+
+    const validated = await validateBody(profileEditSchema, merged);
+    if (!validated.ok) {
+      return NextResponse.json({ error: validated.error }, { status: validated.status });
+    }
+
+    const profile = await upsertSeekerProfile(
+      {
+        ...validated.data,
+        email: session.profile.email,
+      },
+      {
+        id: session.seekerId,
+        supabaseUserId: session.authUserId,
+      }
+    );
     return NextResponse.json({ success: true, profile });
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Invalid JSON body";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }

@@ -22,25 +22,17 @@ const optionalUrl = Yup.string()
   .optional()
   .url("有効なURLを入力してください");
 
-const ageField = Yup.number()
-  .transform((_value, originalValue) => {
-    if (originalValue === "" || originalValue === null || originalValue === undefined) return undefined;
-    return Number(originalValue);
-  })
-  .typeError("年齢を入力してください")
-  .min(18, "年齢は18〜80歳の範囲で入力してください")
-  .max(80, "年齢は18〜80歳の範囲で入力してください")
-  .required("年齢を入力してください");
+import {
+  isBirthdayInAgeRange,
+  isValidBirthday,
+} from "@/lib/birthday";
 
-const applyAgeField = Yup.number()
-  .transform((_value, originalValue) => {
-    if (originalValue === "" || originalValue === null || originalValue === undefined) return undefined;
-    return Number(originalValue);
-  })
-  .typeError("年齢を入力してください")
-  .min(18, "年齢は18歳以上で入力してください")
-  .max(80, "年齢は80歳以下で入力してください")
-  .required("年齢を入力してください");
+const birthdayField = Yup.string()
+  .trim()
+  .required("生年月日を入力してください")
+  .test("valid-date", "有効な生年月日を入力してください", (v) => Boolean(v && isValidBirthday(v)))
+  .test("min-age", "18歳以上である必要があります", (v) => Boolean(v && isBirthdayInAgeRange(v, 18, 80)))
+  .test("max-age", "80歳以下である必要があります", (v) => Boolean(v && isBirthdayInAgeRange(v, 18, 80)));
 
 export const loginSchema = Yup.object({
   email,
@@ -55,12 +47,12 @@ export const seekerAccountSchema = Yup.object({
     .required("確認用パスワードを入力してください"),
 });
 
-export const seekerProfileSchema = Yup.object({
+const seekerProfileFields = {
   name: Yup.string().trim().required("氏名を入力してください"),
   gender: Yup.string()
     .oneOf([...GENDERS], "性別を選択してください")
     .required("性別を選択してください"),
-  age: ageField,
+  birthday: birthdayField,
   area: Yup.string()
     .oneOf([...AREAS], "エリアを選択してください")
     .required("エリアを選択してください"),
@@ -73,7 +65,18 @@ export const seekerProfileSchema = Yup.object({
   employmentType: Yup.string()
     .oneOf([...EMPLOYMENT_TYPES], "希望雇用形態を選択してください")
     .required("希望雇用形態を選択してください"),
+};
+
+export const seekerProfileSchema = Yup.object({
+  ...seekerProfileFields,
   email,
+});
+
+/** Server-side seeker registration — profile fields + password. */
+export const seekerRegisterSchema = Yup.object({
+  ...seekerProfileFields,
+  email,
+  password,
 });
 
 export const companyRegisterSchema = Yup.object({
@@ -88,32 +91,24 @@ export const companyRegisterSchema = Yup.object({
 
 export const applySchema = Yup.object({
   name: Yup.string().trim().required("氏名を入力してください"),
-  age: applyAgeField,
+  birthday: birthdayField,
   area: Yup.string().trim().required("エリアを入力してください"),
   jobType: Yup.string().trim().required("希望職種を入力してください"),
   email,
   message: Yup.string().trim(),
 });
 
-export const profileSchema = Yup.object({
-  name: Yup.string().trim().required("氏名を入力してください"),
-  gender: Yup.string()
-    .oneOf([...GENDERS], "性別を選択してください")
-    .required("性別を選択してください"),
-  age: ageField,
-  area: Yup.string()
-    .oneOf([...AREAS], "エリアを選択してください")
-    .required("エリアを選択してください"),
-  desiredJobType: Yup.string()
-    .oneOf([...JOB_CATEGORIES], "希望職種を選択してください")
-    .required("希望職種を選択してください"),
-  experience: Yup.string()
-    .oneOf([...EXPERIENCE_LEVELS], "社会人経験を選択してください")
-    .required("社会人経験を選択してください"),
-  employmentType: Yup.string()
-    .oneOf([...EMPLOYMENT_TYPES], "希望雇用形態を選択してください")
-    .required("希望雇用形態を選択してください"),
-  email,
+/** Seeker profile edit — same fields as registration except email (auth-bound). */
+export const profileEditSchema = Yup.object(seekerProfileFields);
+
+/** @deprecated Use profileEditSchema — email is managed via Supabase Auth. */
+export const profileSchema = profileEditSchema.shape({ email });
+
+export const companyProfileSchema = Yup.object({
+  name: Yup.string().trim().required("担当者名を入力してください"),
+  companyName: Yup.string().trim().required("会社名を入力してください"),
+  website: optionalUrl,
+  description: Yup.string().trim(),
 });
 
 export const jobFormSchema = Yup.object({
@@ -156,9 +151,12 @@ export const staffProfileSchema = Yup.object({
 export type LoginValues = Yup.InferType<typeof loginSchema>;
 export type SeekerAccountValues = Yup.InferType<typeof seekerAccountSchema>;
 export type SeekerProfileValues = Yup.InferType<typeof seekerProfileSchema>;
+export type SeekerRegisterValues = Yup.InferType<typeof seekerRegisterSchema>;
 export type CompanyRegisterValues = Yup.InferType<typeof companyRegisterSchema>;
 export type ApplyValues = Yup.InferType<typeof applySchema>;
+export type ProfileEditValues = Yup.InferType<typeof profileEditSchema>;
 export type ProfileValues = Yup.InferType<typeof profileSchema>;
+export type CompanyProfileValues = Yup.InferType<typeof companyProfileSchema>;
 export type JobFormValues = Yup.InferType<typeof jobFormSchema>;
 export type ChatMessageValues = Yup.InferType<typeof chatMessageSchema>;
 export type StaffProfileValues = Yup.InferType<typeof staffProfileSchema>;

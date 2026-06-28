@@ -5,7 +5,7 @@ const PROFILE_KEY = "jobswipe_profile";
 export const DEFAULT_PROFILE: UserProfile = {
   name: "",
   gender: "",
-  age: 0,
+  birthday: "",
   area: "",
   desiredJobType: "",
   experience: "",
@@ -20,7 +20,12 @@ export function getProfile(): StoredProfile | null {
   const raw = localStorage.getItem(PROFILE_KEY);
   if (!raw) return null;
   try {
-    return JSON.parse(raw) as StoredProfile;
+    const parsed = JSON.parse(raw) as StoredProfile & { age?: number };
+    if (parsed.age != null && !parsed.birthday) {
+      clearProfile();
+      return null;
+    }
+    return parsed;
   } catch {
     return null;
   }
@@ -35,7 +40,7 @@ export function isProfileComplete(profile: StoredProfile | null): profile is Sto
   return Boolean(
     profile.name &&
       profile.gender &&
-      profile.age > 0 &&
+      profile.birthday &&
       profile.area &&
       profile.desiredJobType &&
       profile.experience &&

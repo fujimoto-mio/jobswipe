@@ -22,6 +22,8 @@ type FormTextInputProps = {
   autoComplete?: string;
   readOnly?: boolean;
   className?: string;
+  min?: string;
+  max?: string;
 };
 
 export function FormTextInput({
@@ -32,6 +34,8 @@ export function FormTextInput({
   autoComplete,
   readOnly,
   className = "",
+  min,
+  max,
 }: FormTextInputProps) {
   const [field, meta] = useField(name);
 
@@ -44,6 +48,8 @@ export function FormTextInput({
         placeholder={placeholder}
         autoComplete={autoComplete}
         readOnly={readOnly}
+        min={min}
+        max={max}
         className={`${fieldClass(meta.error, meta.touched)} ${className}`}
       />
       <FormError name={name} />

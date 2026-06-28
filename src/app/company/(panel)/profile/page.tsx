@@ -1,3 +1,3 @@
-import StaffProfilePage from "@/components/staff/StaffProfilePage";
+import CompanyProfilePage from "@/components/staff/CompanyProfilePage";
 
-export default StaffProfilePage;
+export default CompanyProfilePage;

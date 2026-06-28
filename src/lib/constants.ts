@@ -25,7 +25,7 @@ export const JOB_CATEGORIES = [
   "データサイエンティスト",
 ] as const;
 
-export const GENDERS = ["男性", "女性", "その他", "回答しない"] as const;
+export const GENDERS = ["男性", "女性"] as const;
 
 export const EXPERIENCE_LEVELS = [
   "未経験",
