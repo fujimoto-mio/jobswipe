@@ -1,16 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Form, Formik } from "formik";
 import {
-  Briefcase,
   Building2,
   ChevronDown,
   ExternalLink,
-  FileText,
-  MessageCircle,
   Pencil,
   Upload,
   X,
@@ -38,12 +34,6 @@ type CompanyProfile = {
   companyPostalCode: string | null;
   companyAddress: string | null;
 };
-
-const TOC_ITEMS = [
-  { id: "company-overview", label: "企業概要" },
-  { id: "company-business", label: "事業内容" },
-  { id: "company-details", label: "会社情報" },
-] as const;
 
 const EDIT_TOC_ITEMS = [
   { id: "edit-header", label: "ヘッダー" },
@@ -144,7 +134,7 @@ function shouldCollapseBusiness(text: string) {
 
 export default function CompanyProfilePage() {
   const router = useRouter();
-  const { basePath, loginPath } = useStaffPanel();
+  const { loginPath } = useStaffPanel();
   const [profile, setProfile] = useState<CompanyProfile | null>(null);
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -185,12 +175,6 @@ export default function CompanyProfilePage() {
   const { overview, business } = splitCompanyDescription(profile.companyDescription);
   const showBusinessToggle = shouldCollapseBusiness(business);
   const businessPreview = showBusinessToggle && !businessExpanded ? `${business.slice(0, 420).trim()}…` : business;
-
-  const quickLinks = [
-    { href: `${basePath}/jobs`, label: "求人管理", icon: Briefcase },
-    { href: `${basePath}/applications`, label: "応募管理", icon: FileText },
-    { href: `${basePath}/chat`, label: "チャット", icon: MessageCircle },
-  ];
 
   const clearLogoSelection = () => {
     setLogoFile(null);
@@ -513,39 +497,50 @@ export default function CompanyProfilePage() {
                 <div className="company-profile-layout">
                   <main>
                     <section id="edit-overview" className="company-profile-section company-profile-edit-section">
-                      <h2 className="company-profile-section-title">企業概要</h2>
-                      <p className="company-profile-edit-lead">
-                        求職者向けページの「企業概要」に表示されます。
-                      </p>
-                      <FormTextarea
-                        name="overview"
-                        label=" "
-                        rows={5}
-                        placeholder="ミッション・会社の想い・採用方針など"
-                        className="company-profile-edit-textarea"
-                      />
+                      <div className="company-profile-section-header">
+                        <h2 className="company-profile-section-title">企業概要</h2>
+                        <p className="company-profile-edit-lead">
+                          求職者向けページの「企業概要」に表示されます。
+                        </p>
+                      </div>
+                      <div className="company-profile-section-body">
+                        <FormTextarea
+                          name="overview"
+                          label=" "
+                          rows={5}
+                          placeholder="ミッション・会社の想い・採用方針など"
+                          className="company-profile-edit-textarea"
+                        />
+                      </div>
                     </section>
 
                     <section id="edit-business" className="company-profile-section company-profile-edit-section">
-                      <h2 className="company-profile-section-title">事業内容</h2>
-                      <p className="company-profile-edit-lead">
-                        求職者向けページの「事業内容」に表示されます。
-                      </p>
-                      <FormTextarea
-                        name="business"
-                        label=" "
-                        rows={8}
-                        placeholder="提供サービス・プロダクト・事業領域など"
-                        className="company-profile-edit-textarea"
-                      />
+                      <div className="company-profile-section-header">
+                        <h2 className="company-profile-section-title">事業内容</h2>
+                        <p className="company-profile-edit-lead">
+                          求職者向けページの「事業内容」に表示されます。
+                        </p>
+                      </div>
+                      <div className="company-profile-section-body">
+                        <FormTextarea
+                          name="business"
+                          label=" "
+                          rows={8}
+                          placeholder="提供サービス・プロダクト・事業領域など"
+                          className="company-profile-edit-textarea"
+                        />
+                      </div>
                     </section>
 
                     <section id="edit-details" className="company-profile-section company-profile-edit-section">
-                      <h2 className="company-profile-section-title">会社情報</h2>
-                      <p className="company-profile-edit-lead">
-                        社名とサイトURLはヘッダーで編集できます。郵便番号・所在地は求職者向けページに表示されます。
-                      </p>
-                      <div className="company-profile-info-table mb-4">
+                      <div className="company-profile-section-header">
+                        <h2 className="company-profile-section-title">会社情報</h2>
+                        <p className="company-profile-edit-lead">
+                          社名とサイトURLはヘッダーで編集できます。郵便番号・所在地は求職者向けページに表示されます。
+                        </p>
+                      </div>
+                      <div className="company-profile-section-body">
+                        <div className="company-profile-info-table mb-4">
                         <div className="company-profile-info-row">
                           <div className="company-profile-info-label">社名</div>
                           <div className="company-profile-info-value">{editCompanyName}</div>
@@ -575,6 +570,7 @@ export default function CompanyProfilePage() {
                           autoComplete="street-address"
                         />
                         <CompanyAddressMap address={values.address} companyName={editCompanyName} />
+                      </div>
                       </div>
                     </section>
                   </main>
@@ -729,43 +725,54 @@ export default function CompanyProfilePage() {
           <div className="company-profile-layout">
             <main>
               <section id="company-overview" className="company-profile-section">
-                <h2 className="company-profile-section-title">企業概要</h2>
-                {overview ? (
-                  <p className="company-profile-text">{overview}</p>
-                ) : (
-                  <p className="company-profile-text company-profile-text--muted">
-                    企業概要が未入力です。編集から紹介文の1段落目を追加してください。
-                  </p>
-                )}
+                <div className="company-profile-section-header">
+                  <h2 className="company-profile-section-title">企業概要</h2>
+                </div>
+                <div className="company-profile-section-body">
+                  {overview ? (
+                    <p className="company-profile-text">{overview}</p>
+                  ) : (
+                    <p className="company-profile-text company-profile-text--muted">
+                      企業概要が未入力です。編集から紹介文の1段落目を追加してください。
+                    </p>
+                  )}
+                </div>
               </section>
 
               <section id="company-business" className="company-profile-section">
-                <h2 className="company-profile-section-title">事業内容</h2>
-                {business ? (
-                  <>
-                    <p className="company-profile-text">{businessPreview}</p>
-                    {showBusinessToggle && (
-                      <button
-                        type="button"
-                        onClick={() => setBusinessExpanded((prev) => !prev)}
-                        className="company-profile-expand inline-flex items-center gap-1"
-                      >
-                        {businessExpanded ? "閉じる" : "もっと見る"}
-                        <ChevronDown
-                          className={`h-4 w-4 transition-transform ${businessExpanded ? "rotate-180" : ""}`}
-                        />
-                      </button>
-                    )}
-                  </>
-                ) : (
-                  <p className="company-profile-text company-profile-text--muted">
-                    事業内容が未入力です。編集から2段落目以降に事業内容を追加してください。
-                  </p>
-                )}
+                <div className="company-profile-section-header">
+                  <h2 className="company-profile-section-title">事業内容</h2>
+                </div>
+                <div className="company-profile-section-body">
+                  {business ? (
+                    <>
+                      <p className="company-profile-text">{businessPreview}</p>
+                      {showBusinessToggle && (
+                        <button
+                          type="button"
+                          onClick={() => setBusinessExpanded((prev) => !prev)}
+                          className="company-profile-expand inline-flex items-center gap-1"
+                        >
+                          {businessExpanded ? "閉じる" : "もっと見る"}
+                          <ChevronDown
+                            className={`h-4 w-4 transition-transform ${businessExpanded ? "rotate-180" : ""}`}
+                          />
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <p className="company-profile-text company-profile-text--muted">
+                      事業内容が未入力です。編集から2段落目以降に事業内容を追加してください。
+                    </p>
+                  )}
+                </div>
               </section>
 
               <section id="company-details" className="company-profile-section">
-                <h2 className="company-profile-section-title">会社情報</h2>
+                <div className="company-profile-section-header">
+                  <h2 className="company-profile-section-title">会社情報</h2>
+                </div>
+                <div className="company-profile-section-body">
                 <div className="company-profile-info-table">
                   <div className="company-profile-info-row">
                     <div className="company-profile-info-label">社名</div>
@@ -813,24 +820,11 @@ export default function CompanyProfilePage() {
                     </div>
                   </div>
                 </div>
+                </div>
               </section>
             </main>
 
             <aside className="company-profile-sidebar">
-              <nav className="company-profile-toc" aria-label="ページ内ナビゲーション">
-                <p className="company-profile-toc-title">目次</p>
-                {TOC_ITEMS.map(({ id, label }) => (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => scrollToSection(id)}
-                    className="company-profile-toc-link text-left"
-                  >
-                    {label}
-                  </button>
-                ))}
-              </nav>
-
               <div className="company-profile-side-card">
                 <h3 className="company-profile-side-card-title">担当者（チャット）</h3>
                 <div className="company-profile-staff-row">
@@ -846,29 +840,6 @@ export default function CompanyProfilePage() {
                     <dd className="mt-0.5 break-all font-medium text-slate-800">{profile.email}</dd>
                   </div>
                 </dl>
-              </div>
-
-              <div className="company-profile-side-card">
-                <h3 className="company-profile-side-card-title">管理メニュー</h3>
-                <ul className="space-y-0.5">
-                  {quickLinks.map(({ href, label, icon: Icon }) => (
-                    <li key={href}>
-                      <Link href={href} className="company-profile-shortcut">
-                        <Icon className="h-4 w-4 text-slate-400" />
-                        {label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="company-profile-side-card">
-                <div className="flex items-start gap-2">
-                  <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-                  <p className="text-xs leading-relaxed text-slate-500">
-                    ここで編集した内容は、求職者向けの企業紹介・求人・チャットに反映されます。求人は管理者承認後に公開されます。
-                  </p>
-                </div>
               </div>
             </aside>
           </div>
