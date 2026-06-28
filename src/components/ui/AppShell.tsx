@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import type { ReactNode } from "react";
+import SeekerAccountMenu from "@/components/seeker/SeekerAccountMenu";
 
 type AppHeaderProps = {
   title: string;
@@ -19,7 +20,7 @@ export function AppHeader({ title, backHref, onBack, action }: AppHeaderProps) {
           (backHref ? (
             <Link
               href={backHref}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+              className="btn-icon btn-icon-muted h-9 w-9 shrink-0"
             >
               <ArrowLeft className="h-5 w-5" />
             </Link>
@@ -27,13 +28,16 @@ export function AppHeader({ title, backHref, onBack, action }: AppHeaderProps) {
             <button
               type="button"
               onClick={onBack}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+              className="btn-icon btn-icon-muted h-9 w-9 shrink-0"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
           ))}
         <h1 className="min-w-0 flex-1 truncate text-center text-base font-bold text-slate-900">{title}</h1>
-        <div className="w-9 shrink-0 text-right">{action}</div>
+        <div className="flex min-w-9 shrink-0 items-center justify-end gap-1.5">
+          {action}
+          <SeekerAccountMenu />
+        </div>
       </div>
     </header>
   );
@@ -44,7 +48,7 @@ export function AppPage({ children }: { children: ReactNode }) {
 }
 
 export function AppBadge({ children }: { children: ReactNode }) {
-  return <span className="badge badge-blue">{children}</span>;
+  return <span className="badge badge-blue whitespace-nowrap">{children}</span>;
 }
 
 export function AppCard({ children, className = "" }: { children: ReactNode; className?: string }) {

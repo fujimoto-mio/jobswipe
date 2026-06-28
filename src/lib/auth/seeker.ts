@@ -41,7 +41,7 @@ export const getSeekerSession = cache(async (): Promise<SeekerSession | null> =>
 export async function requireSeekerSession(): Promise<SeekerSession | NextResponse> {
   const session = await getSeekerSession();
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "ログインが必要です" }, { status: 401 });
   }
   return session;
 }

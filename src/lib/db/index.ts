@@ -247,6 +247,10 @@ export async function upsertSeekerProfile(
     experience: profile.experience,
     employmentType: profile.employmentType,
     email: profile.email,
+    introSentence: profile.introSentence?.trim() || null,
+    profileTitle: profile.profileTitle?.trim() || null,
+    summary: profile.summary?.trim() || null,
+    resumeUrl: profile.resumeUrl?.trim() || null,
   };
 
   if (supabaseUserId) {
@@ -370,17 +374,20 @@ export async function updateApplicationStatus(
     }
 
     if (shouldNotify) {
-      const sent = await sendMatchNotificationEmail(
-        row.applicantEmail,
-        row.applicantName,
-        row.job.title,
-        row.job.company.name
-      );
-      if (sent) {
-        await prisma.application.update({
-          where: { id },
-          data: { matchEmailSentAt: now() },
-        });
+      const notifyEnabled = row.seeker?.notifyHiredEmail ?? true;
+      if (notifyEnabled) {
+        const sent = await sendMatchNotificationEmail(
+          row.applicantEmail,
+          row.applicantName,
+          row.job.title,
+          row.job.company.name
+        );
+        if (sent) {
+          await prisma.application.update({
+            where: { id },
+            data: { matchEmailSentAt: now() },
+          });
+        }
       }
     }
 

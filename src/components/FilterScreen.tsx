@@ -2,6 +2,7 @@
 
 import { AREAS, JOB_CATEGORIES } from "@/lib/constants";
 import Logo from "@/components/ui/Logo";
+import SeekerAccountMenu from "@/components/seeker/SeekerAccountMenu";
 import type { JobFilters } from "@/lib/types";
 import { MapPin, Briefcase, Sparkles } from "lucide-react";
 
@@ -29,7 +30,10 @@ export default function FilterScreen({ filters, onChange, onContinue }: FilterSc
   const canContinue = filters.areas.length > 0 || filters.categories.length > 0;
 
   return (
-    <div className="page-shell">
+    <div className="page-shell relative">
+      <div className="absolute right-4 top-3.5 z-10">
+        <SeekerAccountMenu />
+      </div>
       <div className="page-scroll flex-1">
         <div className="page-container py-8">
           <div className="mb-8">
@@ -93,7 +97,7 @@ export default function FilterScreen({ filters, onChange, onContinue }: FilterSc
           type="button"
           onClick={onContinue}
           disabled={!canContinue}
-          className="btn-primary w-full rounded-full py-3.5 disabled:opacity-40"
+          className="btn-primary w-full disabled:opacity-40"
         >
           動画を見る
           </button>

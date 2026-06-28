@@ -11,6 +11,10 @@ export const DEFAULT_PROFILE: UserProfile = {
   experience: "",
   employmentType: "",
   email: "",
+  introSentence: "",
+  profileTitle: "",
+  summary: "",
+  resumeUrl: "",
 };
 
 export type StoredProfile = UserProfile & { id?: string };
@@ -25,7 +29,13 @@ export function getProfile(): StoredProfile | null {
       clearProfile();
       return null;
     }
-    return parsed;
+    return {
+      ...parsed,
+      introSentence: parsed.introSentence ?? "",
+      profileTitle: parsed.profileTitle ?? "",
+      summary: parsed.summary ?? "",
+      resumeUrl: parsed.resumeUrl ?? "",
+    };
   } catch {
     return null;
   }

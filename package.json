@@ -11,6 +11,7 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "cross-env TIME_ZONE=Asia/Tokyo prisma db seed",
+    "storage:setup-resumes": "node --env-file=.env scripts/setup-resumes-bucket.mjs",
     "postinstall": "prisma generate"
   },
   "dependencies": {

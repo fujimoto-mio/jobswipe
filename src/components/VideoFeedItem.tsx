@@ -35,7 +35,7 @@ function ActionButton({
       <div
         className={`flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-md transition ${
           active
-            ? "bg-[#2563EB] shadow-lg shadow-blue-600/40"
+            ? "bg-[#fe2c55] shadow-lg shadow-[#fe2c55]/40"
             : "bg-black/35 ring-1 ring-white/15"
         }`}
       >
@@ -113,7 +113,7 @@ export default function VideoFeedItem({
           <div className="h-12 w-12 overflow-hidden rounded-full ring-2 ring-white bg-white/10">
             <img src={job.companyLogo} alt={job.company} className="h-full w-full object-cover" />
           </div>
-          <span className="absolute -bottom-1 left-1/2 flex h-5 w-5 -translate-x-1/2 items-center justify-center rounded-full bg-[#2563EB] text-[10px] font-bold text-white ring-2 ring-black">
+          <span className="absolute -bottom-1 left-1/2 flex h-5 w-5 -translate-x-1/2 items-center justify-center rounded-full bg-[#fe2c55] text-[10px] font-bold text-white ring-2 ring-black">
             +
           </span>
         </button>
@@ -164,10 +164,8 @@ export default function VideoFeedItem({
               e.stopPropagation();
               onSave();
             }}
-            className={`rounded px-4 py-2 text-xs font-bold transition active:scale-95 ${
-              isSaved
-                ? "bg-white text-[#2563EB]"
-                : "border border-white/40 bg-white/15 text-white backdrop-blur-sm"
+            className={`btn-pill-video ${
+              isSaved ? "btn-pill-video-solid" : "btn-pill-video-outline"
             }`}
           >
             気になる
@@ -178,7 +176,7 @@ export default function VideoFeedItem({
               e.stopPropagation();
               onApply();
             }}
-            className="rounded bg-[#2563EB] px-4 py-2 text-xs font-bold text-white shadow-lg active:scale-95"
+            className="btn-pill-video btn-pill-video-accent"
           >
             応募する
           </button>

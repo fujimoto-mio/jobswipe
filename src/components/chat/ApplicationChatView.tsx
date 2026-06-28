@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Form, Formik, useField } from "formik";
 import { Send } from "lucide-react";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import LoadingSpinner, { ButtonSpinner } from "@/components/ui/LoadingSpinner";
 import { FormError } from "@/components/form/FormFields";
 import { apiFetch, invalidateApiCache } from "@/lib/api-client";
 import { useChatRealtime } from "@/hooks/useChatRealtime";
@@ -55,7 +55,7 @@ function ChatInputField({ onSubmit }: { onSubmit: () => void }) {
             onSubmit();
           }
         }}
-        className={`input-field scrollbar-none max-h-[120px] min-h-[42px] w-full resize-none overflow-y-auto rounded-2xl py-2.5 leading-snug ${
+        className={`input-field scrollbar-none max-h-[120px] min-h-[42px] w-full resize-none overflow-y-auto leading-snug ${
           meta.touched && meta.error ? "ring-1 ring-red-300" : ""
         }`}
       />
@@ -196,10 +196,10 @@ export default function ApplicationChatView({
                 <button
                   type="submit"
                   disabled={isSubmitting || !values.content.trim()}
-                  className="mb-0.5 flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm transition active:scale-95 disabled:opacity-50"
+                  className="btn-icon btn-send mb-0.5 shrink-0 disabled:opacity-50"
                   aria-label="送信"
                 >
-                  <Send className="h-4 w-4" />
+                  {isSubmitting ? <ButtonSpinner /> : <Send className="h-4 w-4" />}
                 </button>
               </div>
             </Form>

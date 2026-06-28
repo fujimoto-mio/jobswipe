@@ -31,6 +31,9 @@ export async function POST(request: Request) {
         {
           ...profileFields,
           email: email.trim(),
+          introSentence: "",
+          summary: "",
+          resumeUrl: "",
         },
         { supabaseUserId: auth.userId }
       );

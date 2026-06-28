@@ -12,6 +12,33 @@ export function parseBirthday(value: string): Date | null {
   return d;
 }
 
+export function splitBirthday(value: string | null | undefined): {
+  year: string;
+  month: string;
+  day: string;
+} {
+  if (!value || !ISO_DATE_RE.test(value.trim())) {
+    return { year: "", month: "", day: "" };
+  }
+  const [year, month, day] = value.split("-");
+  return {
+    year,
+    month: String(Number(month)),
+    day: String(Number(day)),
+  };
+}
+
+/** Build YYYY-MM-DD when all parts are valid; otherwise empty string. */
+export function composeBirthday(year: string, month: string, day: string): string {
+  const y = year.trim();
+  const m = month.trim();
+  const d = day.trim();
+  if (!y || !m || !d) return "";
+  if (!/^\d{4}$/.test(y) || !/^\d{1,2}$/.test(m) || !/^\d{1,2}$/.test(d)) return "";
+  const candidate = `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+  return parseBirthday(candidate) ? candidate : "";
+}
+
 /** API / form value from a Date column. */
 export function birthdayToInputValue(date: Date | string): string {
   return formatDateISOJST(date);
@@ -73,4 +100,27 @@ export function maxBirthdayForMinAge(minAge = 18): string {
 /** Earliest allowed birthday for maximum age. */
 export function minBirthdayForMaxAge(maxAge = 80): string {
   return `${getYearJST() - maxAge}-01-01`;
+}
+
+export function birthdayYearOptions(minAge = 18, maxAge = 80): string[] {
+  const current = getYearJST();
+  const years: string[] = [];
+  for (let y = current - minAge; y >= current - maxAge; y -= 1) {
+    years.push(String(y));
+  }
+  return years;
+}
+
+export function birthdayMonthOptions(): string[] {
+  return Array.from({ length: 12 }, (_, i) => String(i + 1));
+}
+
+export function birthdayDayOptions(year: string, month: string): string[] {
+  const y = Number(year);
+  const m = Number(month);
+  if (!y || !m || m < 1 || m > 12) {
+    return Array.from({ length: 31 }, (_, i) => String(i + 1));
+  }
+  const daysInMonth = new Date(y, m, 0).getDate();
+  return Array.from({ length: daysInMonth }, (_, i) => String(i + 1));
 }

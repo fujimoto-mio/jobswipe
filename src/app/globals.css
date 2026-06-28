@@ -178,6 +178,449 @@ body {
   color: var(--foreground);
 }
 
+/* ── Seeker (TikTok-style) buttons ── */
+.seeker-ui .btn-primary {
+  border-radius: 9999px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  padding: 0.8125rem 1.625rem;
+  background: #fe2c55;
+  box-shadow: none;
+  transition: transform 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+}
+.seeker-ui .btn-primary:hover {
+  background: #e8264a;
+}
+.seeker-ui .btn-primary:active {
+  transform: scale(0.97);
+}
+.seeker-ui .btn-primary:disabled {
+  background: #e2e8f0;
+  color: #94a3b8;
+  opacity: 1;
+}
+
+.seeker-ui .btn-secondary {
+  border-radius: 9999px;
+  border: none;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  padding: 0.8125rem 1.625rem;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.seeker-ui .btn-secondary:hover {
+  background: #e2e8f0;
+  border-color: transparent;
+}
+.seeker-ui .btn-secondary:active {
+  transform: scale(0.97);
+}
+
+.seeker-ui .btn-outline-primary {
+  border-radius: 9999px;
+  font-weight: 600;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.seeker-ui .btn-outline-primary:active {
+  transform: scale(0.97);
+}
+
+.seeker-ui .btn-ghost {
+  border-radius: 9999px;
+  font-weight: 600;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.seeker-ui .btn-ghost:active {
+  transform: scale(0.97);
+}
+
+.seeker-ui .btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.seeker-ui .btn-icon:active {
+  transform: scale(0.95);
+}
+
+.seeker-ui .btn-icon-muted {
+  height: 2.5rem;
+  width: 2.5rem;
+  background: #f1f5f9;
+  color: #334155;
+}
+.seeker-ui .btn-icon-muted:hover {
+  background: #e2e8f0;
+}
+
+.seeker-ui .btn-icon-primary {
+  height: 2.5rem;
+  width: 2.5rem;
+  background: #fe2c55;
+  color: white;
+  box-shadow: 0 2px 8px rgb(254 44 85 / 0.3);
+}
+
+.seeker-ui .btn-icon-danger {
+  height: 2.5rem;
+  width: 2.5rem;
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.seeker-ui .btn-send {
+  height: 2.625rem;
+  width: 2.625rem;
+  background: #fe2c55;
+  color: white;
+  box-shadow: 0 2px 8px rgb(254 44 85 / 0.3);
+}
+
+.seeker-ui .btn-pill-overlay {
+  border-radius: 9999px;
+  border: 1px solid rgb(255 255 255 / 0.25);
+  background: rgb(255 255 255 / 0.9);
+  padding: 0.4375rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #0f172a;
+  backdrop-filter: blur(12px);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.seeker-ui .btn-pill-overlay:hover {
+  background: white;
+}
+.seeker-ui .btn-pill-overlay:active {
+  transform: scale(0.97);
+}
+
+.seeker-ui .btn-pill-video {
+  border-radius: 9999px;
+  padding: 0.5625rem 1.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.seeker-ui .btn-pill-video:active {
+  transform: scale(0.97);
+}
+
+.seeker-ui .btn-pill-video-outline {
+  border: 1px solid rgb(255 255 255 / 0.4);
+  background: rgb(255 255 255 / 0.15);
+  color: white;
+  backdrop-filter: blur(8px);
+}
+
+.seeker-ui .btn-pill-video-solid {
+  background: white;
+  color: #0f172a;
+}
+
+.seeker-ui .btn-pill-video-accent {
+  background: #fe2c55;
+  color: white;
+  box-shadow: 0 4px 14px rgb(254 44 85 / 0.35);
+}
+
+.seeker-ui .chip {
+  border-radius: 9999px;
+  padding: 0.5rem 1.125rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.seeker-ui .chip:active {
+  transform: scale(0.97);
+}
+.seeker-ui .chip-active {
+  border-color: #0f172a;
+  background: #0f172a;
+  color: white;
+  box-shadow: none;
+}
+
+.seeker-ui .seeker-toggle-on {
+  background: #fe2c55 !important;
+}
+
+/* ── Seeker (TikTok-style) form controls ── */
+.seeker-ui .input-field {
+  border: none;
+  border-radius: 1rem;
+  background-color: #f1f5f9;
+  padding: 0.8125rem 1rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #0f172a;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+.seeker-ui .input-field::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+.seeker-ui .input-field:focus {
+  outline: none;
+  background-color: #e2e8f0;
+  box-shadow: 0 0 0 2px rgb(15 23 42 / 0.08);
+}
+.seeker-ui .input-field:read-only,
+.seeker-ui .input-field:disabled {
+  background-color: #f8fafc;
+  color: #64748b;
+  cursor: not-allowed;
+}
+.seeker-ui .input-field.ring-1 {
+  background-color: #fff1f2;
+  box-shadow: 0 0 0 2px #fecaca;
+}
+.seeker-ui .select-wrap select.input-field,
+.seeker-ui select.input-field.select-field,
+.seeker-ui .select-picker-trigger.input-field {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  padding-right: 2.75rem;
+  background-color: #f1f5f9;
+  background-image: none;
+}
+.seeker-ui .select-wrap select.input-field:focus,
+.seeker-ui select.input-field.select-field:focus,
+.seeker-ui .select-picker-trigger.input-field:focus {
+  background-color: #e2e8f0;
+}
+.seeker-ui .select-wrap select.input-field.select-empty,
+.seeker-ui .select-picker-trigger.select-empty {
+  color: #94a3b8;
+}
+.seeker-ui .select-wrap select.input-field option {
+  color: #0f172a;
+  background: #ffffff;
+}
+
+/* Custom select picker (TikTok-style list) */
+.select-picker-trigger {
+  position: relative;
+  display: block;
+}
+.select-picker-menu {
+  max-height: 15rem;
+  overflow-y: auto;
+  border-radius: 1rem;
+  background: #ffffff;
+  padding: 0.375rem;
+  box-shadow:
+    0 12px 40px rgb(15 23 42 / 0.12),
+    0 0 0 1px rgb(15 23 42 / 0.06);
+}
+.select-picker-option {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #0f172a;
+  text-align: left;
+  transition: background-color 0.12s ease, transform 0.12s ease;
+}
+.select-picker-option:hover,
+.select-picker-option:focus-visible {
+  background: #f1f5f9;
+  outline: none;
+}
+.select-picker-option:active {
+  transform: scale(0.99);
+}
+.select-picker-option-selected {
+  background: #f1f5f9;
+  font-weight: 600;
+}
+.select-picker-option-muted {
+  color: #94a3b8;
+  font-weight: 500;
+}
+.select-picker-sheet-panel {
+  max-height: min(70vh, 28rem);
+  overflow-y: auto;
+  border-radius: 1.25rem 1.25rem 0 0;
+  background: #ffffff;
+  padding: 0.5rem 0.75rem max(1rem, env(safe-area-inset-bottom));
+  box-shadow: 0 -8px 40px rgb(15 23 42 / 0.14);
+}
+.select-picker-sheet-handle {
+  margin: 0.375rem auto 0.75rem;
+  height: 0.25rem;
+  width: 2.5rem;
+  border-radius: 9999px;
+  background: #e2e8f0;
+}
+.select-picker-sheet-title {
+  margin-bottom: 0.5rem;
+  padding: 0 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #64748b;
+}
+.select-picker-sheet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+.seeker-ui input[type="date"].input-field.date-field {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  min-height: 2.75rem;
+  background-color: #f1f5f9;
+}
+.seeker-ui input[type="date"].input-field.date-field:focus {
+  background-color: #e2e8f0;
+}
+.seeker-ui input[type="date"].input-field.date-field::-webkit-calendar-picker-indicator {
+  opacity: 0.55;
+  cursor: pointer;
+}
+.birthday-fields {
+  display: flex;
+  align-items: stretch;
+  gap: 0.375rem;
+}
+.birthday-part {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+}
+.birthday-part .select-picker {
+  flex: 1;
+  min-width: 0;
+}
+.birthday-part .select-picker-trigger {
+  height: 100%;
+  width: 100%;
+}
+.birthday-unit {
+  flex-shrink: 0;
+  align-self: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* Profile form + info layout */
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.profile-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.profile-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.profile-form-section-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+.profile-form-row {
+  display: grid;
+  gap: 1rem;
+}
+.profile-form-row-2 {
+  grid-template-columns: 1fr;
+}
+@media (min-width: 480px) {
+  .profile-form-row-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.profile-form-row-2 .birthday-fields {
+  gap: 0.25rem;
+  align-items: stretch;
+}
+.profile-form-row-2 .birthday-part {
+  display: flex;
+}
+.profile-form-row-2 .birthday-part .select-picker {
+  flex: 1;
+  min-width: 0;
+}
+.profile-form-row-2 .birthday-unit {
+  align-self: center;
+  font-size: 0.8125rem;
+}
+.profile-form-note {
+  margin-top: -0.25rem;
+}
+@media (min-width: 640px) {
+  .profile-form-submit {
+    width: 18rem;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+.profile-info-cell:last-child:nth-child(odd):not([class*="col-span-2"]) {
+  grid-column: 1 / -1;
+}
+.select-picker-compact .select-picker-trigger-compact {
+  padding: 0.8125rem 0.5rem;
+  padding-right: 1.75rem;
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  min-height: 100%;
+}
+.select-picker-compact .select-picker-trigger-compact span {
+  display: block;
+  text-align: center;
+}
+.seeker-ui .select-picker-compact .select-picker-trigger-compact {
+  font-weight: 500;
+}
+.seeker-ui textarea.input-field {
+  min-height: 2.75rem;
+  line-height: 1.45;
+}
+.seeker-ui label.block > span:first-of-type {
+  margin-bottom: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #64748b;
+}
+.seeker-ui .field-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  padding: 0.375rem;
+  color: #64748b;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+.seeker-ui .field-toggle-btn:hover {
+  background: rgb(15 23 42 / 0.06);
+  color: #0f172a;
+}
+.seeker-ui .field-toggle-btn:active {
+  transform: scale(0.95);
+}
+
 /* ── Chips / tags ── */
 .chip {
   border-radius: 9999px;

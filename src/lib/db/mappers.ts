@@ -89,6 +89,10 @@ export function mapSeekerProfile(row: {
   desiredJobType: string;
   experience: string;
   employmentType: string;
+  introSentence?: string | null;
+  profileTitle?: string | null;
+  summary?: string | null;
+  resumeUrl?: string | null;
 }): UserProfile & { id: string } {
   return {
     id: row.id,
@@ -100,5 +104,9 @@ export function mapSeekerProfile(row: {
     experience: row.experience,
     employmentType: row.employmentType,
     email: row.email,
+    introSentence: row.introSentence ?? "",
+    profileTitle: row.profileTitle ?? "",
+    summary: row.summary ?? "",
+    resumeUrl: row.resumeUrl ?? "",
   };
 }

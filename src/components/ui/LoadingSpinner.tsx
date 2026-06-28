@@ -50,3 +50,13 @@ export function PageLoading({
     </div>
   );
 }
+
+/** Inline spinner for primary submit buttons */
+export function ButtonSpinner() {
+  return (
+    <span
+      className="inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white/35 border-t-white"
+      aria-hidden="true"
+    />
+  );
+}

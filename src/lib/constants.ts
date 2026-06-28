@@ -58,3 +58,6 @@ export const JOB_APPROVAL_LABELS = {
   approved: "公開中",
   rejected: "却下",
 } as const;
+
+export const SUPPORT_EMAIL =
+  process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "support@jobswipe.app";

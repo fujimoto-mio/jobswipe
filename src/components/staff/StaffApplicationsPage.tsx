@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, ExternalLink } from "lucide-react";
 import { APPLICATION_STATUS_LABELS } from "@/lib/constants";
 import { useStaffPanel } from "@/components/staff/StaffPanelContext";
 import { formatDateJST } from "@/lib/datetime";
@@ -83,6 +83,10 @@ export default function StaffApplicationsPage() {
 
   const selected = applications.find((a) => a.id === selectedId);
   const seeker = selected?.seeker;
+  const hasCareerProfile =
+    Boolean(seeker?.introSentence) ||
+    Boolean(seeker?.summary) ||
+    Boolean(seeker?.resumeUrl);
 
   const columns: ColumnDef<ApplicationWithSeeker>[] = [
     {
@@ -224,6 +228,46 @@ export default function StaffApplicationsPage() {
               <dd className="font-medium text-[var(--body)]">{seeker?.employmentType ?? "—"}</dd>
             </div>
           </dl>
+
+          {hasCareerProfile && (
+            <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                プロフィール
+              </p>
+              <dl className="space-y-3 text-sm">
+                {seeker?.introSentence && (
+                  <div>
+                    <dt className="text-xs text-[var(--muted)]">一言紹介</dt>
+                    <dd className="mt-0.5 leading-relaxed text-[var(--body)]">{seeker.introSentence}</dd>
+                  </div>
+                )}
+                {seeker?.summary && (
+                  <div>
+                    <dt className="text-xs text-[var(--muted)]">サマリー</dt>
+                    <dd className="mt-0.5 whitespace-pre-wrap leading-relaxed text-[var(--body)]">
+                      {seeker.summary}
+                    </dd>
+                  </div>
+                )}
+                {seeker?.resumeUrl && (
+                  <div>
+                    <dt className="text-xs text-[var(--muted)]">履歴書</dt>
+                    <dd className="mt-1">
+                      <a
+                        href={seeker.resumeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 font-medium text-[var(--accent)] underline decoration-[var(--accent)]/30 underline-offset-2"
+                      >
+                        履歴書リンク
+                        <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                      </a>
+                    </dd>
+                  </div>
+                )}
+              </dl>
+            </div>
+          )}
 
           {selected.message && (
             <p className="mt-3 rounded-lg bg-[var(--surface)] p-3 text-sm text-[var(--body)]">{selected.message}</p>

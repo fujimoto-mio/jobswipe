@@ -39,6 +39,27 @@ export const loginSchema = Yup.object({
   password: Yup.string().required("パスワードを入力してください"),
 });
 
+export const passwordChangeSchema = Yup.object({
+  password,
+  confirmPassword: Yup.string()
+    .oneOf([Yup.ref("password")], "パスワードが一致しません")
+    .required("確認用パスワードを入力してください"),
+});
+
+export const emailChangeSchema = Yup.object({ email });
+
+export const seekerSettingsSchema = Yup.object({
+  notifyHiredEmail: Yup.boolean().required(),
+  notifyChatEmail: Yup.boolean().required(),
+});
+
+export const seekerSettingsPatchSchema = Yup.object({
+  notifyHiredEmail: Yup.boolean().optional(),
+  notifyChatEmail: Yup.boolean().optional(),
+}).test("at-least-one", "更新する項目がありません", (v) =>
+  v?.notifyHiredEmail !== undefined || v?.notifyChatEmail !== undefined
+);
+
 export const seekerAccountSchema = Yup.object({
   email,
   password,
@@ -46,6 +67,17 @@ export const seekerAccountSchema = Yup.object({
     .oneOf([Yup.ref("password")], "パスワードが一致しません")
     .required("確認用パスワードを入力してください"),
 });
+
+const optionalResumeUrl = Yup.string()
+  .trim()
+  .transform((v) => v || "")
+  .test("valid-url", "有効なURLを入力してください", (v) => !v || Yup.string().url().isValidSync(v));
+
+const seekerCareerFields = {
+  introSentence: Yup.string().trim().max(500, "500文字以内で入力してください").default(""),
+  summary: Yup.string().trim().max(5000, "5000文字以内で入力してください").default(""),
+  resumeUrl: optionalResumeUrl,
+};
 
 const seekerProfileFields = {
   name: Yup.string().trim().required("氏名を入力してください"),
@@ -99,7 +131,10 @@ export const applySchema = Yup.object({
 });
 
 /** Seeker profile edit — same fields as registration except email (auth-bound). */
-export const profileEditSchema = Yup.object(seekerProfileFields);
+export const profileEditSchema = Yup.object({
+  ...seekerProfileFields,
+  ...seekerCareerFields,
+});
 
 /** @deprecated Use profileEditSchema — email is managed via Supabase Auth. */
 export const profileSchema = profileEditSchema.shape({ email });
@@ -149,6 +184,10 @@ export const staffProfileSchema = Yup.object({
 });
 
 export type LoginValues = Yup.InferType<typeof loginSchema>;
+export type PasswordChangeValues = Yup.InferType<typeof passwordChangeSchema>;
+export type EmailChangeValues = Yup.InferType<typeof emailChangeSchema>;
+export type SeekerSettingsValues = Yup.InferType<typeof seekerSettingsSchema>;
+export type SeekerSettingsPatchValues = Yup.InferType<typeof seekerSettingsPatchSchema>;
 export type SeekerAccountValues = Yup.InferType<typeof seekerAccountSchema>;
 export type SeekerProfileValues = Yup.InferType<typeof seekerProfileSchema>;
 export type SeekerRegisterValues = Yup.InferType<typeof seekerRegisterSchema>;

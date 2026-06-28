@@ -116,6 +116,10 @@ export type UserProfile = {
   experience: string;
   employmentType: string;
   email: string;
+  introSentence: string;
+  profileTitle: string;
+  summary: string;
+  resumeUrl: string;
 };
 
 export type ChatMessage = {
@@ -136,4 +140,9 @@ export type ChatThread = {
 export type JobFilters = {
   areas: string[];
   categories: string[];
+};
+
+export type SeekerSettings = {
+  notifyHiredEmail: boolean;
+  notifyChatEmail: boolean;
 };

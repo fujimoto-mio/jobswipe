@@ -162,7 +162,7 @@ function SeekerChatContent() {
         <button
           type="button"
           onClick={backToList}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-slate-600 transition active:bg-slate-100 md:hidden"
+          className="btn-icon btn-icon-muted h-10 w-10 shrink-0 md:hidden"
           aria-label="一覧に戻る"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -211,7 +211,7 @@ function SeekerChatContent() {
             title="チャットはまだありません"
             description="求人に応募すると、企業担当者とメッセージのやり取りができます"
             action={
-              <Link href="/explore" className="btn-primary flex items-center gap-2 rounded-full px-6">
+              <Link href="/explore" className="btn-primary flex items-center gap-2 px-8">
                 <Search className="h-4 w-4" />
                 求人を探す
               </Link>

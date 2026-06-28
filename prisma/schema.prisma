@@ -76,7 +76,13 @@ model SeekerProfile {
   desiredJobType String   @map("desired_job_type")
   experience     String
   employmentType String   @map("employment_type")
+  introSentence  String?  @map("intro_sentence")
+  profileTitle   String?  @map("profile_title")
+  summary        String?  @db.Text
+  resumeUrl      String?  @map("resume_url")
   supabaseUserId String   @unique @map("supabase_user_id")
+  notifyHiredEmail Boolean @default(true) @map("notify_hired_email")
+  notifyChatEmail  Boolean @default(true) @map("notify_chat_email")
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 

@@ -5,10 +5,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Form, Formik } from "formik";
 import { X, Send, CheckCircle } from "lucide-react";
 import Link from "next/link";
-import { FormTextInput, FormTextarea } from "@/components/form/FormFields";
+import { FormBirthdayInput, FormTextInput, FormTextarea } from "@/components/form/FormFields";
+import { ButtonSpinner } from "@/components/ui/LoadingSpinner";
 import { getProfile } from "@/lib/profile";
 import { apiFetch } from "@/lib/api-client";
-import { maxBirthdayForMinAge, minBirthdayForMaxAge } from "@/lib/birthday";
+import { mapUserFacingError } from "@/lib/auth/errors";
 import { applySchema } from "@/lib/validation/schemas";
 import type { Job } from "@/lib/types";
 
@@ -60,7 +61,7 @@ export default function ApplyModal({ job, onClose, onSuccess }: ApplyModalProps)
           <button
             type="button"
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200"
+            className="btn-icon btn-icon-muted"
           >
             <X className="h-5 w-5" />
           </button>
@@ -104,7 +105,9 @@ export default function ApplyModal({ job, onClose, onSuccess }: ApplyModalProps)
                       setTimeout(onSuccess, 3000);
                     } else {
                       const data = await res.json().catch(() => ({}));
-                      setSubmitError(typeof data.error === "string" ? data.error : "応募に失敗しました");
+                      setSubmitError(
+                        typeof data.error === "string" ? mapUserFacingError(data.error) : "応募に失敗しました"
+                      );
                     }
                   } finally {
                     setSubmitting(false);
@@ -113,21 +116,19 @@ export default function ApplyModal({ job, onClose, onSuccess }: ApplyModalProps)
               >
                 <Form className="space-y-4">
                   <FormTextInput name="name" label="氏名" />
+                  <FormBirthdayInput name="birthday" label="生年月日" />
                   <div className="grid grid-cols-2 gap-3">
-                    <FormTextInput
-                      name="birthday"
-                      label="生年月日"
-                      type="date"
-                      min={minBirthdayForMaxAge(80)}
-                      max={maxBirthdayForMinAge(18)}
-                    />
                     <FormTextInput name="area" label="エリア" />
+                    <FormTextInput name="jobType" label="希望職種" />
                   </div>
-                  <FormTextInput name="jobType" label="希望職種" />
                   <FormTextInput name="email" label="メールアドレス" type="email" />
                   <FormTextarea name="message" label="志望動機（任意）" rows={3} />
-                  <button type="submit" disabled={submitting} className="btn-primary w-full py-3.5">
-                    <Send className="h-4 w-4" />
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="btn-primary flex w-full items-center justify-center gap-2"
+                  >
+                    {submitting ? <ButtonSpinner /> : <Send className="h-4 w-4" />}
                     {submitting ? "送信中..." : "応募を送信"}
                   </button>
                 </Form>
@@ -144,8 +145,8 @@ export default function ApplyModal({ job, onClose, onSuccess }: ApplyModalProps)
             >
               <CheckCircle className="mb-3 h-12 w-12 text-emerald-500" />
               <p className="font-semibold text-[#1E293B]">応募が完了しました</p>
-              <Link href="/chat" className="mt-4 text-sm font-medium text-[#2563EB]">
-                チャットで企業に連絡する →
+              <Link href="/chat" className="btn-primary mt-4 px-6 py-2.5 text-sm">
+                チャットで企業に連絡する
               </Link>
             </motion.div>
           )}

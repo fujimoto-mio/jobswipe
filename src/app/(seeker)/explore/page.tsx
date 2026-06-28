@@ -10,11 +10,13 @@ import { fetchSeekerUnreadTotal } from "@/lib/chat-unread";
 import { getCachedClientSession } from "@/lib/auth/client-session";
 import { saveProfile } from "@/lib/profile";
 import Logo from "@/components/ui/Logo";
+import SeekerAccountMenu from "@/components/seeker/SeekerAccountMenu";
 import Link from "next/link";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
 import type { JobFilters } from "@/lib/types";
+import { FILTER_STORAGE_KEY } from "@/lib/job-filters";
 
-const FILTER_KEY = "jobswipe_filters_ready";
+const FILTER_KEY = FILTER_STORAGE_KEY;
 
 function ExploreContent() {
   const router = useRouter();
@@ -98,13 +100,16 @@ function ExploreContent() {
           <Link href="/">
             <Logo size="sm" theme="dark" inTopbar />
           </Link>
-          <button
-            type="button"
-            onClick={() => setFiltersReady(false)}
-            className="rounded border border-white/25 bg-white/90 px-3.5 py-1.5 text-xs font-semibold text-[var(--accent)] shadow-sm backdrop-blur-md transition hover:bg-white"
-          >
-            条件変更
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setFiltersReady(false)}
+              className="btn-pill-overlay"
+            >
+              条件変更
+            </button>
+            <SeekerAccountMenu variant="overlay" />
+          </div>
         </div>
       </header>
 

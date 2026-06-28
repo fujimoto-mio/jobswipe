@@ -14,6 +14,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import ApplyModal from "@/components/ApplyModal";
+import SeekerAccountMenu from "@/components/seeker/SeekerAccountMenu";
 import { apiFetch } from "@/lib/api-client";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
 import { formatDateJST } from "@/lib/datetime";
@@ -26,7 +27,7 @@ function LinkItem({ href, label }: { href?: string; label: string }) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-blue-600 transition hover:border-blue-200 hover:bg-blue-50"
+      className="flex items-center gap-2.5 rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition active:scale-[0.98] hover:bg-slate-50"
     >
       <ExternalLink className="h-4 w-4 shrink-0" />
       {label}
@@ -77,7 +78,9 @@ export default function JobDetailPage() {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 bg-slate-50 px-6">
         <p className="font-medium text-slate-700">求人が見つかりません</p>
-        <Link href="/explore" className="btn-primary px-6">トップへ戻る</Link>
+        <Link href="/explore" className="btn-primary px-8">
+          トップへ戻る
+        </Link>
       </div>
     );
   }
@@ -95,6 +98,9 @@ export default function JobDetailPage() {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
+        <div className="absolute right-4 top-4 z-10">
+          <SeekerAccountMenu variant="overlay" />
+        </div>
       </div>
 
       <div className="page-container py-0">

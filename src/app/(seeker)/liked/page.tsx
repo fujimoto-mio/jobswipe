@@ -61,7 +61,7 @@ export default function LikedPage() {
             title="保存した求人はありません"
             description="右スワイプまたは保存ボタンで追加できます"
             action={
-              <Link href="/explore" className="btn-primary flex items-center gap-2 rounded-full px-6">
+              <Link href="/explore" className="btn-primary flex items-center gap-2 px-8">
                 <Search className="h-4 w-4" />
                 求人を探す
               </Link>
@@ -91,14 +91,14 @@ export default function LikedPage() {
                 <div className="flex shrink-0 flex-col gap-2">
                   <button
                     onClick={() => setApplyJob(job)}
-                    className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm shadow-blue-600/20 transition active:scale-95"
+                    className="btn-icon btn-icon-primary"
                     aria-label="応募"
                   >
                     <Send className="h-4 w-4" />
                   </button>
                   <button
                     onClick={(e) => handleRemove(e, job.id)}
-                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-red-500 transition active:scale-95"
+                    className="btn-icon btn-icon-danger"
                     aria-label="削除"
                   >
                     <Trash2 className="h-4 w-4" />
