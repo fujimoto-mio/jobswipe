@@ -14,16 +14,12 @@ import {
 } from "lucide-react";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
 import { formatDateTimeJST } from "@/lib/datetime";
-import { JOB_APPROVAL_LABELS } from "@/lib/constants";
+import { JOB_APPROVAL_BADGE_CLASS, JOB_APPROVAL_LABELS } from "@/lib/constants";
 import { useStaffPanel } from "@/components/staff/StaffPanelContext";
 import { apiFetch } from "@/lib/api-client";
 import type { Job } from "@/lib/types";
 
-const APPROVAL_BADGE: Record<Job["approvalStatus"], string> = {
-  pending: "badge-amber",
-  approved: "badge-green",
-  rejected: "badge-red",
-};
+const APPROVAL_BADGE = JOB_APPROVAL_BADGE_CLASS;
 
 function JobViewHero({
   job,
@@ -126,7 +122,7 @@ export default function JobStaffViewPage({ jobId }: JobStaffViewPageProps) {
     return <PageLoading message="求人詳細を読み込み中..." minHeight="min-h-[320px]" />;
   }
 
-  const canEdit = role !== "admin" && job.approvalStatus !== "approved";
+  const canEdit = role !== "admin" && job.approvalStatus !== "Active";
 
   return (
     <div className="company-profile-page staff-ui">

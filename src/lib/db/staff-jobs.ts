@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { JobApprovalStatus as PrismaJobApprovalStatus } from "@prisma/client";
 import { mapJob } from "@/lib/db/mappers";
 import type { Job, JobApprovalStatus } from "@/lib/types";
 
@@ -71,7 +72,7 @@ export async function queryStaffJobs(query: StaffJobsQuery): Promise<PaginatedJo
 
   const where = {
     ...(query.companyId ? { companyId: query.companyId } : {}),
-    ...(query.approvalStatus ? { approvalStatus: query.approvalStatus } : {}),
+    ...(query.approvalStatus ? { approvalStatus: query.approvalStatus as PrismaJobApprovalStatus } : {}),
     ...jobSearchFilter(query.search),
   };
 

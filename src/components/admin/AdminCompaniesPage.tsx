@@ -1,15 +1,59 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import CompanyLogo from "@/components/chat/CompanyLogo";
+import FormSelectPicker from "@/components/form/FormSelectPicker";
 import PaginatedDataTable, { type ColumnDef } from "@/components/ui/PaginatedDataTable";
 import PaginatedTableToolbar from "@/components/ui/PaginatedTableToolbar";
 import { TableRowActions, TableViewLink } from "@/components/ui/TableRowActions";
+import {
+  COMPANY_STATUS_BADGE_CLASS,
+  COMPANY_STATUS_LABELS,
+  type CompanyStatus,
+} from "@/lib/constants";
 import { formatDateJST } from "@/lib/datetime";
 import type { AdminCompanyRow } from "@/lib/db/admin-companies";
 
+type CompanyStatusFilter = "" | CompanyStatus;
+
+const STATUS_FILTER_OPTIONS: { value: CompanyStatusFilter; label: string }[] = [
+  { value: "", label: "すべて" },
+  { value: "Active", label: COMPANY_STATUS_LABELS.Active },
+  { value: "Pending", label: COMPANY_STATUS_LABELS.Pending },
+  { value: "Suspended", label: COMPANY_STATUS_LABELS.Suspended },
+];
+
+function FilterSelect({
+  value,
+  onChange,
+}: {
+  value: CompanyStatusFilter;
+  onChange: (value: CompanyStatusFilter) => void;
+}) {
+  const selectedLabel =
+    STATUS_FILTER_OPTIONS.find((option) => option.value === value)?.label ?? "すべて";
+
+  return (
+    <FormSelectPicker
+      name="filter"
+      title="ステータス"
+      value={selectedLabel}
+      options={STATUS_FILTER_OPTIONS.map((option) => option.label)}
+      placeholder="すべて"
+      allowClear={false}
+      onChange={(label) => {
+        const next = STATUS_FILTER_OPTIONS.find((option) => option.label === label);
+        if (next) onChange(next.value);
+      }}
+      onBlur={() => {}}
+    />
+  );
+}
+
 export default function AdminCompaniesPage() {
   const router = useRouter();
+  const [statusFilter, setStatusFilter] = useState<CompanyStatusFilter>("");
 
   const columns: ColumnDef<AdminCompanyRow>[] = [
     {
@@ -23,6 +67,15 @@ export default function AdminCompaniesPage() {
             <p className="font-semibold text-[var(--foreground)]">{row.name}</p>
           </div>
         </div>
+      ),
+    },
+    {
+      id: "status",
+      header: "ステータス",
+      cell: (row) => (
+        <span className={`badge ${COMPANY_STATUS_BADGE_CLASS[row.status]}`}>
+          {COMPANY_STATUS_LABELS[row.status]}
+        </span>
       ),
     },
     {
@@ -64,7 +117,7 @@ export default function AdminCompaniesPage() {
     <>
       <div className="mb-8">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">企業管理</h1>
-        <p className="mt-1 text-sm text-slate-500">検索・並び替えで登録企業を管理</p>
+        <p className="mt-1 text-sm text-slate-500">検索・フィルター・並び替えで登録企業を管理</p>
       </div>
 
       <PaginatedDataTable
@@ -73,12 +126,14 @@ export default function AdminCompaniesPage() {
         getRowId={(row) => row.id}
         fetchUrl="/api/admin/companies"
         defaultSort={{ column: "name", order: "asc" }}
+        deps={[statusFilter]}
         buildQuery={({ page, pageSize, sort, search }) => ({
           page: String(page),
           limit: String(pageSize),
           search: search || undefined,
           sort: sort.column || undefined,
           order: sort.order,
+          ...(statusFilter ? { status: statusFilter } : {}),
         })}
         parseResponse={(data) => {
           const payload = data as { items?: AdminCompanyRow[]; total?: number };
@@ -87,13 +142,18 @@ export default function AdminCompaniesPage() {
             total: typeof payload.total === "number" ? payload.total : 0,
           };
         }}
-        emptyMessage="登録企業がありません"
+        emptyMessage={
+          statusFilter ? "条件に一致する企業がありません" : "登録企業がありません"
+        }
         onRowClick={(row) => router.push(`/admin/companies/${row.id}`)}
         toolbar={({ searchInput, setSearchInput }) => (
           <PaginatedTableToolbar
             searchValue={searchInput}
             onSearchChange={setSearchInput}
             searchPlaceholder="企業名で検索..."
+            filter={
+              <FilterSelect value={statusFilter} onChange={setStatusFilter} />
+            }
           />
         )}
       />

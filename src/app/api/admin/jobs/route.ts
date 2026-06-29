@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { updateJobApproval, deleteJob } from "@/lib/db";
 import { queryStaffJobs } from "@/lib/db/staff-jobs";
 import { requireAdminUser, requireStaffUser } from "@/lib/auth/admin";
+import { JOB_APPROVAL_STATUSES } from "@/lib/constants";
 import type { JobApprovalStatus } from "@/lib/types";
 
 function parsePage(value: string | null): number {
@@ -25,8 +26,10 @@ export async function GET(request: Request) {
   const search = searchParams.get("search") ?? undefined;
   const sort = searchParams.get("sort") ?? undefined;
   const order: "asc" | "desc" = searchParams.get("order") === "asc" ? "asc" : "desc";
-  const approvalStatus =
-    (searchParams.get("approvalStatus") as JobApprovalStatus | null) ?? undefined;
+  const approvalStatusParam = searchParams.get("approvalStatus");
+  const approvalStatus = JOB_APPROVAL_STATUSES.includes(approvalStatusParam as JobApprovalStatus)
+    ? (approvalStatusParam as JobApprovalStatus)
+    : undefined;
 
   try {
     const result = await queryStaffJobs({
@@ -58,7 +61,7 @@ export async function PATCH(request: Request) {
       approvalStatus: JobApprovalStatus;
     };
 
-    if (!id || !approvalStatus) {
+    if (!id || !approvalStatus || !JOB_APPROVAL_STATUSES.includes(approvalStatus)) {
       return NextResponse.json(
         { error: "id and approvalStatus are required" },
         { status: 400 }

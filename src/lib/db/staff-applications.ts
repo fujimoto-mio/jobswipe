@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { JobApprovalStatus as PrismaJobApprovalStatus } from "@prisma/client";
 import { mapApplication, mapJob, mapSeekerProfile } from "@/lib/db/mappers";
 import { fetchSavedApplyMessages, resolveApplicationMessage } from "@/lib/db/saved-job-message";
 import type {
@@ -185,14 +186,14 @@ export async function queryStaffApplicationJobs(
 
   const jobWhere = {
     ...(query.companyId ? { companyId: query.companyId } : {}),
-    ...(query.approvalStatus ? { approvalStatus: query.approvalStatus } : {}),
+    ...(query.approvalStatus ? { approvalStatus: query.approvalStatus as PrismaJobApprovalStatus } : {}),
     ...jobSearchFilter(query.search),
   };
 
   const applicationSummaryWhere = {
     job: {
       ...(query.companyId ? { companyId: query.companyId } : {}),
-      ...(query.approvalStatus ? { approvalStatus: query.approvalStatus } : {}),
+      ...(query.approvalStatus ? { approvalStatus: query.approvalStatus as PrismaJobApprovalStatus } : {}),
       ...jobSearchFilter(query.search),
     },
   };

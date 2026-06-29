@@ -195,7 +195,7 @@ export default function DataTable<T>({
             </tr>
           </thead>
           <tbody>
-            {loading && pageData.length === 0 ? (
+            {loading ? (
               <tr>
                 <td colSpan={columns.length} className="px-4 py-16">
                   <LoadingSpinner message="データを読み込み中..." />
@@ -235,12 +235,11 @@ export default function DataTable<T>({
         </table>
       </div>
 
-      {totalItems > 0 && (
+      {totalItems > 0 && !loading && (
         <div className="data-table-pagination">
           <div className="data-table-pagination-meta">
             <span>
               {rangeStart}–{rangeEnd} / 全{totalItems}件
-              {loading ? " · 更新中..." : ""}
             </span>
             <label className="flex items-center gap-2 whitespace-nowrap">
               表示件数

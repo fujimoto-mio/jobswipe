@@ -31,7 +31,10 @@ export async function GET(request: Request) {
   const search = searchParams.get("search") ?? undefined;
   const sort = searchParams.get("sort") ?? undefined;
   const order = searchParams.get("order") === "asc" ? "asc" : "desc";
+  const statusParam = searchParams.get("status");
+  const status =
+    statusParam === "Active" || statusParam === "Suspended" ? statusParam : undefined;
 
-  const result = await queryAdminSeekers({ page, limit, search, sort, order });
+  const result = await queryAdminSeekers({ page, limit, search, sort, order, status });
   return NextResponse.json(result);
 }

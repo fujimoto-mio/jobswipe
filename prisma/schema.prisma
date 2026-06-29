@@ -8,6 +8,23 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum CompanyStatus {
+  Active
+  Pending
+  Suspended
+}
+
+enum SeekerStatus {
+  Active
+  Suspended
+}
+
+enum JobApprovalStatus {
+  Pending
+  Active
+  Cancelled
+}
+
 model Company {
   id          String   @id @default(uuid())
   name        String   @unique
@@ -18,6 +35,7 @@ model Company {
   postalCode  String?  @map("postal_code")
   address     String?
   links       Json     @default("{}")
+  status      CompanyStatus @default(Active)
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   jobs        Job[]
   accounts    Account[]
@@ -42,7 +60,7 @@ model Job {
   videoUrl       String   @map("video_url")
   thumbnailUrl   String?  @map("thumbnail_url")
   links          Json     @default("{}")
-  approvalStatus String   @default("pending") @map("approval_status")
+  approvalStatus JobApprovalStatus @default(Pending) @map("approval_status")
   approvedAt     DateTime? @map("approved_at") @db.Timestamptz(3)
   viewCount      Int      @default(0) @map("view_count")
   postedAt       DateTime @default(now()) @map("posted_at") @db.Timestamptz(3)
@@ -97,6 +115,7 @@ model SeekerProfile {
   supabaseUserId String   @unique @map("supabase_user_id")
   notifyHiredEmail Boolean @default(true) @map("notify_hired_email")
   notifyChatEmail  Boolean @default(true) @map("notify_chat_email")
+  status           SeekerStatus @default(Active)
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 

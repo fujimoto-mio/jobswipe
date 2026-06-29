@@ -30,7 +30,7 @@ export async function GET(
   }
 
   if (!staff) {
-    if (job.approvalStatus !== "approved") {
+    if (job.approvalStatus !== "Active") {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
     await incrementJobView(id);
@@ -63,12 +63,12 @@ export async function PATCH(
       }
 
       const existing = await getJobById(id);
-      if (existing?.approvalStatus === "approved") {
+      if (existing?.approvalStatus === "Active") {
         return NextResponse.json({ error: "承認済みの求人は編集できません" }, { status: 403 });
       }
     }
 
-    if (staff.role === "company" && body.approvalStatus && body.approvalStatus !== "pending") {
+    if (staff.role === "company" && body.approvalStatus && body.approvalStatus !== "Pending") {
       return NextResponse.json({ error: "Only admins can change approval status" }, { status: 403 });
     }
 

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { JobApprovalStatus as PrismaJobApprovalStatus, SeekerStatus } from "@prisma/client";
 import { mapApplication, mapChatMessage, mapJob, mapSeekerProfile } from "@/lib/db/mappers";
 import { fetchSavedApplyMessages, resolveApplicationMessage } from "@/lib/db/saved-job-message";
 import { now } from "@/lib/datetime";
@@ -26,7 +27,7 @@ export { listCompanies } from "@/lib/db/companies";
 export async function getAllJobs(filters?: JobFilters, includeUnapproved = false): Promise<Job[]> {
   const rows = await prisma.job.findMany({
     where: {
-      ...(includeUnapproved ? {} : { approvalStatus: "approved" }),
+      ...(includeUnapproved ? {} : { approvalStatus: PrismaJobApprovalStatus.Active }),
       ...(filters?.areas.length ? { area: { in: filters.areas } } : {}),
       ...(filters?.categories.length ? { category: { in: filters.categories } } : {}),
     },
@@ -75,7 +76,7 @@ export async function createJob(
       videoUrl: input.videoUrl ?? "",
       thumbnailUrl: input.thumbnailUrl,
       links: input.links ?? {},
-      approvalStatus: "pending",
+      approvalStatus: PrismaJobApprovalStatus.Pending,
     },
     include: jobInclude,
   });
@@ -88,8 +89,8 @@ export async function updateJobApproval(id: string, status: JobApprovalStatus): 
     const row = await prisma.job.update({
       where: { id },
       data: {
-        approvalStatus: status,
-        approvedAt: status === "approved" ? now() : null,
+        approvalStatus: status as PrismaJobApprovalStatus,
+        approvedAt: status === "Active" ? now() : null,
       },
       include: jobInclude,
     });
@@ -140,8 +141,8 @@ export async function updateJob(
         ...(input.links !== undefined ? { links: input.links } : {}),
         ...(input.approvalStatus !== undefined
           ? {
-              approvalStatus: input.approvalStatus,
-              approvedAt: input.approvalStatus === "approved" ? now() : null,
+              approvalStatus: input.approvalStatus as PrismaJobApprovalStatus,
+              approvedAt: input.approvalStatus === "Active" ? now() : null,
             }
           : {}),
       },
@@ -156,7 +157,7 @@ export async function updateJob(
 export async function getJobsForStaff(companyId?: string | null, includeUnapproved = true): Promise<Job[]> {
   const rows = await prisma.job.findMany({
     where: {
-      ...(includeUnapproved ? {} : { approvalStatus: "approved" }),
+      ...(includeUnapproved ? {} : { approvalStatus: PrismaJobApprovalStatus.Active }),
       ...(companyId ? { companyId } : {}),
     },
     include: jobInclude,
@@ -221,7 +222,7 @@ export async function toggleSave(seekerId: string, jobId: string): Promise<boole
     where: { id: jobId },
     select: { approvalStatus: true },
   });
-  if (!job || job.approvalStatus !== "approved") {
+  if (!job || job.approvalStatus !== PrismaJobApprovalStatus.Active) {
     throw new Error("JOB_NOT_AVAILABLE");
   }
 
@@ -240,7 +241,7 @@ export async function removeSave(seekerId: string, jobId: string): Promise<boole
 
 export async function getSavedJobs(seekerId: string): Promise<Job[]> {
   const rows = await prisma.savedJob.findMany({
-    where: { seekerId, job: { approvalStatus: "approved" } },
+    where: { seekerId, job: { approvalStatus: PrismaJobApprovalStatus.Active } },
     include: { job: { include: jobInclude } },
     orderBy: { createdAt: "desc" },
   });
@@ -315,6 +316,9 @@ export async function upsertSeekerProfile(
 
   if (supabaseUserId) {
     const byAuth = await prisma.seekerProfile.findUnique({ where: { supabaseUserId } });
+    if (byAuth?.status === SeekerStatus.Suspended) {
+      throw new Error("Account suspended");
+    }
     if (byAuth) {
       const row = await prisma.seekerProfile.update({
         where: { id: byAuth.id },
@@ -326,6 +330,10 @@ export async function upsertSeekerProfile(
 
   if (id) {
     try {
+      const existing = await prisma.seekerProfile.findUnique({ where: { id } });
+      if (existing?.status === SeekerStatus.Suspended) {
+        throw new Error("Account suspended");
+      }
       const row = await prisma.seekerProfile.update({
         where: { id },
         data: {
@@ -341,6 +349,11 @@ export async function upsertSeekerProfile(
 
   if (!supabaseUserId) {
     throw new Error("supabaseUserId is required to create a seeker profile");
+  }
+
+  const byEmail = await prisma.seekerProfile.findUnique({ where: { email: profile.email } });
+  if (byEmail?.status === SeekerStatus.Suspended) {
+    throw new Error("Account suspended");
   }
 
   const row = await prisma.seekerProfile.upsert({
@@ -372,7 +385,7 @@ export async function createApplication(
     where: { id: input.jobId },
     select: { approvalStatus: true },
   });
-  if (!job || job.approvalStatus !== "approved") {
+  if (!job || job.approvalStatus !== PrismaJobApprovalStatus.Active) {
     throw new Error("JOB_NOT_AVAILABLE");
   }
 
@@ -681,7 +694,7 @@ export async function getChatThreadsForStaff(
 
 export async function getAdminStats(companyId?: string | null) {
   const jobWhere = companyId ? { companyId } : {};
-  const approvedJobWhere = { ...jobWhere, approvalStatus: "approved" as const };
+  const approvedJobWhere = { ...jobWhere, approvalStatus: PrismaJobApprovalStatus.Active };
   const applicationWhere = companyId ? { job: { companyId } } : {};
   const savedWhere = companyId ? { job: { companyId } } : {};
 
@@ -689,7 +702,7 @@ export async function getAdminStats(companyId?: string | null) {
     await Promise.all([
       prisma.job.count({ where: jobWhere }),
       prisma.job.count({ where: approvedJobWhere }),
-      prisma.job.count({ where: { ...jobWhere, approvalStatus: "pending" } }),
+      prisma.job.count({ where: { ...jobWhere, approvalStatus: PrismaJobApprovalStatus.Pending } }),
       prisma.job.aggregate({ where: approvedJobWhere, _sum: { viewCount: true } }),
       prisma.savedJob.count({ where: savedWhere }),
       prisma.application.count({ where: applicationWhere }),

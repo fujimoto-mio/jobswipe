@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import StaffProfilePage from "@/components/staff/StaffProfilePage";
+import AdminProfilePage from "@/components/admin/AdminProfilePage";
 
 export const metadata: Metadata = {
   title: "プロフィール",
 };
 
-export default StaffProfilePage;
+export default AdminProfilePage;

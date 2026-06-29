@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { APPLICATION_STATUS_LABELS, JOB_APPROVAL_LABELS } from "@/lib/constants";
+import { APPLICATION_STATUS_LABELS, JOB_APPROVAL_BADGE_CLASS, JOB_APPROVAL_LABELS, JOB_APPROVAL_STATUSES } from "@/lib/constants";
 import { useStaffPanel } from "@/components/staff/StaffPanelContext";
 import {
   APPLICATION_STATUS_CHIP_COLORS,
@@ -27,17 +27,12 @@ import { apiFetch } from "@/lib/api-client";
 import type { ApplicationStatus, ApplicationWithSeeker, Job, JobApprovalStatus, SeekerProfileDetail } from "@/lib/types";
 import type { JobApplicationGroupRow, StaffApplicationRow } from "@/lib/db/staff-applications";
 
-const JOB_APPROVAL_COLORS: Record<JobApprovalStatus, string> = {
-  pending: "badge-amber",
-  approved: "badge-green",
-  rejected: "badge-red",
-};
-
 const APPROVAL_FILTER_OPTIONS: { value: "" | JobApprovalStatus; label: string }[] = [
   { value: "", label: "すべて" },
-  { value: "pending", label: JOB_APPROVAL_LABELS.pending },
-  { value: "approved", label: JOB_APPROVAL_LABELS.approved },
-  { value: "rejected", label: JOB_APPROVAL_LABELS.rejected },
+  ...JOB_APPROVAL_STATUSES.map((status) => ({
+    value: status,
+    label: JOB_APPROVAL_LABELS[status],
+  })),
 ];
 
 const APPLICATION_FILTER_OPTIONS: { value: "" | ApplicationStatus; label: string }[] = [
@@ -345,7 +340,7 @@ export default function StaffApplicationsPage() {
       header: "公開状態",
       sortable: true,
       cell: (group) => (
-        <span className={`badge ${JOB_APPROVAL_COLORS[group.job.approvalStatus]}`}>
+        <span className={`badge ${JOB_APPROVAL_BADGE_CLASS[group.job.approvalStatus]}`}>
           {JOB_APPROVAL_LABELS[group.job.approvalStatus]}
         </span>
       ),
@@ -384,7 +379,7 @@ export default function StaffApplicationsPage() {
       cell: (group) => (
         <TableRowActions>
           <TableViewLink href={`${basePath}/jobs/${group.jobId}/view`} />
-          {group.job.approvalStatus !== "approved" && (
+          {group.job.approvalStatus !== "Active" && (
             <>
               <TableEditLink href={`${basePath}/jobs/${group.jobId}/edit`} />
               <TableDeleteButton onClick={() => handleDeleteJob(group.jobId)} />

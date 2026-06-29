@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { NextResponse } from "next/server";
+import { CompanyStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getRoleFromUser, isStaffRole, type StaffRole } from "@/lib/auth/roles";
 import { getSupabaseUser } from "@/lib/auth/supabase-user";
@@ -19,8 +20,15 @@ export const getStaffUser = cache(async (): Promise<StaffUser | null> => {
   const role = getRoleFromUser(user);
   if (!isStaffRole(role)) return null;
 
-  const account = await prisma.account.findUnique({ where: { id: user.id } });
+  const account = await prisma.account.findUnique({
+    where: { id: user.id },
+    include: { company: { select: { status: true } } },
+  });
   const companyId = account?.companyId ?? null;
+
+  if (role === "company" && account?.company?.status === CompanyStatus.Suspended) {
+    return null;
+  }
 
   return {
     id: user.id,

@@ -23,7 +23,8 @@ export async function GET(request: Request) {
     searchParams.has("page") ||
     searchParams.has("limit") ||
     searchParams.has("search") ||
-    searchParams.has("sort");
+    searchParams.has("sort") ||
+    searchParams.has("status");
 
   if (isPaginated) {
     const page = parsePage(searchParams.get("page"));
@@ -31,8 +32,13 @@ export async function GET(request: Request) {
     const search = searchParams.get("search") ?? undefined;
     const sort = searchParams.get("sort") ?? undefined;
     const order = searchParams.get("order") === "asc" ? "asc" : "desc";
+    const statusParam = searchParams.get("status");
+    const status =
+      statusParam === "Active" || statusParam === "Pending" || statusParam === "Suspended"
+        ? statusParam
+        : undefined;
 
-    const result = await queryAdminCompanies({ page, limit, search, sort, order });
+    const result = await queryAdminCompanies({ page, limit, search, sort, order, status });
     return NextResponse.json(result);
   }
 

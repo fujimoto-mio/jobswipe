@@ -93,9 +93,6 @@ export function usePaginatedTable<T>({
       setTotal(parsed.total);
       setMeta(parsed.meta ?? {});
     } catch (err) {
-      setItems([]);
-      setTotal(0);
-      setMeta({});
       setError(err instanceof Error ? err.message : "データの取得に失敗しました");
     } finally {
       setLoading(false);

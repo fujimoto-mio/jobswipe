@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Check, Eye, Pencil, Trash2, X } from "lucide-react";
+import { Ban, Check, Eye, Pencil, RotateCcw, Trash2, X } from "lucide-react";
 import type { ReactNode } from "react";
 
 type TableRowActionsProps = {
@@ -85,6 +85,44 @@ export function TableRejectButton({
       aria-label={label}
     >
       <X className="h-4 w-4" />
+    </button>
+  );
+}
+
+export function TableSuspendButton({
+  onClick,
+  label = "停止",
+}: {
+  onClick: () => void;
+  label?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="btn-icon btn-icon-danger h-9 w-9 shrink-0"
+      aria-label={label}
+    >
+      <Ban className="h-4 w-4" />
+    </button>
+  );
+}
+
+export function TableRestoreButton({
+  onClick,
+  label = "復元",
+}: {
+  onClick: () => void;
+  label?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="btn-icon btn-icon-primary h-9 w-9 shrink-0"
+      aria-label={label}
+    >
+      <RotateCcw className="h-4 w-4" />
     </button>
   );
 }

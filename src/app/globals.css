@@ -1696,7 +1696,7 @@ body {
 /* Company profile — Offers.jp-inspired preview layout */
 .company-profile-page {
   --company-profile-accent: #2563eb;
-  max-width: 1120px;
+  max-width: 1440px;
   margin-inline: auto;
 }
 
@@ -1933,7 +1933,7 @@ body {
 
 /* Company dashboard — aligned with company profile sections */
 .company-dashboard-page {
-  max-width: 1120px;
+  max-width: 1440px;
   margin-inline: auto;
 }
 
@@ -2417,6 +2417,11 @@ body {
 /* ── Staff panel sidebar (TikTok-style) ── */
 .staff-panel-shell {
   background: #f8fafc;
+  --staff-content-max-width: 1440px;
+}
+
+.staff-panel-shell .page-container {
+  max-width: var(--staff-content-max-width);
 }
 
 .staff-sidebar {
@@ -2568,7 +2573,12 @@ body {
 }
 
 .data-table-card.data-table-jobs-layout .data-table-col-status {
-  width: 6.5rem;
+  width: 8.5rem;
+  white-space: nowrap;
+}
+
+.data-table-card.data-table-jobs-layout th {
+  white-space: nowrap;
 }
 
 .data-table-card.data-table-jobs-layout .data-table-col-date {

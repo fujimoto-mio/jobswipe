@@ -104,11 +104,51 @@ export const APPLICATION_STATUS_LABELS = {
   rejected: "不採用",
 } as const;
 
-export const JOB_APPROVAL_LABELS = {
-  pending: "審査中",
-  approved: "公開中",
-  rejected: "却下",
-} as const;
+export type JobApprovalStatus = "Pending" | "Active" | "Cancelled";
+
+export const JOB_APPROVAL_STATUSES: JobApprovalStatus[] = ["Pending", "Active", "Cancelled"];
+
+export const JOB_APPROVAL_LABELS: Record<JobApprovalStatus, string> = {
+  Pending: "審査中",
+  Active: "公開中",
+  Cancelled: "却下",
+};
+
+export const JOB_APPROVAL_BADGE_CLASS: Record<JobApprovalStatus, string> = {
+  Pending: "badge-amber",
+  Active: "badge-green",
+  Cancelled: "badge-red",
+};
+
+export type CompanyStatus = "Active" | "Pending" | "Suspended";
+
+export const COMPANY_STATUSES: CompanyStatus[] = ["Active", "Pending", "Suspended"];
+
+export const COMPANY_STATUS_LABELS: Record<CompanyStatus, string> = {
+  Active: "有効",
+  Pending: "審査待ち",
+  Suspended: "停止中",
+};
+
+export const COMPANY_STATUS_BADGE_CLASS: Record<CompanyStatus, string> = {
+  Active: "badge-green",
+  Pending: "badge-amber",
+  Suspended: "badge-red",
+};
+
+export type SeekerStatus = "Active" | "Suspended";
+
+export const SEEKER_STATUSES: SeekerStatus[] = ["Active", "Suspended"];
+
+export const SEEKER_STATUS_LABELS: Record<SeekerStatus, string> = {
+  Active: "有効",
+  Suspended: "停止中",
+};
+
+export const SEEKER_STATUS_BADGE_CLASS: Record<SeekerStatus, string> = {
+  Active: "badge-green",
+  Suspended: "badge-red",
+};
 
 /** Sentinel value for admin job form — create a new company row instead of linking an existing one. */
 export const NEW_COMPANY_VALUE = "__new__";

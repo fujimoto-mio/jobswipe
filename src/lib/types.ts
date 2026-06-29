@@ -7,7 +7,9 @@ export type EmploymentType =
   | "インターン"
   | "アルバイト";
 
-export type JobApprovalStatus = "pending" | "approved" | "rejected";
+import type { JobApprovalStatus } from "@/lib/constants";
+
+export type { JobApprovalStatus };
 
 export type JobLinks = {
   website?: string;

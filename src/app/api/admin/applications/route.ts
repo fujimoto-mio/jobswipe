@@ -7,6 +7,7 @@ import {
 } from "@/lib/db/staff-applications";
 import { getApplicationWithSeeker, updateApplicationStatus } from "@/lib/db";
 import { staffCanAccessApplication } from "@/lib/db/access";
+import { JOB_APPROVAL_STATUSES } from "@/lib/constants";
 import type { ApplicationStatus, JobApprovalStatus } from "@/lib/types";
 
 function parsePage(value: string | null): number {
@@ -55,8 +56,10 @@ export async function GET(request: Request) {
     const sort = searchParams.get("sort") ?? undefined;
     const order: "asc" | "desc" = searchParams.get("order") === "asc" ? "asc" : "desc";
     const status = (searchParams.get("status") as ApplicationStatus | null) ?? undefined;
-    const approvalStatus =
-      (searchParams.get("approvalStatus") as JobApprovalStatus | null) ?? undefined;
+    const approvalStatusParam = searchParams.get("approvalStatus");
+    const approvalStatus = JOB_APPROVAL_STATUSES.includes(approvalStatusParam as JobApprovalStatus)
+      ? (approvalStatusParam as JobApprovalStatus)
+      : undefined;
 
     const query = {
       companyId,

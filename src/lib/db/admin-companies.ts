@@ -1,6 +1,8 @@
+import { CompanyStatus as PrismaCompanyStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { mapJob } from "@/lib/db/mappers";
 import { formatDateISOJST } from "@/lib/datetime";
+import { COMPANY_STATUSES, type CompanyStatus } from "@/lib/constants";
 
 export type AdminCompanyRow = {
   id: string;
@@ -8,6 +10,7 @@ export type AdminCompanyRow = {
   logoUrl: string | null;
   jobCount: number;
   accountCount: number;
+  status: CompanyStatus;
   createdAt: string;
 };
 
@@ -17,13 +20,29 @@ export type AdminCompaniesQuery = {
   search?: string;
   sort?: string;
   order?: "asc" | "desc";
+  status?: CompanyStatus;
 };
 
-export async function queryAdminCompanies(query: AdminCompaniesQuery) {
-  const { page, limit, search, sort = "name", order = "asc" } = query;
-  const q = search?.trim();
+function parseCompanyStatus(value: string | undefined): CompanyStatus | undefined {
+  if (value && COMPANY_STATUSES.includes(value as CompanyStatus)) {
+    return value as CompanyStatus;
+  }
+  return undefined;
+}
 
-  const where = q ? { name: { contains: q, mode: "insensitive" as const } } : {};
+function toPrismaCompanyStatus(status: CompanyStatus): PrismaCompanyStatus {
+  return status as PrismaCompanyStatus;
+}
+
+export async function queryAdminCompanies(query: AdminCompaniesQuery) {
+  const { page, limit, search, sort = "name", order = "asc", status } = query;
+  const q = search?.trim();
+  const statusFilter = parseCompanyStatus(status);
+
+  const where = {
+    ...(statusFilter ? { status: toPrismaCompanyStatus(statusFilter) } : {}),
+    ...(q ? { name: { contains: q, mode: "insensitive" as const } } : {}),
+  };
 
   const orderBy =
     sort === "jobs"
@@ -45,6 +64,7 @@ export async function queryAdminCompanies(query: AdminCompaniesQuery) {
         id: true,
         name: true,
         logoUrl: true,
+        status: true,
         createdAt: true,
         _count: { select: { jobs: true, accounts: true } },
       },
@@ -57,6 +77,7 @@ export async function queryAdminCompanies(query: AdminCompaniesQuery) {
     logoUrl: row.logoUrl,
     jobCount: row._count.jobs,
     accountCount: row._count.accounts,
+    status: row.status as CompanyStatus,
     createdAt: formatDateISOJST(row.createdAt),
   }));
 
@@ -73,6 +94,7 @@ export type AdminCompanyDetail = {
   postalCode: string | null;
   address: string | null;
   links: unknown;
+  status: CompanyStatus;
   createdAt: string;
   jobCount: number;
   accountCount: number;
@@ -114,6 +136,7 @@ export async function getAdminCompanyDetail(companyId: string): Promise<AdminCom
     postalCode: company.postalCode,
     address: company.address,
     links: company.links,
+    status: company.status as CompanyStatus,
     createdAt: formatDateISOJST(company.createdAt),
     jobCount: company._count.jobs,
     accountCount: company._count.accounts,

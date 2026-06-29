@@ -21,22 +21,17 @@ import {
 } from "@/components/ui/TableRowActions";
 import FormSelectPicker from "@/components/form/FormSelectPicker";
 import { formatDateTimeJST } from "@/lib/datetime";
-import { JOB_APPROVAL_LABELS } from "@/lib/constants";
+import { JOB_APPROVAL_BADGE_CLASS, JOB_APPROVAL_LABELS, JOB_APPROVAL_STATUSES } from "@/lib/constants";
 import { useStaffPanel } from "@/components/staff/StaffPanelContext";
 import { apiFetch } from "@/lib/api-client";
 import type { Job, JobApprovalStatus } from "@/lib/types";
 
-const STATUS_COLORS: Record<JobApprovalStatus, string> = {
-  pending: "badge-amber",
-  approved: "badge-green",
-  rejected: "badge-red",
-};
-
 const APPROVAL_FILTER_OPTIONS: { value: "" | JobApprovalStatus; label: string }[] = [
   { value: "", label: "すべて" },
-  { value: "pending", label: JOB_APPROVAL_LABELS.pending },
-  { value: "approved", label: JOB_APPROVAL_LABELS.approved },
-  { value: "rejected", label: JOB_APPROVAL_LABELS.rejected },
+  ...JOB_APPROVAL_STATUSES.map((status) => ({
+    value: status,
+    label: JOB_APPROVAL_LABELS[status],
+  })),
 ];
 
 function FilterSelect<T extends string>({
@@ -76,7 +71,7 @@ export default function AdminJobsPage() {
   const [approvalFilter, setApprovalFilter] = useState<"" | JobApprovalStatus>("");
   const [pendingApproval, setPendingApproval] = useState<{
     job: Job;
-    action: Extract<JobApprovalStatus, "approved" | "rejected">;
+    action: Extract<JobApprovalStatus, "Active" | "Cancelled">;
   } | null>(null);
 
   const refetch = useCallback(async () => {
@@ -153,7 +148,7 @@ export default function AdminJobsPage() {
       className: "data-table-col-status",
       headerClassName: "data-table-col-status",
       cell: (job) => (
-        <span className={`badge ${STATUS_COLORS[job.approvalStatus]}`}>
+        <span className={`badge ${JOB_APPROVAL_BADGE_CLASS[job.approvalStatus]}`}>
           {JOB_APPROVAL_LABELS[job.approvalStatus]}
         </span>
       ),
@@ -192,10 +187,10 @@ export default function AdminJobsPage() {
           return (
             <TableRowActions>
               <TableViewLink href={`${basePath}/jobs/${job.id}/view`} />
-              {job.approvalStatus === "pending" && (
+              {job.approvalStatus === "Pending" && (
                 <>
-                  <TableApproveButton onClick={() => setPendingApproval({ job, action: "approved" })} />
-                  <TableRejectButton onClick={() => setPendingApproval({ job, action: "rejected" })} />
+                  <TableApproveButton onClick={() => setPendingApproval({ job, action: "Active" })} />
+                  <TableRejectButton onClick={() => setPendingApproval({ job, action: "Cancelled" })} />
                 </>
               )}
             </TableRowActions>
@@ -205,7 +200,7 @@ export default function AdminJobsPage() {
         return (
           <TableRowActions>
             <TableViewLink href={`${basePath}/jobs/${job.id}/view`} />
-            {job.approvalStatus !== "approved" && (
+            {job.approvalStatus !== "Active" && (
               <>
                 <TableEditLink href={`${basePath}/jobs/${job.id}/edit`} />
                 <TableDeleteButton onClick={() => handleDelete(job.id)} />

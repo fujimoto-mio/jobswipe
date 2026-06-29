@@ -111,7 +111,7 @@ function CompanyChatContent() {
       setLoading(true);
       try {
         const jobsRes = await apiFetch(
-          "/api/admin/applications?view=jobs&approvalStatus=approved&limit=100&sort=postedAt&order=desc"
+          "/api/admin/applications?view=jobs&approvalStatus=Active&limit=100&sort=postedAt&order=desc"
         );
 
         const jobsData = await jobsRes.json().catch(() => ({}));

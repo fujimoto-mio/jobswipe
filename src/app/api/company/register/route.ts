@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { CompanyStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCompanyLogoUrl } from "@/lib/job-image";
 import { getRoleFromUser } from "@/lib/auth/roles";
@@ -40,6 +41,7 @@ export async function POST(request: Request) {
         name: companyName,
         logoUrl: getCompanyLogoUrl(companyName),
         website: body.website?.trim() || undefined,
+        status: CompanyStatus.Pending,
       },
       update: {
         website: body.website?.trim() || undefined,

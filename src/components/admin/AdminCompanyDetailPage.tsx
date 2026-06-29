@@ -7,7 +7,7 @@ import { ArrowLeft, Briefcase, ExternalLink, Users } from "lucide-react";
 import CompanyLogo from "@/components/chat/CompanyLogo";
 import JobThumbnail from "@/components/JobThumbnail";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
-import { APPLICATION_STATUS_LABELS, JOB_APPROVAL_LABELS } from "@/lib/constants";
+import { APPLICATION_STATUS_LABELS, JOB_APPROVAL_BADGE_CLASS, JOB_APPROVAL_LABELS } from "@/lib/constants";
 import { apiFetch } from "@/lib/api-client";
 import { companyLinkFormValues } from "@/lib/company-links";
 import type { AdminCompanyDetail } from "@/lib/db/admin-companies";
@@ -177,7 +177,7 @@ export default function AdminCompanyDetailPage() {
                           {job.category} · {JOB_APPROVAL_LABELS[job.approvalStatus]}
                         </p>
                       </div>
-                      <span className={`badge shrink-0 ${job.approvalStatus === "approved" ? "badge-green" : job.approvalStatus === "pending" ? "badge-amber" : "badge-red"}`}>
+                      <span className={`badge shrink-0 ${JOB_APPROVAL_BADGE_CLASS[job.approvalStatus]}`}>
                         {JOB_APPROVAL_LABELS[job.approvalStatus]}
                       </span>
                     </Link>

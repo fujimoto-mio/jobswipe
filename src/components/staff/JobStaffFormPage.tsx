@@ -8,7 +8,7 @@ import { ArrowLeft, Upload, ImageIcon } from "lucide-react";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
 import JobFormFields, { type CompanyOption } from "@/components/form/JobFormFields";
 import { validateVideoFileFull } from "@/lib/video";
-import { JOB_APPROVAL_LABELS } from "@/lib/constants";
+import { JOB_APPROVAL_BADGE_CLASS, JOB_APPROVAL_LABELS } from "@/lib/constants";
 import type { Job } from "@/lib/types";
 import { useStaffPanel } from "@/components/staff/StaffPanelContext";
 import { apiFetch } from "@/lib/api-client";
@@ -73,7 +73,7 @@ export default function JobStaffFormPage({ jobId }: JobStaffFormPageProps) {
 
   useEffect(() => {
     if (!job || loading || !isCompany) return;
-    if (job.approvalStatus === "approved") {
+    if (job.approvalStatus === "Active") {
       router.replace(`${basePath}/jobs/${jobId}/view`);
     }
   }, [job, loading, isCompany, jobId, basePath, router]);
@@ -121,7 +121,7 @@ export default function JobStaffFormPage({ jobId }: JobStaffFormPageProps) {
     return <PageLoading message="求人情報を読み込み中..." minHeight="min-h-[320px]" />;
   }
 
-  if (isCompany && job.approvalStatus === "approved") {
+  if (isCompany && job.approvalStatus === "Active") {
     return <PageLoading message="表示ページへ移動中..." minHeight="min-h-[320px]" />;
   }
 
@@ -140,15 +140,7 @@ export default function JobStaffFormPage({ jobId }: JobStaffFormPageProps) {
           <h1 className="text-2xl font-bold text-[#1E293B]">求人編集</h1>
           <p className="mt-1 text-sm text-[#64748B]">{job.title}</p>
         </div>
-        <span
-          className={`badge ${
-            job.approvalStatus === "approved"
-              ? "badge-green"
-              : job.approvalStatus === "rejected"
-                ? "badge-red"
-                : "badge-amber"
-          }`}
-        >
+        <span className={`badge ${JOB_APPROVAL_BADGE_CLASS[job.approvalStatus]}`}>
           {JOB_APPROVAL_LABELS[job.approvalStatus]}
         </span>
       </div>

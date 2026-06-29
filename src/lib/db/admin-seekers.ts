@@ -1,6 +1,8 @@
+import { SeekerStatus as PrismaSeekerStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { mapSeekerProfile } from "@/lib/db/mappers";
 import { formatDateISOJST } from "@/lib/datetime";
+import { SEEKER_STATUSES, type SeekerStatus } from "@/lib/constants";
 
 export type AdminSeekerRow = {
   id: string;
@@ -9,6 +11,7 @@ export type AdminSeekerRow = {
   area: string;
   desiredJobType: string;
   applicationCount: number;
+  status: SeekerStatus;
   createdAt: string;
 };
 
@@ -18,22 +21,38 @@ export type AdminSeekersQuery = {
   search?: string;
   sort?: string;
   order?: "asc" | "desc";
+  status?: SeekerStatus;
 };
 
-export async function queryAdminSeekers(query: AdminSeekersQuery) {
-  const { page, limit, search, sort = "createdAt", order = "desc" } = query;
-  const q = search?.trim();
+function parseSeekerStatus(value: string | undefined): SeekerStatus | undefined {
+  if (value && SEEKER_STATUSES.includes(value as SeekerStatus)) {
+    return value as SeekerStatus;
+  }
+  return undefined;
+}
 
-  const where = q
-    ? {
-        OR: [
-          { name: { contains: q, mode: "insensitive" as const } },
-          { email: { contains: q, mode: "insensitive" as const } },
-          { area: { contains: q, mode: "insensitive" as const } },
-          { desiredJobType: { contains: q, mode: "insensitive" as const } },
-        ],
-      }
-    : {};
+function toPrismaSeekerStatus(status: SeekerStatus): PrismaSeekerStatus {
+  return status as PrismaSeekerStatus;
+}
+
+export async function queryAdminSeekers(query: AdminSeekersQuery) {
+  const { page, limit, search, sort = "createdAt", order = "desc", status } = query;
+  const q = search?.trim();
+  const statusFilter = parseSeekerStatus(status);
+
+  const where = {
+    ...(statusFilter ? { status: toPrismaSeekerStatus(statusFilter) } : {}),
+    ...(q
+      ? {
+          OR: [
+            { name: { contains: q, mode: "insensitive" as const } },
+            { email: { contains: q, mode: "insensitive" as const } },
+            { area: { contains: q, mode: "insensitive" as const } },
+            { desiredJobType: { contains: q, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  };
 
   const orderBy =
     sort === "name"
@@ -62,6 +81,7 @@ export async function queryAdminSeekers(query: AdminSeekersQuery) {
     area: row.area,
     desiredJobType: row.desiredJobType,
     applicationCount: row._count.applications,
+    status: row.status as SeekerStatus,
     createdAt: formatDateISOJST(row.createdAt),
   }));
 
@@ -85,6 +105,8 @@ export async function getAdminSeekerDetail(seekerId: string) {
 
   return {
     profile: mapSeekerProfile(row),
+    status: row.status as SeekerStatus,
+    createdAt: formatDateISOJST(row.createdAt),
     applicationCount: row._count.applications,
     savedCount: row._count.savedJobs,
     recentApplications: row.applications.map((app) => ({
@@ -96,4 +118,12 @@ export async function getAdminSeekerDetail(seekerId: string) {
       jobId: app.jobId,
     })),
   };
+}
+
+export async function setSeekerStatus(seekerId: string, status: SeekerStatus) {
+  const row = await prisma.seekerProfile.update({
+    where: { id: seekerId },
+    data: { status: toPrismaSeekerStatus(status) },
+  });
+  return row;
 }

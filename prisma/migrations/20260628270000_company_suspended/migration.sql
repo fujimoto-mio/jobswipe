@@ -1,0 +1,1 @@
+ALTER TABLE "companies" ADD COLUMN "suspended" BOOLEAN NOT NULL DEFAULT false;
