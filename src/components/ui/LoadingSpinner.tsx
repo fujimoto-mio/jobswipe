@@ -11,6 +11,12 @@ const sizeClass = {
   lg: "h-10 w-10 border-4",
 } as const;
 
+const seekerSizeClass = {
+  sm: "loading-spinner-seeker--sm",
+  md: "loading-spinner-seeker--md",
+  lg: "loading-spinner-seeker--lg",
+} as const;
+
 export default function LoadingSpinner({
   size = "md",
   message,
@@ -18,9 +24,9 @@ export default function LoadingSpinner({
   dark = false,
 }: LoadingSpinnerProps) {
   return (
-    <div className={`flex flex-col items-center justify-center gap-3 ${className}`}>
+    <div className={`loading-spinner flex flex-col items-center justify-center gap-3 ${className}`}>
       <div
-        className={`animate-spin rounded-full border-solid ${sizeClass[size]} ${
+        className={`loading-spinner-default animate-spin rounded-full border-solid ${sizeClass[size]} ${
           dark
             ? "border-white/20 border-t-white"
             : "border-[var(--border)] border-t-[var(--accent)]"
@@ -28,8 +34,25 @@ export default function LoadingSpinner({
         role="status"
         aria-label="読み込み中"
       />
+      <div
+        className={`loading-spinner-seeker ${seekerSizeClass[size]} ${
+          dark ? "loading-spinner-seeker--dark" : ""
+        }`}
+        role="status"
+        aria-label="読み込み中"
+      >
+        <span className="loading-spinner-seeker-dot" />
+        <span className="loading-spinner-seeker-dot" />
+        <span className="loading-spinner-seeker-dot" />
+      </div>
       {message && (
-        <p className={`text-sm ${dark ? "text-white/70" : "text-[var(--muted)]"}`}>{message}</p>
+        <p
+          className={`loading-spinner-message text-sm ${
+            dark ? "loading-spinner-message--dark text-white/70" : "text-[var(--muted)]"
+          }`}
+        >
+          {message}
+        </p>
       )}
     </div>
   );

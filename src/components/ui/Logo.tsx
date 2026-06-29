@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { APP_NAME_HEAD, APP_NAME_TAIL, APP_TAGLINE } from "@/lib/brand";
 
 type LogoProps = {
   size?: "sm" | "md" | "lg";
@@ -8,14 +9,14 @@ type LogoProps = {
 };
 
 const sizes = {
-  sm: { img: "h-14", title: "text-base sm:text-lg", tagline: "hidden sm:block text-[11px]" },
-  md: { img: "h-16", title: "text-xl", tagline: "text-xs" },
-  lg: { img: "h-24", title: "text-2xl", tagline: "text-sm" },
+  sm: { img: "h-[4.5rem] sm:h-20", title: "text-2xl sm:text-3xl", tagline: "text-sm sm:text-base" },
+  md: { img: "h-24 sm:h-28", title: "text-3xl sm:text-4xl", tagline: "text-base sm:text-lg" },
+  lg: { img: "h-32 sm:h-36", title: "text-4xl sm:text-5xl", tagline: "text-lg sm:text-xl" },
 };
 
 const topbarSizes = {
-  img: "h-10",
-  title: "text-sm",
+  img: "h-10 w-auto sm:h-11",
+  title: "text-lg sm:text-xl",
   tagline: "hidden",
 };
 
@@ -30,10 +31,10 @@ export default function Logo({
   const subClass = theme === "dark" ? "text-white/70" : "text-slate-500";
 
   return (
-    <div className={`flex items-center ${inTopbar ? "gap-2" : "gap-3"}`}>
+    <div className={`flex items-center ${inTopbar ? "gap-2.5" : "gap-3.5 sm:gap-4"}`}>
       <Image
-        src="/logo1.png"
-        alt="#JobSwipe!"
+        src="/logo.png"
+        alt={APP_NAME_HEAD + APP_NAME_TAIL}
         width={1181}
         height={1181}
         unoptimized
@@ -43,10 +44,11 @@ export default function Logo({
       {showText && (
         <div className="min-w-0">
           <p className={`${s.title} font-bold leading-tight tracking-normal ${textClass}`}>
-            Job<span className="text-[var(--accent)]">Swipe</span>
+            {APP_NAME_HEAD}
+            <span className="text-[var(--accent)]">{APP_NAME_TAIL}</span>
           </p>
           <p className={`${s.tagline} mt-0.5 font-medium leading-snug ${subClass}`}>
-            動画で探す、新しい就活
+            {APP_TAGLINE}
           </p>
         </div>
       )}

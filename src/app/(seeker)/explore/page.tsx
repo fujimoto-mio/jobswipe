@@ -9,9 +9,7 @@ import { apiFetch, apiFetchCached } from "@/lib/api-client";
 import { fetchSeekerUnreadTotal } from "@/lib/chat-unread";
 import { getCachedClientSession } from "@/lib/auth/client-session";
 import { saveProfile } from "@/lib/profile";
-import Logo from "@/components/ui/Logo";
-import SeekerAccountMenu from "@/components/seeker/SeekerAccountMenu";
-import Link from "next/link";
+import SeekerBrandHeader from "@/components/seeker/SeekerBrandHeader";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
 import type { JobFilters } from "@/lib/types";
 import {
@@ -19,7 +17,9 @@ import {
   buildExploreFeedParams,
   exploreFeedParamsKey,
   isExploreFeedReady,
+  loadStoredExploreFilters,
   parseExploreFiltersFromParams,
+  saveStoredExploreFilters,
 } from "@/lib/job-filters";
 
 function ExploreContent() {
@@ -29,7 +29,7 @@ function ExploreContent() {
   const [chatCount, setChatCount] = useState(0);
   const [authReady, setAuthReady] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [draftFilters, setDraftFilters] = useState<JobFilters>(DEFAULT_JOB_FILTERS);
+  const [draftFilters, setDraftFilters] = useState<JobFilters>(() => loadStoredExploreFilters());
 
   const showFeed = isExploreFeedReady(searchParams);
   const filters = parseExploreFiltersFromParams(searchParams);
@@ -76,6 +76,7 @@ function ExploreContent() {
   };
 
   const handleContinueFilters = () => {
+    saveStoredExploreFilters(draftFilters);
     navigateToFeed(draftFilters);
   };
 
@@ -83,8 +84,14 @@ function ExploreContent() {
     navigateToFeed(DEFAULT_JOB_FILTERS, { started: true });
   };
 
+  const handleDraftFiltersChange = (nextFilters: JobFilters) => {
+    setDraftFilters(nextFilters);
+    saveStoredExploreFilters(nextFilters);
+  };
+
   const handleOpenFilterScreen = () => {
     setDraftFilters(filters);
+    saveStoredExploreFilters(filters);
     router.replace("/explore");
   };
 
@@ -100,7 +107,7 @@ function ExploreContent() {
     return (
       <FilterScreen
         filters={draftFilters}
-        onChange={setDraftFilters}
+        onChange={handleDraftFiltersChange}
         onContinue={handleContinueFilters}
         onCancel={handleSkipFilters}
       />
@@ -109,22 +116,17 @@ function ExploreContent() {
 
   return (
     <div className="flex h-full w-full flex-col bg-black">
-      <header className="absolute left-0 right-0 top-0 z-30 bg-gradient-to-b from-black/50 to-transparent pb-6 pt-3">
-        <div className="page-container flex items-center justify-between">
-          <Link href="/">
-            <Logo size="sm" theme="dark" inTopbar />
-          </Link>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleOpenFilterScreen}
-              className="btn-pill-overlay"
-            >
+      <header className="absolute left-0 right-0 top-0 z-30 bg-gradient-to-b from-black/50 to-transparent pb-4 pt-2">
+        <SeekerBrandHeader
+          theme="dark"
+          menuVariant="overlay"
+          logoHref="/"
+          action={
+            <button type="button" onClick={handleOpenFilterScreen} className="btn-pill-overlay">
               条件変更
             </button>
-            <SeekerAccountMenu variant="overlay" />
-          </div>
-        </div>
+          }
+        />
       </header>
 
       <main className="relative h-full w-full flex-1 overflow-hidden">

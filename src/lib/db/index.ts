@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { JobApprovalStatus as PrismaJobApprovalStatus, SeekerStatus } from "@prisma/client";
+import { JobApprovalStatus as PrismaJobApprovalStatus, Prisma, SeekerStatus } from "@prisma/client";
 import { mapApplication, mapChatMessage, mapJob, mapSeekerProfile } from "@/lib/db/mappers";
 import { fetchSavedApplyMessages, resolveApplicationMessage } from "@/lib/db/saved-job-message";
 import { now } from "@/lib/datetime";
@@ -309,7 +309,11 @@ export async function upsertSeekerProfile(
     desiredSalary: profile.desiredSalary?.trim() || null,
     jobSearchIntent: profile.jobSearchIntent?.trim() || null,
     education: profile.education?.trim() || null,
+    phone: profile.phone?.trim() || null,
+    address: profile.address?.trim() || null,
     portfolioUrl: profile.portfolioUrl?.trim() || null,
+    avatarUrl: profile.avatarUrl?.trim() || null,
+    bannerUrl: profile.bannerUrl?.trim() || null,
     skills: profile.skills ?? [],
     workHistory: profile.workHistory ?? [],
   };
@@ -342,8 +346,13 @@ export async function upsertSeekerProfile(
         },
       });
       return mapSeekerProfile(row);
-    } catch {
-      // fall through
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (message.includes("Record to update not found")) {
+        // fall through to email upsert
+      } else {
+        throw err;
+      }
     }
   }
 
@@ -369,6 +378,50 @@ export async function upsertSeekerProfile(
   });
 
   return mapSeekerProfile(row);
+}
+
+export async function updateSeekerProfileMedia(
+  seekerId: string,
+  patch: { avatarUrl?: string; bannerUrl?: string }
+): Promise<UserProfile & { id: string }> {
+  const existing = await prisma.seekerProfile.findUnique({
+    where: { id: seekerId },
+    select: { id: true, status: true },
+  });
+  if (!existing) throw new Error("Seeker profile not found");
+  if (existing.status === SeekerStatus.Suspended) throw new Error("Account suspended");
+
+  const data: Prisma.SeekerProfileUpdateInput = {};
+  if (patch.avatarUrl !== undefined) data.avatarUrl = patch.avatarUrl.trim() || null;
+  if (patch.bannerUrl !== undefined) data.bannerUrl = patch.bannerUrl.trim() || null;
+  if (Object.keys(data).length === 0) throw new Error("No fields to update");
+
+  try {
+    const row = await prisma.seekerProfile.update({ where: { id: seekerId }, data });
+    return mapSeekerProfile(row);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!message.includes("Unknown argument")) throw err;
+
+    if (patch.avatarUrl !== undefined) {
+      await prisma.$executeRaw`
+        UPDATE seeker_profiles
+        SET avatar_url = ${patch.avatarUrl.trim() || null}, updated_at = NOW()
+        WHERE id = ${seekerId}::uuid
+      `;
+    }
+    if (patch.bannerUrl !== undefined) {
+      await prisma.$executeRaw`
+        UPDATE seeker_profiles
+        SET banner_url = ${patch.bannerUrl.trim() || null}, updated_at = NOW()
+        WHERE id = ${seekerId}::uuid
+      `;
+    }
+
+    const row = await prisma.seekerProfile.findUnique({ where: { id: seekerId } });
+    if (!row) throw new Error("Seeker profile not found");
+    return mapSeekerProfile(row);
+  }
 }
 
 export async function getSeekerProfile(id: string): Promise<(UserProfile & { id: string }) | null> {
@@ -450,7 +503,7 @@ export async function getApplicationsForSeeker(seekerId: string): Promise<Applic
   const rows = await prisma.application.findMany({
     where: { seekerId },
     orderBy: { createdAt: "desc" },
-    include: { job: { select: { title: true, company: { select: { name: true } } } } },
+    include: { job: { select: { title: true, company: { select: { name: true, logoUrl: true } } } } },
   });
   return rows.map((row) => mapApplication(row, row.job));
 }

@@ -196,6 +196,8 @@ export default function RegisterPageContent() {
             desiredJobType: "",
             experience: "",
             employmentType: "",
+            phone: "",
+            address: "",
             email: account.email,
           }}
           validationSchema={seekerProfileSchema}

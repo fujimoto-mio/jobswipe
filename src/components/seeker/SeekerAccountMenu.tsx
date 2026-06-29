@@ -40,11 +40,11 @@ export default function SeekerAccountMenu({ variant = "default" }: SeekerAccount
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-[100] mt-1.5 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg shadow-slate-200/60">
+        <div className="absolute right-0 top-full z-[100] mt-1.5 flex w-44 flex-col gap-1.5 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg shadow-slate-200/60">
           <Link
             href="/settings"
             onClick={() => setOpen(false)}
-            className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            className="flex w-full items-center gap-2.5 rounded-lg px-3.5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
           >
             <Settings className="h-4 w-4 text-slate-500" />
             設定
@@ -52,7 +52,7 @@ export default function SeekerAccountMenu({ variant = "default" }: SeekerAccount
           <button
             type="button"
             onClick={() => void seekerLogout()}
-            className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-50"
+            className="flex w-full items-center gap-2.5 rounded-lg px-3.5 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-50"
           >
             <LogOut className="h-4 w-4" />
             ログアウト

@@ -61,6 +61,52 @@ export function asSkills(value: unknown): SkillEntry[] {
     .filter((item) => item.name.length > 0);
 }
 
+/** Keep only skills complete enough for server validation. */
+export function skillsForProfileSave(skills: SkillEntry[]): SkillEntry[] {
+  return skills.filter((item) => item.name.trim() && item.years.trim());
+}
+
+const MEDIA_PATCH_KEYS = new Set(["avatarUrl", "bannerUrl"]);
+
+export function isMediaOnlyProfilePatch(raw: Partial<UserProfile>): boolean {
+  const keys = Object.keys(raw).filter((key) => {
+    if (key === "id") return false;
+    return raw[key as keyof UserProfile] !== undefined;
+  });
+  return keys.length > 0 && keys.every((key) => MEDIA_PATCH_KEYS.has(key));
+}
+
+export function mergeSeekerProfilePatch(
+  base: UserProfile,
+  raw: Partial<UserProfile>
+): UserProfile {
+  const extended = normalizeSeekerProfileFields(base);
+  return {
+    name: raw.name ?? base.name,
+    gender: raw.gender ?? base.gender,
+    birthday: raw.birthday ?? base.birthday,
+    area: raw.area ?? base.area,
+    desiredJobType: raw.desiredJobType ?? base.desiredJobType,
+    experience: raw.experience ?? base.experience,
+    employmentType: raw.employmentType ?? base.employmentType,
+    email: base.email,
+    profileTitle: raw.profileTitle ?? extended.profileTitle,
+    introSentence: raw.introSentence ?? extended.introSentence,
+    resumeUrl: raw.resumeUrl ?? extended.resumeUrl,
+    futureGoals: raw.futureGoals ?? extended.futureGoals,
+    desiredSalary: raw.desiredSalary ?? extended.desiredSalary,
+    jobSearchIntent: raw.jobSearchIntent ?? extended.jobSearchIntent,
+    education: raw.education ?? extended.education,
+    phone: raw.phone ?? extended.phone,
+    address: raw.address ?? extended.address,
+    portfolioUrl: raw.portfolioUrl ?? extended.portfolioUrl,
+    avatarUrl: raw.avatarUrl ?? extended.avatarUrl,
+    bannerUrl: raw.bannerUrl ?? extended.bannerUrl,
+    skills: skillsForProfileSave(asSkills(raw.skills ?? base.skills)),
+    workHistory: asWorkHistory(raw.workHistory ?? base.workHistory),
+  };
+}
+
 export function normalizeSeekerProfileFields(p: Partial<UserProfile> | null | undefined): Pick<
   UserProfile,
   | "introSentence"
@@ -70,7 +116,11 @@ export function normalizeSeekerProfileFields(p: Partial<UserProfile> | null | un
   | "desiredSalary"
   | "jobSearchIntent"
   | "education"
+  | "phone"
+  | "address"
   | "portfolioUrl"
+  | "avatarUrl"
+  | "bannerUrl"
   | "skills"
   | "workHistory"
 > {
@@ -82,7 +132,11 @@ export function normalizeSeekerProfileFields(p: Partial<UserProfile> | null | un
     desiredSalary: p?.desiredSalary ?? "",
     jobSearchIntent: p?.jobSearchIntent ?? "",
     education: p?.education ?? "",
+    phone: p?.phone ?? "",
+    address: p?.address ?? "",
     portfolioUrl: p?.portfolioUrl ?? "",
+    avatarUrl: p?.avatarUrl ?? "",
+    bannerUrl: p?.bannerUrl ?? "",
     skills: asSkills(p?.skills),
     workHistory: asWorkHistory(p?.workHistory),
   };
@@ -102,6 +156,10 @@ export function calcProfileCompletion(profile: UserProfile): number {
     Boolean(profile.desiredSalary),
     Boolean(profile.jobSearchIntent),
     Boolean(profile.education),
+    Boolean(profile.phone.trim()),
+    Boolean(profile.address.trim()),
+    Boolean(profile.avatarUrl.trim()),
+    Boolean(profile.bannerUrl.trim()),
     profile.skills.some((skill) => skill.name.trim() && skill.years),
     profile.workHistory.length > 0,
   ];

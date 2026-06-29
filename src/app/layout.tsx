@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_JP } from "next/font/google";
+import { APP_PAGE_TITLE } from "@/lib/brand";
 import "./globals.css";
 
 const notoSansJP = Noto_Sans_JP({
@@ -10,9 +11,13 @@ const notoSansJP = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  title: "JobSwipe - 動画でいい仕事に出会う",
+  title: APP_PAGE_TITLE,
   description: "求人動画をスワイプするだけで探せる、新しい求職体験。職場の雰囲気まで伝わるから、ミスマッチの少ない転職・就活ができます。",
   keywords: ["求人", "就活", "スワイプ", "動画", "採用", "転職"],
+  icons: {
+    icon: [{ url: "/logo.png", type: "image/png" }],
+    apple: [{ url: "/logo.png", type: "image/png" }],
+  },
 };
 
 export const viewport: Viewport = {

@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { getStaffUser } from "@/lib/auth/admin";
 import { getSupabaseUserFromRequest } from "@/lib/auth/supabase-user";
-import { uploadByKind, type UploadKind } from "@/lib/storage";
+import { uploadByKind, resolveUploadContentType, type UploadKind } from "@/lib/storage";
 
 const STAFF_KINDS = new Set<UploadKind>(["video", "thumbnail", "image", "company-logo", "company-banner", "staff-avatar"]);
-const SEEKER_KINDS = new Set<UploadKind>(["image", "resume"]);
+const SEEKER_KINDS = new Set<UploadKind>(["image", "resume", "seeker-avatar", "seeker-banner"]);
 
 function parseKind(raw: string | null): UploadKind | null {
   if (
@@ -14,11 +14,43 @@ function parseKind(raw: string | null): UploadKind | null {
     raw === "resume" ||
     raw === "company-logo" ||
     raw === "company-banner" ||
-    raw === "staff-avatar"
+    raw === "staff-avatar" ||
+    raw === "seeker-avatar" ||
+    raw === "seeker-banner"
   ) {
     return raw;
   }
   return null;
+}
+
+function uploadErrorStatus(message: string): number {
+  if (
+    message.includes("ファイル形式") ||
+    message.includes("ファイルサイズ") ||
+    message.includes("ファイルが空") ||
+    message.includes("対応していない画像") ||
+    message === "file is required" ||
+    message === "kind is required" ||
+    message === "Invalid kind"
+  ) {
+    return 400;
+  }
+  if (message === "Unauthorized") return 401;
+  return 500;
+}
+
+function mapUploadErrorMessage(message: string): string {
+  const lower = message.toLowerCase();
+  if (lower.includes("mime type") && lower.includes("not supported")) {
+    return "対応していない画像形式です。JPEG、PNG、WebP、GIF をご利用ください";
+  }
+  if (lower.includes("payload too large") || lower.includes("maximum allowed size")) {
+    return "ファイルサイズが大きすぎます";
+  }
+  if (lower.includes("bucket not found")) {
+    return "ストレージの設定が完了していません";
+  }
+  return message;
 }
 
 export async function handleUploadRequest(request: Request) {
@@ -49,13 +81,16 @@ export async function handleUploadRequest(request: Request) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const url = await uploadByKind(kind, buffer, file.name, file.type || "application/octet-stream", {
-      userId: user?.id,
+    const contentType = resolveUploadContentType(file.name, file.type || "");
+    const url = await uploadByKind(kind, buffer, file.name, contentType, {
+      userId: staff?.id ?? user?.id,
     });
 
     return NextResponse.json({ success: true, url });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Upload failed";
-    return NextResponse.json({ error: message }, { status: 500 });
+    const raw = error instanceof Error ? error.message : "Upload failed";
+    const message = mapUploadErrorMessage(raw);
+    console.error("[POST /api/upload]", { message: raw, error });
+    return NextResponse.json({ error: message }, { status: uploadErrorStatus(message) });
   }
 }

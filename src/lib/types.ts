@@ -89,6 +89,7 @@ export type Application = {
   createdAt: string;
   jobTitle?: string;
   companyName?: string;
+  companyLogo?: string | null;
 };
 
 export type SeekerProfileDetail = UserProfile & {
@@ -146,7 +147,11 @@ export type UserProfile = {
   desiredSalary: string;
   jobSearchIntent: string;
   education: string;
+  phone: string;
+  address: string;
   portfolioUrl: string;
+  avatarUrl: string;
+  bannerUrl: string;
   skills: SkillEntry[];
   workHistory: WorkHistoryEntry[];
 };

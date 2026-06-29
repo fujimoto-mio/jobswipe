@@ -1,6 +1,48 @@
+import { AREAS, JOB_CATEGORIES } from "@/lib/constants";
 import type { JobFilters } from "@/lib/types";
 
 export const DEFAULT_JOB_FILTERS: JobFilters = { areas: [], categories: [] };
+
+const EXPLORE_FILTERS_STORAGE_KEY = "jobswipe_explore_filters";
+
+function sanitizeStoredFilters(value: unknown): JobFilters {
+  if (!value || typeof value !== "object") return DEFAULT_JOB_FILTERS;
+
+  const raw = value as { areas?: unknown; categories?: unknown };
+  const areas = Array.isArray(raw.areas)
+    ? raw.areas.filter((area): area is string => typeof area === "string" && AREAS.includes(area as (typeof AREAS)[number]))
+    : [];
+  const categories = Array.isArray(raw.categories)
+    ? raw.categories.filter(
+        (category): category is string =>
+          typeof category === "string" && JOB_CATEGORIES.includes(category as (typeof JOB_CATEGORIES)[number])
+      )
+    : [];
+
+  return { areas, categories };
+}
+
+export function loadStoredExploreFilters(): JobFilters {
+  if (typeof window === "undefined") return DEFAULT_JOB_FILTERS;
+
+  try {
+    const raw = localStorage.getItem(EXPLORE_FILTERS_STORAGE_KEY);
+    if (!raw) return DEFAULT_JOB_FILTERS;
+    return sanitizeStoredFilters(JSON.parse(raw));
+  } catch {
+    return DEFAULT_JOB_FILTERS;
+  }
+}
+
+export function saveStoredExploreFilters(filters: JobFilters): void {
+  if (typeof window === "undefined") return;
+
+  try {
+    localStorage.setItem(EXPLORE_FILTERS_STORAGE_KEY, JSON.stringify(filters));
+  } catch {
+    // ignore quota / private mode errors
+  }
+}
 
 export const EXPLORE_STARTED_PARAM = "started";
 

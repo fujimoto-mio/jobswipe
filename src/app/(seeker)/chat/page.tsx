@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, MessageCircle, Search } from "lucide-react";
+import { MessageCircle, Search } from "lucide-react";
 import { apiFetch, invalidateApiCache } from "@/lib/api-client";
 import ApplicationChatView from "@/components/chat/ApplicationChatView";
 import ChatThreadList, { ChatThreadHeader } from "@/components/chat/ChatThreadList";
@@ -158,21 +158,8 @@ function SeekerChatContent() {
 
   const chatPanel = selectedThread ? (
     <>
-      <div className="flex shrink-0 items-center gap-2 border-b border-slate-100 bg-white md:px-0">
-        <button
-          type="button"
-          onClick={backToList}
-          className="btn-icon btn-icon-muted h-10 w-10 shrink-0 md:!hidden"
-          aria-label="一覧に戻る"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div className="min-w-0 flex-1 md:hidden">
-          <ChatThreadHeader thread={selectedThread} />
-        </div>
-        <div className="hidden w-full md:block">
-          <ChatThreadHeader thread={selectedThread} />
-        </div>
+      <div className="shrink-0 border-b border-slate-100 bg-white">
+        <ChatThreadHeader thread={selectedThread} onBack={backToList} />
       </div>
       {chatLoading ? (
         <div className="flex min-h-0 flex-1 items-center justify-center bg-slate-50">
@@ -212,13 +199,18 @@ function SeekerChatContent() {
 
   return (
     <AppPage>
-      <AppHeader title="チャット" backHref="/explore" />
+      <AppHeader
+        title="チャット"
+        backHref={selectedId ? undefined : "/explore"}
+        className={selectedId ? "max-md:hidden" : undefined}
+      />
 
       <main className="flex min-h-0 flex-1 flex-col overflow-hidden pb-[4.5rem]">
         {initialLoading ? (
           <PageLoading message="チャットを読み込み中..." minHeight="min-h-[50vh]" />
         ) : threads.length === 0 ? (
           <EmptyState
+            variant="seeker"
             icon={MessageCircle}
             title="チャットはまだありません"
             description="求人に応募すると、企業担当者とメッセージのやり取りができます"
@@ -236,9 +228,6 @@ function SeekerChatContent() {
                 selectedId ? "hidden md:flex" : "flex w-full"
               }`}
             >
-              <div className="border-b border-slate-100 px-3 py-2.5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">企業</p>
-              </div>
               <div className="min-h-0 flex-1 overflow-y-auto">
                 <ChatThreadList threads={threads} selectedId={selectedId} onSelect={selectThread} />
               </div>

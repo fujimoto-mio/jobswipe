@@ -5,6 +5,9 @@ import {
   type StorageBucket,
   type UploadKind,
 } from "@/lib/storage/constants";
+import { resolveUploadContentType, validateResolvedUpload } from "@/lib/upload/validation";
+
+export { resolveUploadContentType, SUPPORTED_IMAGE_MIMES } from "@/lib/upload/validation";
 
 function sanitizeFilename(filename: string): string {
   return filename.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -16,24 +19,13 @@ function buildObjectPath(folder: string, filename: string, userId?: string): str
   return `${prefix}/${Date.now()}-${safe}`;
 }
 
-function mimeMatches(contentType: string, rule: string | string[]): boolean {
-  if (Array.isArray(rule)) return rule.includes(contentType);
-  return contentType.startsWith(rule);
-}
-
 export function validateUploadFile(
   kind: UploadKind,
   contentType: string,
   size: number
 ): { ok: true } | { ok: false; message: string } {
-  const config = UPLOAD_KIND_CONFIG[kind];
-  if (!mimeMatches(contentType, config.mimePrefix)) {
-    return { ok: false, message: "ファイル形式が正しくありません" };
-  }
-  if (size > config.maxBytes) {
-    const maxMb = Math.round(config.maxBytes / (1024 * 1024));
-    return { ok: false, message: `ファイルサイズが大きすぎます（最大 ${maxMb}MB）` };
-  }
+  const message = validateResolvedUpload(kind, contentType, size);
+  if (message) return { ok: false, message };
   return { ok: true };
 }
 

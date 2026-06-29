@@ -1,44 +1,43 @@
 "use client";
 
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import type { ReactNode } from "react";
-import SeekerAccountMenu from "@/components/seeker/SeekerAccountMenu";
+import SeekerBrandHeader from "@/components/seeker/SeekerBrandHeader";
 
 type AppHeaderProps = {
-  title: string;
+  title?: string;
   backHref?: string;
   onBack?: () => void;
   action?: ReactNode;
+  theme?: "light" | "dark";
+  showMenu?: boolean;
+  menuVariant?: "default" | "overlay";
+  logoHref?: string;
+  className?: string;
 };
 
-export function AppHeader({ title, backHref, onBack, action }: AppHeaderProps) {
+export function AppHeader({
+  title,
+  backHref,
+  onBack,
+  action,
+  theme = "light",
+  showMenu = true,
+  menuVariant = "default",
+  logoHref,
+  className = "",
+}: AppHeaderProps) {
   return (
-    <header className="page-header">
-      <div className="page-container flex items-center gap-3 py-3.5">
-        {(backHref || onBack) &&
-          (backHref ? (
-            <Link
-              href={backHref}
-              className="btn-icon btn-icon-muted h-9 w-9 shrink-0"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-          ) : (
-            <button
-              type="button"
-              onClick={onBack}
-              className="btn-icon btn-icon-muted h-9 w-9 shrink-0"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-          ))}
-        <h1 className="min-w-0 flex-1 truncate text-center text-base font-bold text-slate-900">{title}</h1>
-        <div className="flex min-w-9 shrink-0 items-center justify-end gap-1.5">
-          {action}
-          <SeekerAccountMenu />
-        </div>
-      </div>
+    <header className={`page-header ${className}`.trim()}>
+      <SeekerBrandHeader
+        title={title}
+        theme={theme}
+        backHref={backHref}
+        onBack={onBack}
+        action={action}
+        showMenu={showMenu}
+        menuVariant={menuVariant}
+        logoHref={logoHref}
+      />
     </header>
   );
 }

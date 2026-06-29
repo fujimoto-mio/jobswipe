@@ -104,6 +104,20 @@ export default function SeekerProfileFormFields({
           <FormSelect name="education" label="最終学歴" options={EDUCATION_LEVELS} placeholder="選択" />
         )}
 
+        <FormTextInput
+          name="phone"
+          label="電話番号"
+          type="tel"
+          placeholder="090-1234-5678"
+          autoComplete="tel"
+        />
+        <FormTextInput
+          name="address"
+          label="住所"
+          placeholder="東京都渋谷区..."
+          autoComplete="street-address"
+        />
+
         {showEmail && (
           <FormTextInput
             name="email"

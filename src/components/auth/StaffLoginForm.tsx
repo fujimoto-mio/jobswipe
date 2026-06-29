@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Form, Formik } from "formik";
 import { Building2, LogIn, Shield } from "lucide-react";
-import Logo from "@/components/ui/Logo";
+import SeekerBrandHeader from "@/components/seeker/SeekerBrandHeader";
 import { FormPassword, FormTextInput } from "@/components/form/FormFields";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { apiFetch } from "@/lib/api-client";
@@ -50,11 +50,7 @@ export default function StaffLoginForm({ mode }: StaffLoginFormProps) {
   return (
     <div className="min-h-[100dvh] bg-[var(--surface)]">
       <header className="page-header">
-        <div className="page-container flex h-14 items-center sm:h-16">
-          <Link href="/" className="shrink-0">
-            <Logo inTopbar />
-          </Link>
-        </div>
+        <SeekerBrandHeader showMenu={false} logoHref="/" />
       </header>
 
       <main className="page-container flex justify-center py-10 sm:py-16">

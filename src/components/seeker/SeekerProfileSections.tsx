@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type { UserProfile, WorkHistoryEntry } from "@/lib/types";
 
 const PROFILE_TEXT_FIELDS = [
@@ -7,6 +8,21 @@ const PROFILE_TEXT_FIELDS = [
   { key: "futureGoals", label: "今後やりたいこと" },
 ] as const satisfies ReadonlyArray<{
   key: keyof Pick<UserProfile, "introSentence" | "futureGoals">;
+  label: string;
+}>;
+
+const PREFERENCE_FIELDS = [
+  { key: "area", label: "希望エリア" },
+  { key: "desiredJobType", label: "希望職種" },
+  { key: "employmentType", label: "希望雇用形態" },
+  { key: "experience", label: "社会人経験" },
+  { key: "desiredSalary", label: "希望年収" },
+  { key: "jobSearchIntent", label: "転職意欲" },
+] as const satisfies ReadonlyArray<{
+  key: keyof Pick<
+    UserProfile,
+    "area" | "desiredJobType" | "employmentType" | "experience" | "desiredSalary" | "jobSearchIntent"
+  >;
   label: string;
 }>;
 
@@ -42,99 +58,95 @@ function formatWorkPeriod(entry: WorkHistoryEntry): string {
   return `${start} 〜 ${end}`;
 }
 
+function ProfileSectionShell({
+  title,
+  children,
+  flush = false,
+}: {
+  title: string;
+  children: ReactNode;
+  flush?: boolean;
+}) {
+  return (
+    <section className="profile-section">
+      <div className="profile-section-header">
+        <p className="profile-section-title">{title}</p>
+      </div>
+      <div className={`profile-section-content ${flush ? "profile-section-content--flush" : ""}`}>{children}</div>
+    </section>
+  );
+}
+
 function ProfileTextSection({ profile }: { profile: UserProfile }) {
   const filledFields = PROFILE_TEXT_FIELDS.map(({ key, label }) => ({
     label,
     value: profile[key].trim(),
   })).filter((field) => field.value);
 
+  if (filledFields.length === 0) return null;
+
   return (
-    <section className="profile-section">
-      <div className="profile-section-header">
-        <p className="profile-section-title">プロフィール</p>
+    <ProfileSectionShell title="自己紹介">
+      <div className="profile-text-fields">
+        {filledFields.map(({ label, value }) => (
+          <ProfileTextBlock key={label} label={label} value={value} />
+        ))}
       </div>
-      <div className="profile-section-content">
-        {filledFields.length === 0 ? (
-          <p className="profile-field-value profile-field-value-muted">未設定</p>
-        ) : (
-          <div className="profile-text-fields">
-            {filledFields.map(({ label, value }) => (
-              <ProfileTextBlock key={label} label={label} value={value} />
-            ))}
-          </div>
-        )}
-      </div>
-    </section>
+    </ProfileSectionShell>
   );
 }
 
 export function SeekerProfileCareerView({ profile }: { profile: UserProfile }) {
+  const filledPreferences = PREFERENCE_FIELDS.map(({ key, label }) => ({
+    label,
+    value: profile[key].trim(),
+  })).filter((field) => field.value);
+
   return (
     <>
       <ProfileTextSection profile={profile} />
-      <section className="profile-section">
-        <div className="profile-section-header">
-          <p className="profile-section-title">希望条件</p>
-        </div>
-        <div className="profile-section-content profile-section-content--flush">
-          <div className="profile-info-list">
-          <ProfileInfoRow label="希望エリア" value={profile.area} />
-          <ProfileInfoRow label="希望職種" value={profile.desiredJobType} />
-          <ProfileInfoRow label="希望雇用形態" value={profile.employmentType} />
-          <ProfileInfoRow label="社会人経験" value={profile.experience} />
-          <ProfileInfoRow label="希望年収" value={profile.desiredSalary} />
-          <ProfileInfoRow label="転職意欲" value={profile.jobSearchIntent} />
-          </div>
-        </div>
-      </section>
 
-      <section className="profile-section">
-        <div className="profile-section-header">
-          <p className="profile-section-title">職歴</p>
-        </div>
-        {profile.workHistory.length === 0 ? (
-          <div className="profile-section-content">
-            <p className="profile-field-value profile-field-value-muted">未設定</p>
+      {filledPreferences.length > 0 && (
+        <ProfileSectionShell title="希望条件" flush>
+          <div className="profile-info-list">
+            {filledPreferences.map(({ label, value }) => (
+              <ProfileInfoRow key={label} label={label} value={value} />
+            ))}
           </div>
-        ) : (
-          <div className="profile-section-content profile-section-content--flush">
-            <ul className="profile-info-list">
+        </ProfileSectionShell>
+      )}
+
+      {profile.workHistory.length > 0 && (
+        <ProfileSectionShell title="職歴" flush>
+          <ul className="profile-info-list">
             {profile.workHistory.map((entry, index) => (
               <li key={`${entry.company}-${index}`} className="profile-work-item">
                 <p className="profile-info-value">{entry.company || "—"}</p>
                 <p className="profile-field-value">{entry.role || "—"}</p>
                 <p className="profile-work-meta">{formatWorkPeriod(entry)}</p>
                 {entry.description.trim() && (
-                  <p className="profile-field-value profile-field-value-body mt-2 whitespace-pre-wrap">{entry.description}</p>
+                  <p className="profile-field-value profile-field-value-body mt-2 whitespace-pre-wrap">
+                    {entry.description}
+                  </p>
                 )}
               </li>
             ))}
-            </ul>
-          </div>
-        )}
-      </section>
+          </ul>
+        </ProfileSectionShell>
+      )}
 
-      <section className="profile-section">
-        <div className="profile-section-header">
-          <p className="profile-section-title">スキル</p>
-        </div>
-        <div className="profile-section-content profile-section-content--flush">
-          {profile.skills.length === 0 ? (
-            <p className="profile-field-value profile-field-value-muted px-4 pb-2">未設定</p>
-          ) : (
-            <ul className="profile-info-list">
-              {profile.skills.map((skill, index) => (
-                <li key={`${skill.name}-${index}`} className="profile-info-row">
-                  <p className="profile-field-label">{skill.name}</p>
-                  <p className={`profile-info-value ${skill.years ? "" : "is-empty"}`}>
-                    {skill.years || "未設定"}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </section>
+      {profile.skills.length > 0 && (
+        <ProfileSectionShell title="スキル">
+          <div className="profile-skill-chips">
+            {profile.skills.map((skill, index) => (
+              <span key={`${skill.name}-${index}`} className="profile-skill-chip">
+                {skill.name}
+                {skill.years ? <span className="profile-skill-chip-years">{skill.years}</span> : null}
+              </span>
+            ))}
+          </div>
+        </ProfileSectionShell>
+      )}
     </>
   );
 }
@@ -157,76 +169,54 @@ export function SeekerProfileCareerSummary({ profile }: { profile: UserProfile }
   return (
     <>
       {filledTextFields.length > 0 && (
-        <section className="profile-section">
-          <div className="profile-section-header">
-            <p className="profile-section-title">プロフィール</p>
+        <ProfileSectionShell title="自己紹介">
+          <div className="profile-text-fields">
+            {filledTextFields.map(({ label, value }) => (
+              <ProfileTextBlock key={label} label={label} value={value} />
+            ))}
           </div>
-          <div className="profile-section-content">
-            <div className="profile-text-fields">
-              {filledTextFields.map(({ label, value }) => (
-                <ProfileTextBlock key={label} label={label} value={value} />
-              ))}
-            </div>
-          </div>
-        </section>
+        </ProfileSectionShell>
       )}
 
       {(profile.desiredSalary || profile.jobSearchIntent) && (
-        <section className="profile-section">
-          <div className="profile-section-header">
-            <p className="profile-section-title">希望条件</p>
+        <ProfileSectionShell title="希望条件" flush>
+          <div className="profile-info-list">
+            {profile.desiredSalary && <ProfileInfoRow label="希望年収" value={profile.desiredSalary} />}
+            {profile.jobSearchIntent && <ProfileInfoRow label="転職意欲" value={profile.jobSearchIntent} />}
           </div>
-          <div className="profile-section-content profile-section-content--flush">
-            <div className="profile-info-list">
-              {profile.desiredSalary && <ProfileInfoRow label="希望年収" value={profile.desiredSalary} />}
-              {profile.jobSearchIntent && <ProfileInfoRow label="転職意欲" value={profile.jobSearchIntent} />}
-            </div>
-          </div>
-        </section>
+        </ProfileSectionShell>
       )}
 
       {profile.workHistory.length > 0 && (
-        <section className="profile-section">
-          <div className="profile-section-header">
-            <p className="profile-section-title">職歴</p>
-          </div>
-          <div className="profile-section-content profile-section-content--flush">
-            <ul className="profile-info-list">
-              {profile.workHistory.map((entry, index) => (
-                <li key={`${entry.company}-${index}`} className="profile-work-item">
-                  <p className="profile-info-value">{entry.company || "—"}</p>
-                  <p className="profile-field-value">{entry.role || "—"}</p>
-                  <p className="profile-work-meta">{formatWorkPeriod(entry)}</p>
-                  {entry.description.trim() && (
-                    <p className="profile-field-value profile-field-value-body mt-2 whitespace-pre-wrap">
-                      {entry.description}
-                    </p>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
+        <ProfileSectionShell title="職歴" flush>
+          <ul className="profile-info-list">
+            {profile.workHistory.map((entry, index) => (
+              <li key={`${entry.company}-${index}`} className="profile-work-item">
+                <p className="profile-info-value">{entry.company || "—"}</p>
+                <p className="profile-field-value">{entry.role || "—"}</p>
+                <p className="profile-work-meta">{formatWorkPeriod(entry)}</p>
+                {entry.description.trim() && (
+                  <p className="profile-field-value profile-field-value-body mt-2 whitespace-pre-wrap">
+                    {entry.description}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </ProfileSectionShell>
       )}
 
       {profile.skills.length > 0 && (
-        <section className="profile-section">
-          <div className="profile-section-header">
-            <p className="profile-section-title">スキル</p>
+        <ProfileSectionShell title="スキル">
+          <div className="profile-skill-chips">
+            {profile.skills.map((skill, index) => (
+              <span key={`${skill.name}-${index}`} className="profile-skill-chip">
+                {skill.name}
+                {skill.years ? <span className="profile-skill-chip-years">{skill.years}</span> : null}
+              </span>
+            ))}
           </div>
-          <div className="profile-section-content profile-section-content--flush">
-            <ul className="profile-info-list">
-              {profile.skills.map((skill, index) => (
-                <li key={`${skill.name}-${index}`} className="profile-info-row">
-                  <p className="profile-field-label">{skill.name}</p>
-                  <p className={`profile-info-value ${skill.years ? "" : "is-empty"}`}>
-                    {skill.years || "未設定"}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
+        </ProfileSectionShell>
       )}
     </>
   );

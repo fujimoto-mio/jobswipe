@@ -37,7 +37,7 @@ export function usePaginatedTable<T>({
   parseResponse,
   defaultSort = { column: "", order: "desc" },
   defaultPageSize = 10,
-  searchDebounceMs = 300,
+  searchDebounceMs = 500,
   enabled = true,
   deps = [],
 }: UsePaginatedTableOptions<T>) {

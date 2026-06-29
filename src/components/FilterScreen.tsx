@@ -1,8 +1,7 @@
 "use client";
 
 import { AREAS, JOB_CATEGORIES } from "@/lib/constants";
-import Logo from "@/components/ui/Logo";
-import SeekerAccountMenu from "@/components/seeker/SeekerAccountMenu";
+import SeekerBrandHeader from "@/components/seeker/SeekerBrandHeader";
 import type { JobFilters } from "@/lib/types";
 import { MapPin, Briefcase } from "lucide-react";
 
@@ -32,14 +31,13 @@ export default function FilterScreen({ filters, onChange, onContinue, onCancel }
 
   return (
     <div className="seeker-filter-page flex h-full min-h-0 flex-col">
-      <div className="flex shrink-0 items-center justify-end px-4 py-3">
-        <SeekerAccountMenu />
-      </div>
+      <header className="page-header shrink-0">
+        <SeekerBrandHeader />
+      </header>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
-        <div className="mb-6">
-          <Logo size="md" />
-          <h1 className="seeker-filter-title mt-5">あなたに合う求人を探す</h1>
+        <div className="mb-6 mt-2">
+          <h1 className="seeker-filter-title">あなたに合う求人を探す</h1>
           <p className="seeker-filter-subtitle mt-2">
             エリアと職種を選んで、動画フィードをスタート
           </p>

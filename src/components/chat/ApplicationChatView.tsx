@@ -248,46 +248,52 @@ export default function ApplicationChatView({
 
   return (
     <div className={`flex min-h-0 flex-1 flex-col ${className}`}>
-      <div className="flex-1 overflow-y-auto bg-slate-50 px-4 py-4">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-slate-50 px-4 py-4">
         {loading ? (
-          <LoadingSpinner message="メッセージを読み込み中..." className="py-12" />
+          <div className="flex flex-1 items-center justify-center">
+            <LoadingSpinner message="メッセージを読み込み中..." />
+          </div>
         ) : messages.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-400">{emptyHint}</p>
+          <div className="flex flex-1 items-center justify-center px-2">
+            <p className="max-w-xs text-center text-sm text-slate-400 sm:max-w-sm">{emptyHint}</p>
+          </div>
         ) : (
-          messages.map((msg) => {
-            const own = isOwn(msg);
-            const participant = getMessageParticipant(msg, {
-              seekerName,
-              companyName,
-              companyStaffName,
-              companyStaffAvatarUrl,
-            });
-            return (
-              <div
-                key={msg.id}
-                className={`chat-message-row ${own ? "chat-message-row--own" : "chat-message-row--other"}`}
-              >
-                <ChatAvatar
-                  name={participant.name}
-                  imageUrl={participant.imageUrl}
-                  variant={participant.variant}
-                />
-                <div className="chat-message-stack">
-                  <p className="chat-message-sender">{participant.name}</p>
-                  <div
-                    className={`chat-message-bubble ${
-                      own ? "chat-message-bubble--own" : "chat-message-bubble--other"
-                    }`}
-                  >
-                    <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+          <>
+            {messages.map((msg) => {
+              const own = isOwn(msg);
+              const participant = getMessageParticipant(msg, {
+                seekerName,
+                companyName,
+                companyStaffName,
+                companyStaffAvatarUrl,
+              });
+              return (
+                <div
+                  key={msg.id}
+                  className={`chat-message-row ${own ? "chat-message-row--own" : "chat-message-row--other"}`}
+                >
+                  <ChatAvatar
+                    name={participant.name}
+                    imageUrl={participant.imageUrl}
+                    variant={participant.variant}
+                  />
+                  <div className="chat-message-stack">
+                    <p className="chat-message-sender">{participant.name}</p>
+                    <div
+                      className={`chat-message-bubble ${
+                        own ? "chat-message-bubble--own" : "chat-message-bubble--other"
+                      }`}
+                    >
+                      <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                    </div>
+                    <p className="chat-message-time">{formatDateTimeFullJST(msg.createdAt)}</p>
                   </div>
-                  <p className="chat-message-time">{formatDateTimeFullJST(msg.createdAt)}</p>
                 </div>
-              </div>
-            );
-          })
+              );
+            })}
+            <div ref={bottomRef} />
+          </>
         )}
-        <div ref={bottomRef} />
       </div>
 
       <div className="border-t border-slate-200 bg-white px-4 py-3">

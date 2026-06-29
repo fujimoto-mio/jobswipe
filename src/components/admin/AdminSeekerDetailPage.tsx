@@ -204,6 +204,8 @@ export default function AdminSeekerDetailPage() {
               <InfoRow label="性別" value={profile.gender} />
               <InfoRow label="生年月日" value={formatBirthdayDisplay(profile.birthday)} />
               <InfoRow label="最終学歴" value={profile.education} />
+              <InfoRow label="電話番号" value={profile.phone} />
+              <InfoRow label="住所" value={profile.address} />
               <div className="company-profile-info-row">
                 <div className="company-profile-info-label">メール</div>
                 <div className="company-profile-info-value break-all">{profile.email}</div>

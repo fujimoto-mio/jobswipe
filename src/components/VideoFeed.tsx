@@ -142,7 +142,7 @@ export default function VideoFeed({ filters, fetchKey = "", onSaveCountChange }:
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center bg-white">
-        <LoadingSpinner size="lg" message="求人動画を読み込み中..." />
+        <LoadingSpinner size="lg" message="求人動画を読み込み中..." dark />
       </div>
     );
   }

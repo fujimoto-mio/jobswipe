@@ -136,6 +136,18 @@ const seekerPreferenceFields = {
     ),
 };
 
+const seekerContactFields = {
+  phone: Yup.string()
+    .trim()
+    .default("")
+    .test("valid-phone", "有効な電話番号を入力してください", (value) => {
+      if (!value) return true;
+      const digits = value.replace(/\D/g, "");
+      return digits.length >= 10 && digits.length <= 11;
+    }),
+  address: Yup.string().trim().max(500, "500文字以内で入力してください").default(""),
+};
+
 const seekerPersonalFields = {
   education: Yup.string()
     .trim()
@@ -169,12 +181,14 @@ const seekerProfileFields = {
 
 export const seekerProfileSchema = Yup.object({
   ...seekerProfileFields,
+  ...seekerContactFields,
   email,
 });
 
 /** Server-side seeker registration — profile fields + password. */
 export const seekerRegisterSchema = Yup.object({
   ...seekerProfileFields,
+  ...seekerContactFields,
   email,
   password,
 });
@@ -202,9 +216,31 @@ export const applySchema = Yup.object({
 export const profileEditSchema = Yup.object({
   ...seekerProfileFields,
   ...seekerPersonalFields,
+  ...seekerContactFields,
   ...seekerPreferenceFields,
   ...seekerCareerFields,
+  avatarUrl: Yup.string()
+    .transform((v) => (v == null ? "" : String(v)))
+    .trim()
+    .default(""),
+  bannerUrl: Yup.string()
+    .transform((v) => (v == null ? "" : String(v)))
+    .trim()
+    .default(""),
 });
+
+export const profileMediaPatchSchema = Yup.object({
+  avatarUrl: Yup.string()
+    .transform((v) => (v == null ? "" : String(v)))
+    .trim()
+    .optional(),
+  bannerUrl: Yup.string()
+    .transform((v) => (v == null ? "" : String(v)))
+    .trim()
+    .optional(),
+}).test("at-least-one", "更新する項目がありません", (v) =>
+  v?.avatarUrl !== undefined || v?.bannerUrl !== undefined
+);
 
 /** @deprecated Use profileEditSchema — email is managed via Supabase Auth. */
 export const profileSchema = profileEditSchema.shape({ email });
@@ -299,6 +335,7 @@ export type SeekerRegisterValues = Yup.InferType<typeof seekerRegisterSchema>;
 export type CompanyRegisterValues = Yup.InferType<typeof companyRegisterSchema>;
 export type ApplyValues = Yup.InferType<typeof applySchema>;
 export type ProfileEditValues = Yup.InferType<typeof profileEditSchema>;
+export type ProfileMediaPatchValues = Yup.InferType<typeof profileMediaPatchSchema>;
 export type ProfileValues = Yup.InferType<typeof profileSchema>;
 export type CompanyProfileValues = Yup.InferType<typeof companyProfileSchema>;
 export type JobFormValues = Yup.InferType<typeof jobFormSchema>;

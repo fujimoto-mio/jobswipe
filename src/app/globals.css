@@ -201,6 +201,10 @@ body {
   opacity: 1;
 }
 
+.seeker-ui .empty-state-icon--seeker {
+  background: rgba(254, 44, 85, 0.1);
+}
+
 .seeker-ui .btn-secondary {
   border-radius: 9999px;
   border: none;
@@ -499,15 +503,20 @@ body {
   transform: scale(0.97);
 }
 .seeker-ui .chip-active {
-  border-color: #161823;
-  background: #161823;
+  border-color: #fe2c55;
+  background: linear-gradient(135deg, #fe2c55 0%, #ff4d73 100%);
   color: #ffffff;
-  box-shadow: none;
+  box-shadow:
+    0 2px 10px rgb(254 44 85 / 0.34),
+    0 0 0 1px rgb(37 244 238 / 0.18);
 }
 .seeker-ui .chip-active:hover {
-  border-color: #161823;
-  background: #161823;
+  border-color: #fe2c55;
+  background: linear-gradient(135deg, #e9264d 0%, #fe2c55 100%);
   color: #ffffff;
+  box-shadow:
+    0 3px 14px rgb(254 44 85 / 0.4),
+    0 0 0 1px rgb(37 244 238 / 0.22);
 }
 
 .seeker-filter-page {
@@ -740,6 +749,272 @@ body {
 /* Profile page — TikTok-style typography & layout */
 .profile-page {
   background: #f1f1f2;
+}
+.seeker-ui .profile-top-card {
+  margin-bottom: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+.seeker-ui .profile-hero-banner-wrap {
+  position: relative;
+}
+.seeker-ui .profile-hero-banner {
+  height: 7.5rem;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+.seeker-ui .profile-hero-banner-actions {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  display: flex;
+  gap: 0.375rem;
+}
+.seeker-ui .profile-hero-media-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 9999px;
+  border: none;
+  background: rgb(255 255 255 / 0.92);
+  padding: 0.375rem 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #161823;
+  box-shadow: 0 2px 8px rgb(15 23 42 / 0.12);
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.seeker-ui .profile-hero-media-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.seeker-ui .profile-hero-media-btn:disabled {
+  opacity: 0.6;
+}
+.seeker-ui .profile-hero-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 1rem 1.125rem;
+}
+.seeker-ui .profile-hero-avatar-wrap {
+  position: relative;
+  margin-top: -2.75rem;
+}
+.seeker-ui .profile-hero-avatar-edit {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  height: 2rem;
+  width: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 2px solid #fff;
+  background: #161823;
+  color: #fff;
+  box-shadow: 0 2px 8px rgb(15 23 42 / 0.18);
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.seeker-ui .profile-hero-avatar-edit:active:not(:disabled) {
+  transform: scale(0.94);
+}
+.seeker-ui .profile-hero-avatar-edit:disabled {
+  opacity: 0.6;
+}
+.seeker-ui .seeker-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  padding: 3px;
+  background: linear-gradient(135deg, #fe2c55 0%, #25f4ee 100%);
+  box-shadow: 0 8px 24px rgb(254 44 85 / 0.18);
+}
+.seeker-ui .seeker-avatar--hero {
+  height: 5.5rem;
+  width: 5.5rem;
+}
+.seeker-ui .seeker-avatar--lg {
+  height: 3rem;
+  width: 3rem;
+}
+.seeker-ui .seeker-avatar--md {
+  height: 2.75rem;
+  width: 2.75rem;
+}
+.seeker-ui .seeker-avatar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  border-radius: 9999px;
+  background: #161823;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+.seeker-ui .seeker-avatar--lg .seeker-avatar-inner,
+.seeker-ui .seeker-avatar--md .seeker-avatar-inner {
+  font-size: 0.875rem;
+}
+.seeker-ui .seeker-avatar-photo {
+  height: 100%;
+  width: 100%;
+  border-radius: 9999px;
+  object-fit: cover;
+  background: #161823;
+}
+.seeker-ui .profile-hero-name {
+  margin-top: 0.75rem;
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #161823;
+  line-height: 1.3;
+}
+.seeker-ui .profile-hero-bio {
+  margin-top: 0.25rem;
+  max-width: 18rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: rgba(22, 24, 35, 0.55);
+}
+.seeker-ui .profile-hero-upload-error {
+  margin-top: 0.5rem;
+  max-width: 18rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #dc2626;
+}
+.seeker-ui .profile-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 1rem;
+  padding-top: 0.875rem;
+  border-top: 0.5px solid rgba(22, 24, 35, 0.08);
+}
+.seeker-ui .profile-stat-item {
+  flex: 1;
+  min-width: 0;
+  padding: 0.125rem 0.5rem;
+  text-align: center;
+}
+.seeker-ui .profile-stat-value {
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #161823;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+.seeker-ui .profile-stat-label {
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  color: rgba(22, 24, 35, 0.55);
+}
+.seeker-ui .profile-stat-divider {
+  flex-shrink: 0;
+  width: 1px;
+  height: 1.25rem;
+  background: rgba(22, 24, 35, 0.1);
+}
+.seeker-ui .profile-completion {
+  margin-top: 0.875rem;
+  width: 100%;
+  max-width: 18rem;
+}
+.seeker-ui .profile-completion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.375rem;
+  font-size: 0.75rem;
+  color: rgba(22, 24, 35, 0.55);
+}
+.seeker-ui .profile-completion-value {
+  font-weight: 700;
+  color: #161823;
+}
+.seeker-ui .profile-completion-track {
+  height: 0.375rem;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: rgba(22, 24, 35, 0.08);
+}
+.seeker-ui .profile-completion-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #fe2c55 0%, #ff6b8a 100%);
+  transition: width 0.3s ease;
+}
+.seeker-ui .profile-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  margin-top: 0.875rem;
+  width: 100%;
+  max-width: 18rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+.seeker-ui .profile-page .profile-section-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.seeker-ui .profile-page .profile-section-header {
+  padding: 0.875rem 1rem 0.25rem;
+}
+.seeker-ui .profile-application-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0.375rem 1rem 1rem !important;
+}
+.seeker-ui .profile-application-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.seeker-ui .profile-application-card:active {
+  transform: scale(0.985);
+}
+.seeker-ui .profile-section--flush-list {
+  padding: 0;
+}
+.seeker-ui .profile-skill-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.seeker-ui .profile-skill-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 9999px;
+  background: rgba(254, 44, 85, 0.08);
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #161823;
+}
+.seeker-ui .profile-skill-chip-years {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(22, 24, 35, 0.55);
 }
 .profile-section {
   margin-top: 8px;
@@ -1498,17 +1773,6 @@ body {
   min-width: 0;
 }
 
-.chat-thread-header .chat-thread-header-actions {
-  align-self: flex-start;
-}
-
-@media (max-width: 767px) {
-  .chat-thread-header {
-    padding-left: 0;
-    padding-right: 0.75rem;
-  }
-}
-
 .chat-thread-applicant-name {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1540,21 +1804,6 @@ body {
   white-space: nowrap;
   font-size: 0.75rem;
   color: #94a3b8;
-}
-
-.chat-thread-header-actions {
-  display: flex;
-  shrink: 0;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-@media (min-width: 640px) {
-  .chat-thread-header-actions {
-    flex-direction: column;
-    align-items: flex-end;
-  }
 }
 
 .chat-column-resize-handle {
@@ -2452,6 +2701,154 @@ body {
   color: #0f172a;
 }
 
+.seeker-ui .seeker-search-bar {
+  position: relative;
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.seeker-ui .seeker-search-bar-icon {
+  pointer-events: none;
+  position: absolute;
+  left: 0.875rem;
+  top: 50%;
+  z-index: 1;
+  height: 1rem;
+  width: 1rem;
+  transform: translateY(-50%);
+  color: rgba(22, 24, 35, 0.45);
+}
+
+.seeker-ui .seeker-search-bar-input {
+  width: 100%;
+  min-height: 2.5rem;
+  padding-left: 2.5rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(22, 24, 35, 0.08);
+  background: #f1f1f2;
+  font-size: 0.875rem;
+  color: #161823;
+}
+
+.seeker-ui .seeker-search-bar-input::placeholder {
+  color: rgba(22, 24, 35, 0.45);
+}
+
+.seeker-ui .seeker-search-bar-input:focus {
+  border-color: rgba(254, 44, 85, 0.35);
+  background: #ffffff;
+  box-shadow: 0 0 0 2px rgb(254 44 85 / 0.12);
+}
+
+.seeker-ui .seeker-list-pagination {
+  margin-top: 0.75rem;
+  border: none;
+  border-radius: 1rem;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgb(15 23 42 / 0.06);
+}
+
+.seeker-ui .seeker-saved-job-actions .btn-icon-muted,
+.seeker-ui .seeker-saved-job-actions .btn-icon-primary,
+.seeker-ui .seeker-saved-job-actions .btn-icon-danger {
+  height: 2rem;
+  width: 2rem;
+}
+
+.seeker-ui .seeker-saved-job-actions .btn-icon svg {
+  height: 0.875rem;
+  width: 0.875rem;
+}
+
+@media (min-width: 768px) {
+  .seeker-ui .seeker-saved-job-actions .btn-icon-muted,
+  .seeker-ui .seeker-saved-job-actions .btn-icon-primary,
+  .seeker-ui .seeker-saved-job-actions .btn-icon-danger {
+    height: 2.5rem;
+    width: 2.5rem;
+  }
+
+  .seeker-ui .seeker-saved-job-actions .btn-icon svg {
+    height: 1rem;
+    width: 1rem;
+  }
+}
+
+.seeker-ui .seeker-list-pagination.data-table-pagination {
+  border-top: none;
+}
+
+.seeker-ui .seeker-list-pagination .data-table-pagination-nav-compact {
+  justify-content: center;
+  gap: 1rem;
+}
+
+.seeker-ui .seeker-list-pagination .seeker-pagination-nav-circle {
+  flex: none;
+  border-radius: 9999px;
+}
+
+.seeker-ui .seeker-page-size-picker {
+  width: auto;
+  min-width: 3.5rem;
+}
+
+.seeker-ui .seeker-page-size-picker .select-picker-trigger-compact {
+  min-height: 2rem;
+  min-width: 3.5rem;
+  padding: 0.375rem 1.75rem 0.375rem 0.875rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(22, 24, 35, 0.12);
+  background: #f1f1f2;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #161823;
+}
+
+.seeker-ui .seeker-page-size-picker .select-picker-trigger-compact:focus {
+  background: #ebebec;
+  box-shadow: 0 0 0 2px rgb(254 44 85 / 0.18);
+}
+
+.seeker-ui .seeker-page-size-picker .select-picker-trigger-compact span {
+  overflow: visible;
+  text-overflow: unset;
+  white-space: nowrap;
+  padding-right: 0;
+  text-align: center;
+}
+
+.seeker-ui .seeker-page-size-picker .select-picker-menu {
+  right: 0;
+  left: auto;
+  min-width: 5.75rem;
+}
+
+.seeker-ui .seeker-page-size-picker .select-picker-option {
+  padding: 0.625rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.seeker-ui .seeker-page-size-picker .select-picker-option-selected {
+  background: rgba(254, 44, 85, 0.1);
+  color: #fe2c55;
+  font-weight: 700;
+}
+
+.seeker-ui .seeker-page-size-picker .select-picker-option-selected svg {
+  color: #fe2c55;
+}
+
+.seeker-ui .select-picker-sheet-list .select-picker-option-selected {
+  background: rgba(254, 44, 85, 0.1);
+  color: #fe2c55;
+  font-weight: 700;
+}
+
+.seeker-ui .select-picker-sheet-list .select-picker-option-selected svg {
+  color: #fe2c55;
+}
+
 /* ── Staff panel sidebar (TikTok-style) ── */
 .staff-panel-shell {
   background: #f8fafc;
@@ -2806,6 +3203,96 @@ body {
   border-radius: 9999px;
   border: 3px solid var(--border);
   border-top-color: var(--accent);
+}
+
+.loading-spinner-seeker {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+}
+
+.seeker-ui .loading-spinner-default {
+  display: none;
+}
+
+.seeker-ui .loading-spinner-seeker {
+  display: flex;
+}
+
+.seeker-ui .loading-spinner-message:not(.loading-spinner-message--dark) {
+  color: rgba(22, 24, 35, 0.55);
+  font-weight: 500;
+}
+
+.loading-spinner-seeker-dot {
+  display: block;
+  border-radius: 9999px;
+  animation: seeker-loader-bounce 0.9s ease-in-out infinite;
+}
+
+.loading-spinner-seeker--sm .loading-spinner-seeker-dot:nth-child(1),
+.loading-spinner-seeker--sm .loading-spinner-seeker-dot:nth-child(3) {
+  height: 0.375rem;
+  width: 0.375rem;
+}
+
+.loading-spinner-seeker--sm .loading-spinner-seeker-dot:nth-child(2) {
+  height: 0.5rem;
+  width: 0.5rem;
+}
+
+.loading-spinner-seeker--md .loading-spinner-seeker-dot:nth-child(1),
+.loading-spinner-seeker--md .loading-spinner-seeker-dot:nth-child(3) {
+  height: 0.5rem;
+  width: 0.5rem;
+}
+
+.loading-spinner-seeker--md .loading-spinner-seeker-dot:nth-child(2) {
+  height: 0.625rem;
+  width: 0.625rem;
+}
+
+.loading-spinner-seeker--lg .loading-spinner-seeker-dot:nth-child(1),
+.loading-spinner-seeker--lg .loading-spinner-seeker-dot:nth-child(3) {
+  height: 0.625rem;
+  width: 0.625rem;
+}
+
+.loading-spinner-seeker--lg .loading-spinner-seeker-dot:nth-child(2) {
+  height: 0.75rem;
+  width: 0.75rem;
+}
+
+.loading-spinner-seeker-dot:nth-child(1) {
+  background: #fe2c55;
+}
+
+.loading-spinner-seeker-dot:nth-child(2) {
+  background: #161823;
+  animation-delay: 0.15s;
+}
+
+.loading-spinner-seeker-dot:nth-child(3) {
+  background: #25f4ee;
+  animation-delay: 0.3s;
+}
+
+.seeker-ui .loading-spinner-seeker--dark .loading-spinner-seeker-dot:nth-child(2) {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+@keyframes seeker-loader-bounce {
+  0%,
+  100% {
+    transform: translateY(0) scale(0.85);
+    opacity: 0.55;
+  }
+
+  50% {
+    transform: translateY(-0.375rem) scale(1);
+    opacity: 1;
+  }
 }
 
 @keyframes spin {

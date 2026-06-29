@@ -47,7 +47,7 @@ export function mapJob(row: JobWithCompany): Job {
 
 export function mapApplication(
   row: PrismaApplication,
-  job?: { title: string; company: { name: string } }
+  job?: { title: string; company: { name: string; logoUrl?: string | null } }
 ): Application {
   return {
     id: row.id,
@@ -63,7 +63,13 @@ export function mapApplication(
     interviewSlot: row.interviewSlot ?? undefined,
     interviewBookedAt: row.interviewBookedAt ? serializeTimestamp(row.interviewBookedAt) : undefined,
     createdAt: serializeTimestamp(row.createdAt),
-    ...(job ? { jobTitle: job.title, companyName: job.company.name } : {}),
+    ...(job
+      ? {
+          jobTitle: job.title,
+          companyName: job.company.name,
+          companyLogo: job.company.logoUrl ?? null,
+        }
+      : {}),
   };
 }
 
@@ -96,7 +102,11 @@ export function mapSeekerProfile(row: {
   desiredSalary?: string | null;
   jobSearchIntent?: string | null;
   education?: string | null;
+  phone?: string | null;
+  address?: string | null;
   portfolioUrl?: string | null;
+  avatarUrl?: string | null;
+  bannerUrl?: string | null;
   skills?: unknown;
   workHistory?: unknown;
 }): UserProfile & { id: string } {
@@ -117,7 +127,11 @@ export function mapSeekerProfile(row: {
     desiredSalary: row.desiredSalary ?? "",
     jobSearchIntent: row.jobSearchIntent ?? "",
     education: row.education ?? "",
+    phone: row.phone ?? "",
+    address: row.address ?? "",
     portfolioUrl: row.portfolioUrl ?? "",
+    avatarUrl: row.avatarUrl ?? "",
+    bannerUrl: row.bannerUrl ?? "",
     skills: asSkills(row.skills),
     workHistory: asWorkHistory(row.workHistory),
   };

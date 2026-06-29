@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import SeekerBrandHeader from "@/components/seeker/SeekerBrandHeader";
 import Logo from "@/components/ui/Logo";
 
 type SeekerAuthShellProps = {
@@ -19,11 +19,7 @@ export default function SeekerAuthShell({
   return (
     <div className="min-h-[100dvh] bg-[var(--surface)]">
       <header className="page-header">
-        <div className="page-container flex h-14 items-center sm:h-16">
-          <Link href="/" className="shrink-0">
-            <Logo inTopbar />
-          </Link>
-        </div>
+        <SeekerBrandHeader showMenu={false} logoHref="/" />
       </header>
 
       <main className="page-container py-8 pb-12 sm:py-12">

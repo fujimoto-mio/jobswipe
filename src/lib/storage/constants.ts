@@ -8,7 +8,7 @@ export const STORAGE_BUCKETS = {
 
 export type StorageBucket = (typeof STORAGE_BUCKETS)[keyof typeof STORAGE_BUCKETS];
 
-export type UploadKind = "video" | "thumbnail" | "image" | "resume" | "company-logo" | "company-banner" | "staff-avatar";
+export type UploadKind = "video" | "thumbnail" | "image" | "resume" | "company-logo" | "company-banner" | "staff-avatar" | "seeker-avatar" | "seeker-banner";
 
 export const UPLOAD_KIND_CONFIG: Record<
   UploadKind,
@@ -59,6 +59,20 @@ export const UPLOAD_KIND_CONFIG: Record<
     bucket: STORAGE_BUCKETS.images,
     folder: "staff-avatars",
     maxBytes: 2 * 1024 * 1024,
+    mimePrefix: "image/",
+    public: true,
+  },
+  "seeker-avatar": {
+    bucket: STORAGE_BUCKETS.images,
+    folder: "seeker-avatars",
+    maxBytes: 2 * 1024 * 1024,
+    mimePrefix: "image/",
+    public: true,
+  },
+  "seeker-banner": {
+    bucket: STORAGE_BUCKETS.images,
+    folder: "seeker-banners",
+    maxBytes: 5 * 1024 * 1024,
     mimePrefix: "image/",
     public: true,
   },

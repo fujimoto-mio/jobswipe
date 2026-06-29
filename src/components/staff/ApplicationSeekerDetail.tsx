@@ -267,6 +267,8 @@ function ApplicationRegistrationSection({
           <CompanyProfileInfoRow label="性別" value={seeker?.gender} />
           <CompanyProfileInfoRow label="生年月日" value={birthdayValue} />
           <CompanyProfileInfoRow label="最終学歴" value={seeker?.education} />
+          <CompanyProfileInfoRow label="電話番号" value={seeker?.phone} />
+          <CompanyProfileInfoRow label="住所" value={seeker?.address} />
           <div className="company-profile-info-row">
             <div className="company-profile-info-label">メール</div>
             <div className="company-profile-info-value break-all">{application.applicantEmail}</div>

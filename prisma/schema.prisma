@@ -109,7 +109,11 @@ model SeekerProfile {
   desiredSalary  String?  @map("desired_salary")
   jobSearchIntent String? @map("job_search_intent")
   education      String?
+  phone          String?
+  address        String?
   portfolioUrl   String?  @map("portfolio_url")
+  avatarUrl      String?  @map("avatar_url")
+  bannerUrl      String?  @map("banner_url")
   skills         Json     @default("[]")
   workHistory    Json     @default("[]") @map("work_history")
   supabaseUserId String   @unique @map("supabase_user_id")

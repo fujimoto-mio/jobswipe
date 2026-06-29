@@ -8,6 +8,7 @@ export {
 
 export {
   validateUploadFile,
+  resolveUploadContentType,
   uploadToStorage,
   uploadByKind,
   getSignedStorageUrl,
