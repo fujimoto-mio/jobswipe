@@ -2,6 +2,7 @@ import type { UserProfile } from "./types";
 import { normalizeSeekerProfileFields } from "./profile-fields";
 
 const PROFILE_KEY = "jobswipe_profile";
+const PROFILE_UPDATED_EVENT = "jobswipe_profile_updated";
 
 export const DEFAULT_PROFILE: UserProfile = {
   name: "",
@@ -38,6 +39,22 @@ export function getProfile(): StoredProfile | null {
 
 export function saveProfile(profile: StoredProfile): void {
   localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(PROFILE_UPDATED_EVENT, { detail: profile }));
+  }
+}
+
+export function subscribeProfileUpdates(
+  listener: (profile: StoredProfile | null) => void
+): () => void {
+  if (typeof window === "undefined") return () => {};
+
+  const handler = (event: Event) => {
+    listener((event as CustomEvent<StoredProfile | null>).detail ?? null);
+  };
+
+  window.addEventListener(PROFILE_UPDATED_EVENT, handler);
+  return () => window.removeEventListener(PROFILE_UPDATED_EVENT, handler);
 }
 
 export function isProfileComplete(profile: StoredProfile | null): profile is StoredProfile {
@@ -56,4 +73,7 @@ export function isProfileComplete(profile: StoredProfile | null): profile is Sto
 
 export function clearProfile(): void {
   localStorage.removeItem(PROFILE_KEY);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(PROFILE_UPDATED_EVENT, { detail: null }));
+  }
 }

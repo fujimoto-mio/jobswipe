@@ -8,7 +8,6 @@ import FilterScreen from "@/components/FilterScreen";
 import { apiFetch, apiFetchCached } from "@/lib/api-client";
 import { fetchSeekerUnreadTotal } from "@/lib/chat-unread";
 import { getCachedClientSession } from "@/lib/auth/client-session";
-import { saveProfile } from "@/lib/profile";
 import SeekerBrandHeader from "@/components/seeker/SeekerBrandHeader";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
 import type { JobFilters } from "@/lib/types";
@@ -48,11 +47,6 @@ function ExploreContent() {
       setAuthReady(true);
       if (loggedIn) {
         refreshCounts();
-        void apiFetch("/api/profile")
-          .then((r) => r.json())
-          .then((d) => {
-            if (d.profile) saveProfile(d.profile);
-          });
       }
     });
   }, [refreshCounts]);

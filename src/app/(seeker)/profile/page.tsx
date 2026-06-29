@@ -7,9 +7,10 @@ import { Pencil } from "lucide-react";
 import { PageLoading, ButtonSpinner } from "@/components/ui/LoadingSpinner";
 import BottomNav from "@/components/BottomNav";
 import { AppHeader, AppPage } from "@/components/ui/AppShell";
-import { getProfile, saveProfile, isProfileComplete } from "@/lib/profile";
+import { saveProfile, isProfileComplete } from "@/lib/profile";
 import { apiFetch } from "@/lib/api-client";
 import { fetchSeekerUnreadTotal } from "@/lib/chat-unread";
+import { useSeekerUser } from "@/components/seeker/SeekerUserProvider";
 import SeekerProfileFormFields from "@/components/form/SeekerProfileFormFields";
 import SeekerProfileHero from "@/components/seeker/SeekerProfileHero";
 import { SeekerProfileCareerView } from "@/components/seeker/SeekerProfileSections";
@@ -28,58 +29,47 @@ function normalizeProfile(p: UserProfile | null): UserProfile | null {
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { profile: storedProfile, ready } = useSeekerUser();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editing, setEditing] = useState(false);
   const [saveCount, setSaveCount] = useState(0);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [saveError, setSaveError] = useState("");
+
+  useEffect(() => {
+    if (!ready) return;
+
+    const normalized = normalizeProfile(storedProfile);
+    if (!isProfileComplete(normalized)) {
+      router.replace("/explore");
+      return;
+    }
+
+    if (!editing) {
+      setProfile(normalized);
+    }
+  }, [ready, storedProfile, editing, router]);
 
   useEffect(() => {
     let cancelled = false;
 
-    void (async () => {
-      const cached = getProfile();
-      const cachedComplete = isProfileComplete(cached);
-
-      if (cachedComplete) {
-        setProfile(normalizeProfile(cached));
-        setLoading(false);
-      }
-
-      const tasks: Promise<void>[] = [
-        apiFetch("/api/profile")
-          .then((r) => r.json())
-          .then((data) => {
-            if (cancelled) return;
-            const fresh = normalizeProfile(data.profile ?? null);
-            if (!isProfileComplete(fresh)) {
-              if (!cachedComplete) router.replace("/explore");
-              return;
-            }
-            saveProfile(fresh!);
-            setProfile(fresh);
-            setLoading(false);
-          }),
-        apiFetch("/api/saves")
-          .then((r) => r.json())
-          .then((data) => {
-            if (!cancelled) setSaveCount(data.count ?? 0);
-          }),
-        fetchSeekerUnreadTotal().then((count) => {
-          if (!cancelled) setUnreadChatCount(count);
+    void Promise.all([
+      apiFetch("/api/saves")
+        .then((r) => r.json())
+        .then((data) => {
+          if (!cancelled) setSaveCount(data.count ?? 0);
         }),
-      ];
-
-      await Promise.all(tasks);
-    })();
+      fetchSeekerUnreadTotal().then((count) => {
+        if (!cancelled) setUnreadChatCount(count);
+      }),
+    ]);
 
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, []);
 
-  if (loading || !profile) {
+  if (!ready || !profile) {
     return (
       <AppPage>
         <AppHeader title="プロフィール" onBack={() => router.push("/explore")} />

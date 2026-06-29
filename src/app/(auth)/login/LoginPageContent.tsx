@@ -10,7 +10,7 @@ import { FormPassword, FormTextInput } from "@/components/form/FormFields";
 import { apiFetch, invalidateApiCache } from "@/lib/api-client";
 import { clearClientSessionCache } from "@/lib/auth/client-session";
 import { mapAuthError } from "@/lib/auth/errors";
-import { saveProfile } from "@/lib/profile";
+import { invalidateSeekerMeCache, syncSeekerProfileFromMe } from "@/lib/seeker-user";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { loginSchema } from "@/lib/validation/schemas";
 
@@ -72,13 +72,14 @@ export default function LoginPageContent() {
               return;
             }
 
-            const res = await apiFetch("/api/profile");
+            const res = await apiFetch("/api/me");
             const data = await res.json();
 
             if (data.profile) {
               clearClientSessionCache();
               invalidateApiCache();
-              saveProfile(data.profile);
+              invalidateSeekerMeCache();
+              syncSeekerProfileFromMe(data);
               router.replace(next);
               router.refresh();
               return;

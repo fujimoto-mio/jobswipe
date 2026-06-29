@@ -6,13 +6,14 @@ import LoadingSpinner, { ButtonSpinner } from "@/components/ui/LoadingSpinner";
 import { apiFetch, invalidateApiCache } from "@/lib/api-client";
 import { useChatRealtime } from "@/hooks/useChatRealtime";
 import { formatDateTimeFullJST } from "@/lib/datetime";
-import { resolveStaffAvatarUrl } from "@/lib/job-image";
+import { resolveSeekerAvatarUrl, resolveStaffAvatarUrl } from "@/lib/job-image";
 import type { ChatMessage } from "@/lib/types";
 
 type ApplicationChatViewProps = {
   applicationId: string;
   sender: "seeker" | "company";
   seekerName: string;
+  seekerAvatarUrl?: string | null;
   companyName: string;
   companyStaffName?: string | null;
   companyStaffAvatarUrl?: string | null;
@@ -57,18 +58,26 @@ function getMessageParticipant(
   msg: ChatMessage,
   {
     seekerName,
+    seekerAvatarUrl,
     companyName,
     companyStaffName,
     companyStaffAvatarUrl,
   }: {
     seekerName: string;
+    seekerAvatarUrl?: string | null;
     companyName: string;
     companyStaffName?: string | null;
     companyStaffAvatarUrl?: string | null;
   }
 ) {
   if (msg.sender === "seeker") {
-    return { name: seekerName, imageUrl: null, variant: "seeker" as const };
+    const avatarUrl = msg.senderAvatarUrl?.trim() || seekerAvatarUrl?.trim() || null;
+    const hasCustomAvatar = Boolean(avatarUrl && !avatarUrl.includes("ui-avatars.com"));
+    return {
+      name: seekerName,
+      imageUrl: hasCustomAvatar ? resolveSeekerAvatarUrl(seekerName, avatarUrl) : null,
+      variant: "seeker" as const,
+    };
   }
 
   const staffName = msg.senderName?.trim() || companyStaffName?.trim() || companyName;
@@ -173,6 +182,7 @@ export default function ApplicationChatView({
   applicationId,
   sender,
   seekerName,
+  seekerAvatarUrl,
   companyName,
   companyStaffName,
   companyStaffAvatarUrl,
@@ -255,7 +265,7 @@ export default function ApplicationChatView({
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-1 items-center justify-center px-2">
-            <p className="max-w-xs text-center text-sm text-slate-400 sm:max-w-sm">{emptyHint}</p>
+            <p className="text-center text-sm text-slate-400 md:whitespace-nowrap">{emptyHint}</p>
           </div>
         ) : (
           <>
@@ -263,6 +273,7 @@ export default function ApplicationChatView({
               const own = isOwn(msg);
               const participant = getMessageParticipant(msg, {
                 seekerName,
+                seekerAvatarUrl,
                 companyName,
                 companyStaffName,
                 companyStaffAvatarUrl,

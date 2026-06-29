@@ -29,17 +29,18 @@ import { PageLoading, ButtonSpinner } from "@/components/ui/LoadingSpinner";
 import { apiFetch } from "@/lib/api-client";
 import { mapUserFacingError } from "@/lib/auth/errors";
 import { fetchSeekerUnreadTotal } from "@/lib/chat-unread";
-import { getProfile, saveProfile, isProfileComplete } from "@/lib/profile";
+import { saveProfile } from "@/lib/profile";
+import { useSeekerUser } from "@/components/seeker/SeekerUserProvider";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { emailChangeSchema, passwordChangeSchema } from "@/lib/validation/schemas";
 
 type ActiveModal = "email" | "password" | null;
 
 export default function SettingsPage() {
-  const [email, setEmail] = useState("");
+  const { profile, ready } = useSeekerUser();
+  const email = profile?.email ?? "";
   const [saveCount, setSaveCount] = useState(0);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [activeModal, setActiveModal] = useState<ActiveModal>(null);
   const [emailMessage, setEmailMessage] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -57,45 +58,23 @@ export default function SettingsPage() {
   useEffect(() => {
     let cancelled = false;
 
-    void (async () => {
-      const cached = getProfile();
-      if (isProfileComplete(cached)) {
-        setEmail(cached.email);
-      }
-
-      const tasks: Promise<void>[] = [
-        apiFetch("/api/saves")
-          .then((r) => r.json())
-          .then((data) => {
-            if (!cancelled) setSaveCount(data.count ?? 0);
-          }),
-        fetchSeekerUnreadTotal().then((count) => {
-          if (!cancelled) setUnreadChatCount(count);
+    void Promise.all([
+      apiFetch("/api/saves")
+        .then((r) => r.json())
+        .then((data) => {
+          if (!cancelled) setSaveCount(data.count ?? 0);
         }),
-      ];
-
-      if (!isProfileComplete(cached)) {
-        tasks.push(
-          apiFetch("/api/profile")
-            .then((r) => r.json())
-            .then((data) => {
-              if (cancelled || !data.profile) return;
-              saveProfile(data.profile);
-              setEmail(data.profile.email);
-            })
-        );
-      }
-
-      await Promise.all(tasks);
-      if (!cancelled) setLoading(false);
-    })();
+      fetchSeekerUnreadTotal().then((count) => {
+        if (!cancelled) setUnreadChatCount(count);
+      }),
+    ]);
 
     return () => {
       cancelled = true;
     };
   }, []);
 
-  if (loading) {
+  if (!ready) {
     return (
       <AppPage>
         <AppHeader title="設定" backHref="/profile" />
@@ -237,7 +216,6 @@ export default function SettingsPage() {
                 if (res.ok) {
                   const data = await res.json();
                   if (data.profile) saveProfile(data.profile);
-                  setEmail(data.profile?.email ?? values.email.trim());
                   setEmailMessage("メールアドレスを更新しました");
                   setTimeout(closeModal, 1200);
                 } else {

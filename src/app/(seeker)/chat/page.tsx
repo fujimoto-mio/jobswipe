@@ -12,6 +12,7 @@ import { AppHeader, AppPage } from "@/components/ui/AppShell";
 import EmptyState from "@/components/ui/EmptyState";
 import LoadingSpinner, { PageLoading } from "@/components/ui/LoadingSpinner";
 import { markSeekerChatRead, prefetchChatMessages } from "@/lib/chat-unread";
+import { useSeekerUser } from "@/components/seeker/SeekerUserProvider";
 import type { ChatMessage, ChatThread } from "@/lib/types";
 
 function syncChatUrl(applicationId: string | null) {
@@ -30,6 +31,8 @@ function SeekerChatContent() {
   const [saveCount, setSaveCount] = useState(0);
   const [unreadTotal, setUnreadTotal] = useState(0);
   const [initialLoading, setInitialLoading] = useState(true);
+  const { profile: seekerProfile } = useSeekerUser();
+  const seekerAvatarUrl = seekerProfile?.avatarUrl ?? null;
 
   const refreshThreads = useCallback(async () => {
     const [chatRes, savesRes] = await Promise.all([
@@ -170,6 +173,7 @@ function SeekerChatContent() {
           applicationId={selectedThread.application.id}
           sender="seeker"
           seekerName={selectedThread.application.applicantName}
+          seekerAvatarUrl={seekerAvatarUrl}
           companyName={selectedThread.job.company}
           companyStaffName={selectedThread.companyStaff?.name}
           companyStaffAvatarUrl={selectedThread.companyStaff?.avatarUrl}
