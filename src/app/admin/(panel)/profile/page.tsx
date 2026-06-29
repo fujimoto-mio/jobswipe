@@ -1,8 +1,5 @@
-import type { Metadata } from "next";
-import AdminProfilePage from "@/components/admin/AdminProfilePage";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "プロフィール",
-};
-
-export default AdminProfilePage;
+export default function AdminProfileRedirectPage() {
+  redirect("/admin/settings");
+}

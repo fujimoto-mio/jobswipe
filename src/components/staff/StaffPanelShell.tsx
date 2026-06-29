@@ -16,6 +16,7 @@ import {
   X,
   Building2,
   Users,
+  Settings,
 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import Logo from "@/components/ui/Logo";
@@ -94,6 +95,9 @@ export default function StaffPanelShell({ children }: StaffPanelShellProps) {
     router.refresh();
   };
 
+  const accountMenuHref = role === "admin" ? `${basePath}/settings` : `${basePath}/profile`;
+  const accountMenuLabel = role === "admin" ? "設定" : "プロフィール";
+
   const nav: NavItem[] =
     role === "admin"
       ? [
@@ -101,7 +105,7 @@ export default function StaffPanelShell({ children }: StaffPanelShellProps) {
           { href: `${basePath}/companies`, label: "企業管理", icon: Building2 },
           { href: `${basePath}/seekers`, label: "求職者管理", icon: Users },
           { href: `${basePath}/jobs`, label: "求人審査", icon: ShieldCheck },
-          { href: `${basePath}/profile`, label: "プロフィール", icon: User },
+          { href: `${basePath}/settings`, label: "設定", icon: Settings },
         ]
       : [
           { href: basePath, label: "ダッシュボード", icon: LayoutDashboard },
@@ -211,7 +215,11 @@ export default function StaffPanelShell({ children }: StaffPanelShellProps) {
         <header className="staff-desktop-header page-header hidden shrink-0 md:block">
           <div className="staff-ui flex h-14 items-center justify-between px-6">
             <p className="text-sm font-bold text-slate-900">{pageTitle}</p>
-            <StaffAccountMenu profileHref={`${basePath}/profile`} onLogout={handleLogout} />
+            <StaffAccountMenu
+              accountHref={accountMenuHref}
+              accountLabel={accountMenuLabel}
+              onLogout={handleLogout}
+            />
           </div>
         </header>
 
@@ -227,7 +235,11 @@ export default function StaffPanelShell({ children }: StaffPanelShellProps) {
               <Menu className="h-5 w-5" />
             </button>
             <p className="min-w-0 flex-1 truncate text-sm font-bold text-slate-900">{pageTitle}</p>
-            <StaffAccountMenu profileHref={`${basePath}/profile`} onLogout={handleLogout} />
+            <StaffAccountMenu
+              accountHref={accountMenuHref}
+              accountLabel={accountMenuLabel}
+              onLogout={handleLogout}
+            />
           </div>
         </header>
 

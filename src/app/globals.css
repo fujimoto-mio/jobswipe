@@ -1958,10 +1958,6 @@ body {
   .company-dashboard-sections .company-profile-section:nth-child(2) .company-dashboard-metric-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
-
-  .admin-dashboard-page .company-dashboard-sections .company-profile-section:nth-child(2) .company-dashboard-metric-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
 }
 
 .company-dashboard-metric {
@@ -2041,6 +2037,48 @@ body {
   margin-top: 0.125rem;
   font-size: 0.75rem;
   color: #64748b;
+}
+
+@keyframes dashboard-skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.dashboard-summary-skeleton-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+  padding: 1.25rem 1rem;
+  text-align: center;
+}
+
+.dashboard-summary-skeleton-value {
+  height: 2rem;
+  margin-inline: auto;
+  border-radius: 0.625rem;
+  background: linear-gradient(
+    90deg,
+    #eef2f6 0%,
+    #e2e8f0 35%,
+    #f8fafc 50%,
+    #e2e8f0 65%,
+    #eef2f6 100%
+  );
+  background-size: 200% 100%;
+  animation: dashboard-skeleton-shimmer 1.8s ease-in-out infinite;
+}
+
+.dashboard-summary-skeleton-label {
+  margin-top: 0.625rem;
+  font-size: 0.875rem;
+  color: #94a3b8;
 }
 
 .company-dashboard-section-header-row {

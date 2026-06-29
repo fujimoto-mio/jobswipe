@@ -698,7 +698,7 @@ export async function getAdminStats(companyId?: string | null) {
   const applicationWhere = companyId ? { job: { companyId } } : {};
   const savedWhere = companyId ? { job: { companyId } } : {};
 
-  const [totalJobs, approvedJobs, pendingJobs, videoViews, savedCount, applicationCount, pendingApplications, interviewCount, hiredCount, companyCount, activeChatCount] =
+  const [totalJobs, approvedJobs, pendingJobs, videoViews, savedCount, applicationCount, pendingApplications, interviewCount, hiredCount, companyCount, seekerCount, activeChatCount] =
     await Promise.all([
       prisma.job.count({ where: jobWhere }),
       prisma.job.count({ where: approvedJobWhere }),
@@ -712,6 +712,7 @@ export async function getAdminStats(companyId?: string | null) {
       }),
       prisma.application.count({ where: { ...applicationWhere, status: "hired" } }),
       companyId ? Promise.resolve(0) : prisma.company.count(),
+      companyId ? Promise.resolve(0) : prisma.seekerProfile.count(),
       prisma.application.count({
         where: {
           ...applicationWhere,
@@ -733,6 +734,7 @@ export async function getAdminStats(companyId?: string | null) {
     interviewRate: applicationCount ? Math.round((interviewCount / applicationCount) * 100) : 0,
     hireRate: interviewCount ? Math.round((hiredCount / interviewCount) * 100) : 0,
     companyCount,
+    seekerCount,
     activeChatCount,
   };
 }
