@@ -4,7 +4,9 @@ import { companyLinkFormValues, companyLinksFromForm } from "@/lib/company-links
 import { prisma } from "@/lib/prisma";
 import { getCompanyLogoUrl, isGeneratedCompanyLogo } from "@/lib/job-image";
 
-function staffProfileResponse(account: {
+import { resolveStaffMediaFields } from "@/lib/storage/resolve-media";
+
+async function staffProfileResponse(account: {
   role: string;
   companyId: string | null;
   email: string;
@@ -23,7 +25,7 @@ function staffProfileResponse(account: {
   } | null;
 }) {
   const linkFields = companyLinkFormValues(account.company?.links);
-  return {
+  return resolveStaffMediaFields({
     role: account.role,
     companyId: account.companyId,
     companyName: account.company?.name ?? null,
@@ -40,7 +42,7 @@ function staffProfileResponse(account: {
     email: account.email,
     name: account.name,
     avatarUrl: account.avatarUrl,
-  };
+  });
 }
 
 export async function GET() {
@@ -56,7 +58,7 @@ export async function GET() {
     return NextResponse.json({ error: "Account not found" }, { status: 404 });
   }
 
-  return NextResponse.json(staffProfileResponse(account));
+  return NextResponse.json(await staffProfileResponse(account));
 }
 
 type StaffProfilePatchBody = {
@@ -178,7 +180,7 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ error: "Account not found" }, { status: 404 });
       }
 
-      return NextResponse.json({ success: true, ...staffProfileResponse(account) });
+      return NextResponse.json({ success: true, ...(await staffProfileResponse(account)) });
     }
 
     const account = await prisma.account.update({
@@ -190,7 +192,7 @@ export async function PATCH(request: Request) {
       include: { company: true },
     });
 
-    return NextResponse.json({ success: true, ...staffProfileResponse(account) });
+    return NextResponse.json({ success: true, ...(await staffProfileResponse(account)) });
   } catch (error) {
     console.error("[PATCH /api/admin/me]", error);
     const message = error instanceof Error ? error.message : "Invalid JSON body";

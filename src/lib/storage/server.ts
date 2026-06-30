@@ -1,23 +1,23 @@
-import { createSupabaseServiceClient } from "@/lib/supabase/server";
+import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { Upload } from "@aws-sdk/lib-storage";
 import {
+  MULTIPART_UPLOAD_THRESHOLD_BYTES,
   STORAGE_BUCKETS,
   UPLOAD_KIND_CONFIG,
+  buildStorageKey,
   type StorageBucket,
   type UploadKind,
 } from "@/lib/storage/constants";
+import {
+  getMissingR2EnvVars,
+  getR2Client,
+  getR2Config,
+  resolveBucketName,
+} from "@/lib/storage/r2-client";
+import { buildStorageRef, parseStorageObjectRef } from "@/lib/storage/urls";
 import { resolveUploadContentType, validateResolvedUpload } from "@/lib/upload/validation";
 
 export { resolveUploadContentType, SUPPORTED_IMAGE_MIMES } from "@/lib/upload/validation";
-
-function sanitizeFilename(filename: string): string {
-  return filename.replace(/[^a-zA-Z0-9._-]/g, "_");
-}
-
-function buildObjectPath(folder: string, filename: string, userId?: string): string {
-  const safe = sanitizeFilename(filename);
-  const prefix = userId ? `${folder}/${userId}` : folder;
-  return `${prefix}/${Date.now()}-${safe}`;
-}
 
 export function validateUploadFile(
   kind: UploadKind,
@@ -29,38 +29,68 @@ export function validateUploadFile(
   return { ok: true };
 }
 
+function cacheControlFor(contentType: string): string {
+  if (contentType.startsWith("video/")) return "public, max-age=31536000, immutable";
+  if (contentType.startsWith("image/")) return "public, max-age=86400";
+  return "private, max-age=3600";
+}
+
+async function putObject(
+  client: NonNullable<ReturnType<typeof getR2Client>>,
+  bucketName: string,
+  path: string,
+  payload: Buffer,
+  contentType: string
+): Promise<void> {
+  const params = {
+    Bucket: bucketName,
+    Key: path,
+    Body: payload,
+    ContentType: contentType,
+    CacheControl: cacheControlFor(contentType),
+  };
+
+  if (payload.byteLength >= MULTIPART_UPLOAD_THRESHOLD_BYTES) {
+    const upload = new Upload({
+      client,
+      params,
+      queueSize: 4,
+      partSize: MULTIPART_UPLOAD_THRESHOLD_BYTES,
+      leavePartsOnError: false,
+    });
+    await upload.done();
+    return;
+  }
+
+  await client.send(new PutObjectCommand(params));
+}
+
 export async function uploadToStorage(
   bucket: StorageBucket,
   path: string,
   body: Buffer | ArrayBuffer,
-  contentType: string,
-  options?: { upsert?: boolean }
+  contentType: string
 ): Promise<string> {
-  const supabase = createSupabaseServiceClient();
-  if (!supabase) {
-    throw new Error("Supabase Storage is not configured");
+  const config = getR2Config();
+  const client = getR2Client();
+  if (!config || !client) {
+    const missing = getMissingR2EnvVars();
+    throw new Error(
+      missing.length
+        ? `Cloudflare R2 is not configured (missing: ${missing.join(", ")})`
+        : "Cloudflare R2 is not configured"
+    );
   }
 
-  const { error } = await supabase.storage.from(bucket).upload(path, body, {
-    contentType,
-    upsert: options?.upsert ?? true,
-  });
+  const bucketName = resolveBucketName(bucket, config);
+  const payload =
+    body instanceof Buffer
+      ? body
+      : Buffer.from(body instanceof ArrayBuffer ? new Uint8Array(body) : body);
 
-  if (error) throw new Error(error.message);
+  await putObject(client, bucketName, path, payload, contentType);
 
-  const config = Object.values(UPLOAD_KIND_CONFIG).find((c) => c.bucket === bucket);
-  if (config?.public === false) {
-    const { data, error: signError } = await supabase.storage
-      .from(bucket)
-      .createSignedUrl(path, 60 * 60 * 24 * 365);
-    if (signError || !data?.signedUrl) {
-      throw new Error(signError?.message ?? "Signed URL generation failed");
-    }
-    return data.signedUrl;
-  }
-
-  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-  return data.publicUrl;
+  return buildStorageRef(bucketName, path);
 }
 
 export async function uploadByKind(
@@ -73,32 +103,25 @@ export async function uploadByKind(
   const validation = validateUploadFile(kind, contentType, file.byteLength);
   if (!validation.ok) throw new Error(validation.message);
 
-  const config = UPLOAD_KIND_CONFIG[kind];
-  const path = buildObjectPath(config.folder, filename, options?.userId);
-  return uploadToStorage(config.bucket, path, file, contentType);
-}
-
-export async function getSignedStorageUrl(
-  bucket: StorageBucket,
-  path: string,
-  expiresInSeconds = 3600
-): Promise<string> {
-  const supabase = createSupabaseServiceClient();
-  if (!supabase) throw new Error("Supabase Storage is not configured");
-
-  const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, expiresInSeconds);
-  if (error || !data?.signedUrl) {
-    throw new Error(error?.message ?? "Signed URL generation failed");
-  }
-  return data.signedUrl;
+  const kindConfig = UPLOAD_KIND_CONFIG[kind];
+  const path = buildStorageKey(kindConfig.folder, filename, options?.userId);
+  return uploadToStorage(kindConfig.bucket, path, file, contentType);
 }
 
 export async function deleteFromStorage(bucket: StorageBucket, path: string): Promise<void> {
-  const supabase = createSupabaseServiceClient();
-  if (!supabase) throw new Error("Supabase Storage is not configured");
+  const config = getR2Config();
+  const client = getR2Client();
+  if (!config || !client) {
+    const missing = getMissingR2EnvVars();
+    throw new Error(
+      missing.length
+        ? `Cloudflare R2 is not configured (missing: ${missing.join(", ")})`
+        : "Cloudflare R2 is not configured"
+    );
+  }
 
-  const { error } = await supabase.storage.from(bucket).remove([path]);
-  if (error) throw new Error(error.message);
+  const bucketName = resolveBucketName(bucket, config);
+  await client.send(new DeleteObjectCommand({ Bucket: bucketName, Key: path }));
 }
 
 /** @deprecated Use uploadByKind("video", ...) */
@@ -119,6 +142,13 @@ export async function uploadThumbnail(
   return uploadByKind("thumbnail", file, filename, contentType);
 }
 
+export function isStorageUrl(url: string): boolean {
+  if (!url) return false;
+  if (parseStorageObjectRef(url)) return true;
+  return isSupabaseStorageUrl(url);
+}
+
+/** @deprecated Use isStorageUrl — kept for legacy Supabase URLs in the database */
 export function isSupabaseStorageUrl(url: string): boolean {
   if (!url) return false;
   try {
@@ -130,9 +160,19 @@ export function isSupabaseStorageUrl(url: string): boolean {
 }
 
 export function getStorageBucketFromUrl(url: string): StorageBucket | null {
-  if (!isSupabaseStorageUrl(url)) return null;
-  for (const bucket of Object.values(STORAGE_BUCKETS)) {
-    if (url.includes(`/${bucket}/`)) return bucket;
+  const ref = parseStorageObjectRef(url);
+  if (ref) return ref.bucket;
+
+  if (isSupabaseStorageUrl(url)) {
+    if (url.includes("/resumes/") || url.includes(`/${STORAGE_BUCKETS.private}/`)) {
+      return STORAGE_BUCKETS.private;
+    }
+    return STORAGE_BUCKETS.public;
   }
+
   return null;
+}
+
+export function getStorageObjectKeyFromUrl(url: string): string | null {
+  return parseStorageObjectRef(url)?.key ?? null;
 }

@@ -2,6 +2,7 @@ import type { Job as PrismaJob, Company, Application as PrismaApplication, ChatM
 import { birthdayToInputValue } from "@/lib/birthday";
 import { asStringArray as parseNonEmptyStrings, asWorkHistory, asSkills } from "@/lib/profile-fields";
 import { getCompanyLogoUrl } from "@/lib/job-image";
+import { resolveAvatarUrl, resolveJobMedia, resolveSeekerProfileMedia } from "@/lib/storage/resolve-media";
 import { resolveJobLinks } from "@/lib/company-links";
 import { formatDateISOJST, serializeTimestamp } from "@/lib/datetime";
 import type {
@@ -83,6 +84,25 @@ export function mapChatMessage(row: PrismaChatMessage): ChatMessage {
     content: row.content,
     createdAt: serializeTimestamp(row.createdAt),
   };
+}
+
+export async function mapJobResolved(row: JobWithCompany): Promise<Job> {
+  return resolveJobMedia(mapJob(row));
+}
+
+export async function mapChatMessageResolved(row: PrismaChatMessage): Promise<ChatMessage> {
+  const message = mapChatMessage(row);
+  const senderAvatarUrl = await resolveAvatarUrl(message.senderAvatarUrl);
+  return {
+    ...message,
+    senderAvatarUrl: senderAvatarUrl ?? message.senderAvatarUrl,
+  };
+}
+
+export async function mapSeekerProfileResolved(
+  row: Parameters<typeof mapSeekerProfile>[0]
+): Promise<UserProfile & { id: string }> {
+  return resolveSeekerProfileMedia(mapSeekerProfile(row));
 }
 
 export function mapSeekerProfile(row: {

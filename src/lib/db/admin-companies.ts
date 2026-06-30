@@ -1,6 +1,7 @@
 import { CompanyStatus as PrismaCompanyStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { mapJob } from "@/lib/db/mappers";
+import { mapJobResolved } from "@/lib/db/mappers";
+import { resolveStorageReadUrl } from "@/lib/storage/resolve-media";
 import { formatDateISOJST } from "@/lib/datetime";
 import { COMPANY_STATUSES, type CompanyStatus } from "@/lib/constants";
 
@@ -71,15 +72,17 @@ export async function queryAdminCompanies(query: AdminCompaniesQuery) {
     }),
   ]);
 
-  const items: AdminCompanyRow[] = rows.map((row) => ({
-    id: row.id,
-    name: row.name,
-    logoUrl: row.logoUrl,
-    jobCount: row._count.jobs,
-    accountCount: row._count.accounts,
-    status: row.status as CompanyStatus,
-    createdAt: formatDateISOJST(row.createdAt),
-  }));
+  const items: AdminCompanyRow[] = await Promise.all(
+    rows.map(async (row) => ({
+      id: row.id,
+      name: row.name,
+      logoUrl: (await resolveStorageReadUrl(row.logoUrl)) ?? row.logoUrl,
+      jobCount: row._count.jobs,
+      accountCount: row._count.accounts,
+      status: row.status as CompanyStatus,
+      createdAt: formatDateISOJST(row.createdAt),
+    }))
+  );
 
   return { items, total };
 }
@@ -100,7 +103,7 @@ export type AdminCompanyDetail = {
   accountCount: number;
   applicationCount: number;
   accounts: { id: string; name: string | null; email: string }[];
-  recentJobs: ReturnType<typeof mapJob>[];
+  recentJobs: Awaited<ReturnType<typeof mapJobResolved>>[];
 };
 
 export async function getAdminCompanyDetail(companyId: string): Promise<AdminCompanyDetail | null> {
@@ -129,8 +132,8 @@ export async function getAdminCompanyDetail(companyId: string): Promise<AdminCom
   return {
     id: company.id,
     name: company.name,
-    logoUrl: company.logoUrl,
-    bannerUrl: company.bannerUrl,
+    logoUrl: (await resolveStorageReadUrl(company.logoUrl)) ?? company.logoUrl,
+    bannerUrl: (await resolveStorageReadUrl(company.bannerUrl)) ?? company.bannerUrl,
     description: company.description,
     website: company.website,
     postalCode: company.postalCode,
@@ -142,6 +145,6 @@ export async function getAdminCompanyDetail(companyId: string): Promise<AdminCom
     accountCount: company._count.accounts,
     applicationCount,
     accounts: company.accounts,
-    recentJobs: company.jobs.map(mapJob),
+    recentJobs: await Promise.all(company.jobs.map(mapJobResolved)),
   };
 }

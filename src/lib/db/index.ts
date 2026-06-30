@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { JobApprovalStatus as PrismaJobApprovalStatus, Prisma, SeekerStatus } from "@prisma/client";
-import { mapApplication, mapChatMessage, mapJob, mapSeekerProfile } from "@/lib/db/mappers";
+import { mapApplication, mapChatMessageResolved, mapJobResolved, mapSeekerProfileResolved } from "@/lib/db/mappers";
 import { fetchSavedApplyMessages, resolveApplicationMessage } from "@/lib/db/saved-job-message";
 import { now } from "@/lib/datetime";
 import { parseBirthday } from "@/lib/birthday";
@@ -18,6 +18,7 @@ import type {
   UserProfile,
   ApplicationWithSeeker,
 } from "@/lib/types";
+import { resolveAvatarUrl } from "@/lib/storage/resolve-media";
 import { sendMatchNotificationEmail } from "@/lib/email";
 
 const jobInclude = { company: true } as const;
@@ -35,12 +36,12 @@ export async function getAllJobs(filters?: JobFilters, includeUnapproved = false
     orderBy: { postedAt: "desc" },
   });
 
-  return rows.map(mapJob);
+  return Promise.all(rows.map(mapJobResolved));
 }
 
 export async function getJobById(id: string): Promise<Job | null> {
   const row = await prisma.job.findUnique({ where: { id }, include: jobInclude });
-  return row ? mapJob(row) : null;
+  return row ? mapJobResolved(row) : null;
 }
 
 export async function incrementJobView(id: string): Promise<void> {
@@ -81,7 +82,7 @@ export async function createJob(
     include: jobInclude,
   });
 
-  return mapJob(row);
+  return mapJobResolved(row);
 }
 
 export async function updateJobApproval(id: string, status: JobApprovalStatus): Promise<Job | null> {
@@ -94,7 +95,7 @@ export async function updateJobApproval(id: string, status: JobApprovalStatus): 
       },
       include: jobInclude,
     });
-    return mapJob(row);
+    return mapJobResolved(row);
   } catch {
     return null;
   }
@@ -148,7 +149,7 @@ export async function updateJob(
       },
       include: jobInclude,
     });
-    return mapJob(row);
+    return mapJobResolved(row);
   } catch {
     return null;
   }
@@ -163,7 +164,7 @@ export async function getJobsForStaff(companyId?: string | null, includeUnapprov
     include: jobInclude,
     orderBy: { postedAt: "desc" },
   });
-  return rows.map(mapJob);
+  return Promise.all(rows.map(mapJobResolved));
 }
 
 export async function getApplicationWithSeeker(id: string): Promise<ApplicationWithSeeker | null> {
@@ -178,7 +179,7 @@ export async function getApplicationWithSeeker(id: string): Promise<ApplicationW
   return {
     ...mapApplication(row),
     message: resolveApplicationMessage(row.seekerId, row.jobId, row.message, savedMessages),
-    seeker: row.seeker ? mapSeekerProfile(row.seeker) : undefined,
+    seeker: row.seeker ? await mapSeekerProfileResolved(row.seeker) : undefined,
   };
 }
 
@@ -189,10 +190,12 @@ export async function getApplicationsForStaff(companyId?: string | null): Promis
     orderBy: { createdAt: "desc" },
   });
 
-  return rows.map((row) => ({
-    ...mapApplication(row),
-    seeker: row.seeker ? mapSeekerProfile(row.seeker) : undefined,
-  }));
+  return Promise.all(
+    rows.map(async (row) => ({
+      ...mapApplication(row),
+      seeker: row.seeker ? await mapSeekerProfileResolved(row.seeker) : undefined,
+    }))
+  );
 }
 
 export async function deleteJob(id: string, companyId?: string | null): Promise<boolean> {
@@ -246,7 +249,7 @@ export async function getSavedJobs(seekerId: string): Promise<Job[]> {
     orderBy: { createdAt: "desc" },
   });
 
-  return rows.map((r) => mapJob(r.job));
+  return Promise.all(rows.map((r) => mapJobResolved(r.job)));
 }
 
 async function upsertSavedJobApplyMessage(
@@ -328,7 +331,7 @@ export async function upsertSeekerProfile(
         where: { id: byAuth.id },
         data,
       });
-      return mapSeekerProfile(row);
+      return mapSeekerProfileResolved(row);
     }
   }
 
@@ -345,7 +348,7 @@ export async function upsertSeekerProfile(
           ...(supabaseUserId ? { supabaseUserId } : {}),
         },
       });
-      return mapSeekerProfile(row);
+      return mapSeekerProfileResolved(row);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       if (message.includes("Record to update not found")) {
@@ -377,7 +380,7 @@ export async function upsertSeekerProfile(
     },
   });
 
-  return mapSeekerProfile(row);
+  return mapSeekerProfileResolved(row);
 }
 
 export async function updateSeekerProfileMedia(
@@ -398,7 +401,7 @@ export async function updateSeekerProfileMedia(
 
   try {
     const row = await prisma.seekerProfile.update({ where: { id: seekerId }, data });
-    return mapSeekerProfile(row);
+    return mapSeekerProfileResolved(row);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     if (!message.includes("Unknown argument")) throw err;
@@ -420,13 +423,13 @@ export async function updateSeekerProfileMedia(
 
     const row = await prisma.seekerProfile.findUnique({ where: { id: seekerId } });
     if (!row) throw new Error("Seeker profile not found");
-    return mapSeekerProfile(row);
+    return mapSeekerProfileResolved(row);
   }
 }
 
 export async function getSeekerProfile(id: string): Promise<(UserProfile & { id: string }) | null> {
   const row = await prisma.seekerProfile.findUnique({ where: { id } });
-  return row ? mapSeekerProfile(row) : null;
+  return row ? mapSeekerProfileResolved(row) : null;
 }
 
 export async function createApplication(
@@ -592,7 +595,7 @@ export async function addChatMessage(
     });
   }
 
-  return mapChatMessage(row);
+  return mapChatMessageResolved(row);
 }
 
 export async function getChatMessages(applicationId: string): Promise<ChatMessage[]> {
@@ -600,7 +603,7 @@ export async function getChatMessages(applicationId: string): Promise<ChatMessag
     where: { applicationId },
     orderBy: { createdAt: "asc" },
   });
-  return rows.map(mapChatMessage);
+  return Promise.all(rows.map(mapChatMessageResolved));
 }
 
 export async function markSeekerChatRead(
@@ -686,7 +689,17 @@ async function getCompanyStaffMap(companyIds: string[]) {
       avatarUrl: row.avatarUrl,
     });
   }
-  return map;
+
+  const entries = await Promise.all(
+    [...map.entries()].map(async ([companyId, staff]) => [
+      companyId,
+      {
+        ...staff,
+        avatarUrl: (await resolveAvatarUrl(staff.avatarUrl)) ?? staff.avatarUrl,
+      },
+    ] as const)
+  );
+  return new Map(entries);
 }
 
 export async function getChatThreadsForSeeker(seekerId: string): Promise<
@@ -705,13 +718,15 @@ export async function getChatThreadsForSeeker(seekerId: string): Promise<
 
   const staffMap = await getCompanyStaffMap([...new Set(apps.map((app) => app.job.companyId))]);
 
-  const threads = apps.map((app) => ({
-    application: mapApplication(app),
-    job: mapJob(app.job),
-    companyStaff: staffMap.get(app.job.companyId),
-    lastMessage: app.messages[0] ? mapChatMessage(app.messages[0]) : undefined,
-    unreadCount: unreadMap.get(app.id) ?? 0,
-  }));
+  const threads = await Promise.all(
+    apps.map(async (app) => ({
+      application: mapApplication(app),
+      job: await mapJobResolved(app.job),
+      companyStaff: staffMap.get(app.job.companyId),
+      lastMessage: app.messages[0] ? await mapChatMessageResolved(app.messages[0]) : undefined,
+      unreadCount: unreadMap.get(app.id) ?? 0,
+    }))
+  );
 
   threads.sort((a, b) => {
     const aTime = a.lastMessage?.createdAt ?? a.application.createdAt;
@@ -735,14 +750,16 @@ export async function getChatThreadsForStaff(
     orderBy: { updatedAt: "desc" },
   });
 
-  return rows.map((row) => ({
-    application: {
-      ...mapApplication(row),
-      seeker: row.seeker ? mapSeekerProfile(row.seeker) : undefined,
-    },
-    job: mapJob(row.job),
-    lastMessage: row.messages[0] ? mapChatMessage(row.messages[0]) : undefined,
-  }));
+  return Promise.all(
+    rows.map(async (row) => ({
+      application: {
+        ...mapApplication(row),
+        seeker: row.seeker ? await mapSeekerProfileResolved(row.seeker) : undefined,
+      },
+      job: await mapJobResolved(row.job),
+      lastMessage: row.messages[0] ? await mapChatMessageResolved(row.messages[0]) : undefined,
+    }))
+  );
 }
 
 export async function getAdminStats(companyId?: string | null) {

@@ -1,6 +1,6 @@
 import { SeekerStatus as PrismaSeekerStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { mapSeekerProfile } from "@/lib/db/mappers";
+import { mapSeekerProfileResolved } from "@/lib/db/mappers";
 import { formatDateISOJST } from "@/lib/datetime";
 import { SEEKER_STATUSES, type SeekerStatus } from "@/lib/constants";
 
@@ -104,7 +104,7 @@ export async function getAdminSeekerDetail(seekerId: string) {
   if (!row) return null;
 
   return {
-    profile: mapSeekerProfile(row),
+    profile: await mapSeekerProfileResolved(row),
     status: row.status as SeekerStatus,
     createdAt: formatDateISOJST(row.createdAt),
     applicationCount: row._count.applications,

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { JobApprovalStatus as PrismaJobApprovalStatus } from "@prisma/client";
-import { mapJob } from "@/lib/db/mappers";
+import { mapJobResolved } from "@/lib/db/mappers";
 import type { Job, JobApprovalStatus } from "@/lib/types";
 
 const jobInclude = { company: true } as const;
@@ -88,7 +88,7 @@ export async function queryStaffJobs(query: StaffJobsQuery): Promise<PaginatedJo
   ]);
 
   return {
-    items: rows.map(mapJob),
+    items: await Promise.all(rows.map(mapJobResolved)),
     total,
     page,
     pageSize,

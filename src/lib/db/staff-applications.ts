@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { JobApprovalStatus as PrismaJobApprovalStatus } from "@prisma/client";
-import { mapApplication, mapJob, mapSeekerProfile } from "@/lib/db/mappers";
+import { mapApplication, mapJobResolved, mapSeekerProfileResolved } from "@/lib/db/mappers";
 import { fetchSavedApplyMessages, resolveApplicationMessage } from "@/lib/db/saved-job-message";
 import type {
   ApplicationStatus,
@@ -127,11 +127,13 @@ export async function getApplicationsForJob(
     rows.map((row) => ({ seekerId: row.seekerId, jobId: row.jobId }))
   );
 
-  return rows.map((row) => ({
-    ...mapApplication(row),
-    message: resolveApplicationMessage(row.seekerId, row.jobId, row.message, savedMessages),
-    seeker: row.seeker ? mapSeekerProfile(row.seeker) : undefined,
-  }));
+  return Promise.all(
+    rows.map(async (row) => ({
+      ...mapApplication(row),
+      message: resolveApplicationMessage(row.seekerId, row.jobId, row.message, savedMessages),
+      seeker: row.seeker ? await mapSeekerProfileResolved(row.seeker) : undefined,
+    }))
+  );
 }
 
 export async function queryStaffApplications(
@@ -164,12 +166,14 @@ export async function queryStaffApplications(
   );
 
   return {
-    items: rows.map((row) => ({
-      ...mapApplication(row, { title: row.job.title, company: row.job.company }),
-      message: resolveApplicationMessage(row.seekerId, row.jobId, row.message, savedMessages),
-      seeker: row.seeker ? mapSeekerProfile(row.seeker) : undefined,
-      job: mapJob(row.job),
-    })),
+    items: await Promise.all(
+      rows.map(async (row) => ({
+        ...mapApplication(row, { title: row.job.title, company: row.job.company }),
+        message: resolveApplicationMessage(row.seekerId, row.jobId, row.message, savedMessages),
+        seeker: row.seeker ? await mapSeekerProfileResolved(row.seeker) : undefined,
+        job: await mapJobResolved(row.job),
+      }))
+    ),
     total,
     page,
     pageSize,
@@ -214,11 +218,13 @@ export async function queryStaffApplicationJobs(
   ]);
 
   return {
-    items: rows.map((row) => ({
-      jobId: row.id,
-      job: mapJob(row),
-      applicantCount: row._count.applications,
-    })),
+    items: await Promise.all(
+      rows.map(async (row) => ({
+        jobId: row.id,
+        job: await mapJobResolved(row),
+        applicantCount: row._count.applications,
+      }))
+    ),
     total,
     page,
     pageSize,

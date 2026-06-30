@@ -2,7 +2,7 @@ import { cache } from "react";
 import { NextResponse } from "next/server";
 import { SeekerStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { mapSeekerProfile } from "@/lib/db/mappers";
+import { mapSeekerProfileResolved } from "@/lib/db/mappers";
 import { getSupabaseUser } from "@/lib/auth/supabase-user";
 import type { UserProfile } from "@/lib/types";
 
@@ -37,7 +37,7 @@ export const getSeekerSession = cache(async (): Promise<SeekerSession | null> =>
   return {
     authUserId: user.id,
     seekerId: row.id,
-    profile: mapSeekerProfile(row),
+    profile: await mapSeekerProfileResolved(row),
   };
 });
 

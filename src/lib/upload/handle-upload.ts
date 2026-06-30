@@ -47,8 +47,11 @@ function mapUploadErrorMessage(message: string): string {
   if (lower.includes("payload too large") || lower.includes("maximum allowed size")) {
     return "ファイルサイズが大きすぎます";
   }
-  if (lower.includes("bucket not found")) {
+  if (lower.includes("bucket not found") || lower.includes("nosuchbucket")) {
     return "ストレージの設定が完了していません";
+  }
+  if (lower.includes("cloudflare r2 is not configured")) {
+    return "ストレージの設定が完了していません（.env の R2 設定を確認してください）";
   }
   return message;
 }

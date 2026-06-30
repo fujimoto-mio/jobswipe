@@ -1,6 +1,6 @@
 import { JobApprovalStatus as PrismaJobApprovalStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { mapJob } from "@/lib/db/mappers";
+import { mapJobResolved } from "@/lib/db/mappers";
 import type { Job } from "@/lib/types";
 
 const savedJobInclude = {
@@ -77,7 +77,7 @@ export async function querySavedJobs(query: SavedJobsQuery): Promise<{
   ]);
 
   return {
-    items: rows.map((row) => mapJob(row.job)),
+    items: await Promise.all(rows.map((row) => mapJobResolved(row.job))),
     total,
     count,
   };
