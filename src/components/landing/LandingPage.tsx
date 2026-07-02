@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { getYearJST } from "@/lib/datetime";
 import Logo from "@/components/ui/Logo";
+import LandingHeader, { scrollToSection } from "@/components/landing/LandingHeader";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const FEATURES = [
@@ -42,13 +43,6 @@ const STEPS = [
 
 const SECTION_IDS = ["features", "flow", "company"] as const;
 
-function scrollToSection(id: string) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.scrollIntoView({ behavior: "smooth", block: "start" });
-  window.history.replaceState(null, "", `#${id}`);
-}
-
 export default function LandingPage() {
   const router = useRouter();
 
@@ -76,56 +70,7 @@ export default function LandingPage() {
 
   return (
     <div className="w-full bg-[var(--background)] text-[var(--foreground)]">
-      <header className="border-b border-[var(--border)] bg-white">
-        <div className="mx-auto flex h-14 w-full max-w-7xl items-center gap-2 px-4 sm:h-16 sm:gap-4 sm:px-6 lg:px-8">
-          <Link href="/" className="shrink-0">
-            <Logo inTopbar />
-          </Link>
-          <nav className="flex flex-1 items-center justify-center gap-4 text-sm font-medium text-[var(--body)] sm:gap-8">
-            {[
-              { id: "features", label: "特徴" },
-              { id: "flow", label: "使い方" },
-              { id: "company", label: "企業の方へ", short: "企業" },
-            ].map(({ id, label, short }) => (
-              <a
-                key={id}
-                href={`#${id}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  scrollToSection(id);
-                }}
-                className="whitespace-nowrap transition-colors hover:text-[var(--accent)]"
-              >
-                {short ? (
-                  <>
-                    <span className="sm:hidden">{short}</span>
-                    <span className="hidden sm:inline">{label}</span>
-                  </>
-                ) : (
-                  label
-                )}
-              </a>
-            ))}
-          </nav>
-          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-            <Link
-              href="/company/login"
-              className="hidden text-sm font-medium text-[var(--body)] hover:text-[var(--accent)] sm:inline"
-            >
-              企業ログイン
-            </Link>
-            <Link
-              href="/login"
-              className="hidden text-sm font-medium text-[var(--body)] hover:text-[var(--accent)] md:inline"
-            >
-              ログイン
-            </Link>
-            <Link href="/register" className="btn-primary px-4 py-2 text-sm sm:px-5">
-              無料で始める
-            </Link>
-          </div>
-        </div>
-      </header>
+      <LandingHeader onLandingPage />
 
       <section className="relative flex min-h-[calc(100dvh-3.5rem)] w-full items-center border-b border-[var(--border)] bg-white sm:min-h-[calc(100dvh-4rem)]">
         <div className="relative mx-auto grid w-full max-w-7xl gap-12 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-2 lg:items-center lg:gap-16 lg:px-8 lg:py-20">
