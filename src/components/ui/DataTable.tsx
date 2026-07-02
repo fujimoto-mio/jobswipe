@@ -194,11 +194,11 @@ export default function DataTable<T>({
               ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody aria-busy={loading}>
             {loading ? (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-16">
-                  <LoadingSpinner message="データを読み込み中..." />
+                <td colSpan={columns.length} className="data-table-loading-cell">
+                  <LoadingSpinner message="データを読み込み中..." staff={staffStyle} />
                 </td>
               </tr>
             ) : pageData.length === 0 ? (

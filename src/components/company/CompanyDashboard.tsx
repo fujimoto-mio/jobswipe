@@ -15,7 +15,6 @@ import {
   UserCheck,
   ChevronRight,
 } from "lucide-react";
-import { PageLoading } from "@/components/ui/LoadingSpinner";
 import { apiFetch } from "@/lib/api-client";
 import { APPLICATION_STATUS_LABELS } from "@/lib/constants";
 import { formatTimeJST } from "@/lib/datetime";
@@ -47,20 +46,54 @@ type MetricItem = {
   suffix?: string;
 };
 
-function DashboardMetricGrid({ items }: { items: MetricItem[] }) {
+function DashboardMetricCard({
+  label,
+  value,
+  icon: Icon,
+  suffix = "",
+  loading = false,
+  delay = 0,
+}: {
+  label: string;
+  value: number;
+  icon: typeof Eye;
+  suffix?: string;
+  loading?: boolean;
+  delay?: number;
+}) {
   return (
-    <div className="company-dashboard-metric-grid">
-      {items.map(({ label, value, icon: Icon, suffix = "" }) => (
-        <div key={label} className="company-dashboard-metric">
-          <div className="company-dashboard-metric-icon">
-            <Icon className="h-4 w-4" />
-          </div>
-          <p className="company-dashboard-metric-value">
-            {value.toLocaleString()}
-            {suffix}
-          </p>
-          <p className="company-dashboard-metric-label">{label}</p>
-        </div>
+    <div className="company-dashboard-metric">
+      <div className="company-dashboard-metric-icon">
+        <Icon className="h-4 w-4" />
+      </div>
+      {loading ? (
+        <div
+          className="dashboard-skeleton-line dashboard-skeleton-line--metric"
+          style={{ animationDelay: `${delay}ms` }}
+          aria-hidden
+        />
+      ) : (
+        <p className="company-dashboard-metric-value">
+          {value.toLocaleString()}
+          {suffix}
+        </p>
+      )}
+      <p className="company-dashboard-metric-label">{label}</p>
+    </div>
+  );
+}
+
+function DashboardMetricGrid({
+  items,
+  loading = false,
+}: {
+  items: MetricItem[];
+  loading?: boolean;
+}) {
+  return (
+    <div className="company-dashboard-metric-grid" aria-busy={loading}>
+      {items.map((item, index) => (
+        <DashboardMetricCard key={item.label} {...item} loading={loading} delay={index * 90} />
       ))}
     </div>
   );
@@ -71,63 +104,76 @@ function DashboardQuickAction({
   title,
   description,
   icon: Icon,
+  descriptionLoading = false,
 }: {
   href: string;
   title: string;
   description: string;
   icon: typeof Plus;
+  descriptionLoading?: boolean;
 }) {
   return (
-    <Link href={href} className="company-dashboard-action-row">
+    <Link href={href} className="company-dashboard-action-row" aria-busy={descriptionLoading}>
       <div className="company-dashboard-action-icon">
         <Icon className="h-4 w-4" />
       </div>
       <div className="min-w-0 flex-1">
         <p className="company-dashboard-action-title">{title}</p>
-        <p className="company-dashboard-action-desc">{description}</p>
+        {descriptionLoading ? (
+          <div className="dashboard-skeleton-line dashboard-skeleton-line--desc" aria-hidden />
+        ) : (
+          <p className="company-dashboard-action-desc">{description}</p>
+        )}
       </div>
       <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
     </Link>
   );
 }
 
+function DashboardChatListSkeleton({ rows = 3 }: { rows?: number }) {
+  return (
+    <ul className="company-dashboard-chat-list" aria-busy="true" aria-label="チャットを読み込み中">
+      {Array.from({ length: rows }, (_, index) => (
+        <li key={index} className="company-dashboard-chat-row company-dashboard-chat-row--skeleton">
+          <div
+            className="dashboard-skeleton-line dashboard-skeleton-line--chat"
+            style={{ animationDelay: `${index * 100}ms` }}
+            aria-hidden
+          />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export default function CompanyDashboard() {
   const [stats, setStats] = useState<CompanyStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [threads, setThreads] = useState<Thread[]>([]);
+  const [threadsLoading, setThreadsLoading] = useState(true);
   const [companyName, setCompanyName] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      apiFetch("/api/admin/stats").then((r) => r.json()),
-      apiFetch("/api/chat").then((r) => r.json()),
-      apiFetch("/api/admin/me").then((r) => r.json()),
-    ])
-      .then(([statsData, chatData, meData]) => {
-        setStats(statsData);
-        setThreads((chatData.threads ?? []).slice(0, 5));
-        setCompanyName(meData.companyName ?? "");
-      })
-      .finally(() => setLoading(false));
+    apiFetch("/api/admin/stats")
+      .then((r) => r.json())
+      .then(setStats)
+      .finally(() => setStatsLoading(false));
   }, []);
 
-  const pageHeader = (
-    <div className="mb-8">
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900">採用ダッシュボード</h1>
-      <p className="mt-1 text-sm text-slate-500">
-        {companyName ? `${companyName} · ` : ""}求人・応募・求職者とのチャット
-      </p>
-    </div>
-  );
+  useEffect(() => {
+    apiFetch("/api/chat")
+      .then((r) => r.json())
+      .then((data) => setThreads((data.threads ?? []).slice(0, 5)))
+      .finally(() => setThreadsLoading(false));
+  }, []);
 
-  if (loading) {
-    return (
-      <>
-        {pageHeader}
-        <PageLoading message="データを読み込み中..." minHeight="min-h-[360px]" />
-      </>
-    );
-  }
+  useEffect(() => {
+    apiFetch("/api/admin/me")
+      .then((r) => r.json())
+      .then((data) => setCompanyName(data.companyName ?? ""))
+      .finally(() => setProfileLoading(false));
+  }, []);
 
   const kpiCards: MetricItem[] = [
     { label: "動画再生数", value: stats?.videoViews ?? 0, icon: Eye },
@@ -146,7 +192,21 @@ export default function CompanyDashboard() {
 
   return (
     <div className="company-dashboard-page">
-      {pageHeader}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">採用ダッシュボード</h1>
+        <p className="mt-1 text-sm text-slate-500">
+          {profileLoading ? (
+            <>
+              <span className="dashboard-skeleton-line dashboard-skeleton-line--subtitle" aria-hidden />
+              <span> · 求人・応募・求職者とのチャット</span>
+            </>
+          ) : companyName ? (
+            `${companyName} · 求人・応募・求職者とのチャット`
+          ) : (
+            "求人・応募・求職者とのチャット"
+          )}
+        </p>
+      </div>
 
       <div className="company-dashboard-sections">
         <section className="company-profile-section">
@@ -154,7 +214,7 @@ export default function CompanyDashboard() {
             <h2 className="company-profile-section-title">採用KPI</h2>
           </div>
           <div className="company-profile-section-body">
-            <DashboardMetricGrid items={kpiCards} />
+            <DashboardMetricGrid items={kpiCards} loading={statsLoading} />
           </div>
         </section>
 
@@ -163,7 +223,7 @@ export default function CompanyDashboard() {
             <h2 className="company-profile-section-title">運用状況</h2>
           </div>
           <div className="company-profile-section-body">
-            <DashboardMetricGrid items={opsCards} />
+            <DashboardMetricGrid items={opsCards} loading={statsLoading} />
           </div>
         </section>
 
@@ -184,6 +244,7 @@ export default function CompanyDashboard() {
                 title="応募管理"
                 description={`未対応 ${stats?.pendingApplications ?? 0}件`}
                 icon={FileText}
+                descriptionLoading={statsLoading}
               />
               <DashboardQuickAction
                 href="/company/chat"
@@ -204,7 +265,9 @@ export default function CompanyDashboard() {
             </Link>
           </div>
           <div className="company-profile-section-body company-profile-section-body--flush">
-            {threads.length === 0 ? (
+            {threadsLoading ? (
+              <DashboardChatListSkeleton />
+            ) : threads.length === 0 ? (
               <p className="company-profile-text company-profile-text--muted px-4 py-6 text-center">
                 応募があると、ここに求職者とのチャットが表示されます
               </p>

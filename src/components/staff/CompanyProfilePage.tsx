@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import CompanyLogo from "@/components/chat/CompanyLogo";
 import StaffAvatar from "@/components/chat/StaffAvatar";
-import { PageLoading } from "@/components/ui/LoadingSpinner";
+import CompanyProfilePageSkeleton from "@/components/staff/CompanyProfilePageSkeleton";
 import { FormTextInput, FormTextarea } from "@/components/form/FormFields";
 import { useStaffPanel } from "@/components/staff/StaffPanelContext";
 import { apiFetch } from "@/lib/api-client";
@@ -188,13 +188,13 @@ export default function CompanyProfilePage() {
 
   if (loading || !profile) {
     return (
-      <>
+      <div className="company-profile-page">
         <div className="mb-8">
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">プロフィール</h1>
           <p className="mt-1 text-sm text-slate-500">求職者に表示される企業紹介ページ</p>
         </div>
-        <PageLoading message="プロフィールを読み込み中..." minHeight="min-h-[320px]" />
-      </>
+        <CompanyProfilePageSkeleton />
+      </div>
     );
   }
 

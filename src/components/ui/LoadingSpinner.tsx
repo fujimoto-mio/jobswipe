@@ -3,6 +3,8 @@ type LoadingSpinnerProps = {
   message?: string;
   className?: string;
   dark?: boolean;
+  /** Staff panel (admin/company) teal accent */
+  staff?: boolean;
 };
 
 const sizeClass = {
@@ -22,9 +24,14 @@ export default function LoadingSpinner({
   message,
   className = "",
   dark = false,
+  staff = false,
 }: LoadingSpinnerProps) {
   return (
-    <div className={`loading-spinner flex flex-col items-center justify-center gap-3 ${className}`}>
+    <div
+      className={`loading-spinner flex flex-col items-center justify-center gap-3 ${
+        staff ? "loading-spinner--staff" : ""
+      } ${className}`}
+    >
       <div
         className={`loading-spinner-default animate-spin rounded-full border-solid ${sizeClass[size]} ${
           dark
@@ -62,14 +69,16 @@ export function PageLoading({
   message = "読み込み中...",
   minHeight = "min-h-[240px]",
   dark = false,
+  staff = false,
 }: {
   message?: string;
   minHeight?: string;
   dark?: boolean;
+  staff?: boolean;
 }) {
   return (
     <div className={`flex ${minHeight} items-center justify-center`}>
-      <LoadingSpinner size="lg" message={message} dark={dark} />
+      <LoadingSpinner size="lg" message={message} dark={dark} staff={staff} />
     </div>
   );
 }

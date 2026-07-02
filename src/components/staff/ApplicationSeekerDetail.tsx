@@ -21,12 +21,12 @@ export const APPLICATION_STATUS_CHIP_COLORS: Record<ApplicationStatus, string> =
   rejected: "badge-red",
 };
 
-const APPLICATION_STATUS_PILL_COLORS: Record<ApplicationStatus, string> = {
-  new: "bg-amber-50 text-amber-700",
-  scheduling: "bg-blue-50 text-blue-700",
-  interview_done: "bg-violet-50 text-violet-700",
-  hired: "bg-emerald-50 text-emerald-700",
-  rejected: "bg-red-50 text-red-600",
+const APPLICATION_STATUS_PILL_CLASS: Record<ApplicationStatus, string> = {
+  new: "application-seeker-status-pill--new",
+  scheduling: "application-seeker-status-pill--scheduling",
+  interview_done: "application-seeker-status-pill--interview",
+  hired: "application-seeker-status-pill--hired",
+  rejected: "application-seeker-status-pill--rejected",
 };
 
 export const APPLICATION_STATUSES: ApplicationStatus[] = [
@@ -123,7 +123,7 @@ function ApplicationSeekerHero({
         {showMeta && (
           <div className="application-seeker-meta">
             <span
-              className={`application-seeker-status-pill ${APPLICATION_STATUS_PILL_COLORS[application.status]}`}
+              className={`application-seeker-status-pill ${APPLICATION_STATUS_PILL_CLASS[application.status]}`}
             >
               {APPLICATION_STATUS_LABELS[application.status]}
             </span>

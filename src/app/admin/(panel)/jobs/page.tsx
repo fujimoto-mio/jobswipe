@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import JobApprovalConfirmModal from "@/components/admin/JobApprovalConfirmModal";
+import JobDeleteConfirmModal from "@/components/staff/JobDeleteConfirmModal";
 import JobThumbnail from "@/components/JobThumbnail";
 import PaginatedDataTable, {
   type ColumnDef,
@@ -73,6 +74,7 @@ export default function AdminJobsPage() {
     job: Job;
     action: Extract<JobApprovalStatus, "Active" | "Cancelled">;
   } | null>(null);
+  const [pendingDeleteJob, setPendingDeleteJob] = useState<Job | null>(null);
 
   const refetch = useCallback(async () => {
     await tableRef.current?.refetch();
@@ -89,13 +91,18 @@ export default function AdminJobsPage() {
     await refetch();
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("この求人を削除しますか？")) return;
-    await apiFetch("/api/admin/jobs", {
+  const deleteJob = async (id: string) => {
+    const res = await apiFetch("/api/admin/jobs", {
       method: "DELETE",
       body: JSON.stringify({ id }),
     });
+    if (!res.ok) throw new Error("delete failed");
     await refetch();
+  };
+
+  const handleConfirmDeleteJob = async () => {
+    if (!pendingDeleteJob) return;
+    await deleteJob(pendingDeleteJob.id);
   };
 
   const columns: ColumnDef<Job>[] = [
@@ -203,7 +210,7 @@ export default function AdminJobsPage() {
             {job.approvalStatus !== "Active" && (
               <>
                 <TableEditLink href={`${basePath}/jobs/${job.id}/edit`} />
-                <TableDeleteButton onClick={() => handleDelete(job.id)} />
+                <TableDeleteButton onClick={() => setPendingDeleteJob(job)} />
               </>
             )}
           </TableRowActions>
@@ -287,6 +294,14 @@ export default function AdminJobsPage() {
             onConfirm={() =>
               updateApproval(pendingApproval.job.id, pendingApproval.action)
             }
+          />
+        )}
+        {pendingDeleteJob && (
+          <JobDeleteConfirmModal
+            key={pendingDeleteJob.id}
+            job={pendingDeleteJob}
+            onClose={() => setPendingDeleteJob(null)}
+            onConfirm={handleConfirmDeleteJob}
           />
         )}
       </AnimatePresence>

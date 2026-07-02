@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Send } from "lucide-react";
+import { Send, MessageCircle } from "lucide-react";
 import LoadingSpinner, { ButtonSpinner } from "@/components/ui/LoadingSpinner";
 import { apiFetch, invalidateApiCache } from "@/lib/api-client";
 import { useChatRealtime } from "@/hooks/useChatRealtime";
@@ -19,6 +19,8 @@ type ApplicationChatViewProps = {
   companyStaffAvatarUrl?: string | null;
   emptyHint?: string;
   className?: string;
+  /** Staff panel (company/admin) teal theme for bubbles and composer */
+  staffStyle?: boolean;
   /** When set, skips fetch and uses parent cache (instant thread switch). */
   messages?: ChatMessage[];
   loading?: boolean;
@@ -188,6 +190,7 @@ export default function ApplicationChatView({
   companyStaffAvatarUrl,
   emptyHint = "メッセージを送信して会話を始めましょう",
   className = "",
+  staffStyle = false,
   messages: controlledMessages,
   loading: controlledLoading,
   onMessagesChange,
@@ -258,15 +261,26 @@ export default function ApplicationChatView({
 
   return (
     <div className={`flex min-h-0 flex-1 flex-col ${className}`}>
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-slate-50 px-4 py-4">
+      <div
+        className={`company-chat-messages flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-4 ${
+          staffStyle ? "company-chat-messages--staff" : "bg-slate-50"
+        }`}
+      >
         {loading ? (
           <div className="flex flex-1 items-center justify-center">
-            <LoadingSpinner message="メッセージを読み込み中..." />
+            <LoadingSpinner message="メッセージを読み込み中..." staff={staffStyle} />
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center px-2">
-            <p className="text-center text-sm text-slate-400 md:whitespace-nowrap">{emptyHint}</p>
-          </div>
+          staffStyle ? (
+            <div className="company-chat-empty">
+              <MessageCircle className="company-chat-empty-icon" strokeWidth={1.75} aria-hidden />
+              <p>{emptyHint}</p>
+            </div>
+          ) : (
+            <div className="flex flex-1 items-center justify-center px-2">
+              <p className="text-center text-sm text-slate-400 md:whitespace-nowrap">{emptyHint}</p>
+            </div>
+          )
         ) : (
           <>
             {messages.map((msg) => {
@@ -307,7 +321,7 @@ export default function ApplicationChatView({
         )}
       </div>
 
-      <div className="border-t border-slate-200 bg-white px-4 py-3">
+      <div className={`chat-composer-footer border-t bg-white px-4 py-3 ${staffStyle ? "chat-composer-footer--staff" : "border-slate-200"}`}>
         <ChatComposer
           applicationId={applicationId}
           sender={sender}

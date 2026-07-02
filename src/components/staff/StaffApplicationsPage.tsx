@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { APPLICATION_STATUS_LABELS, JOB_APPROVAL_BADGE_CLASS, JOB_APPROVAL_LABELS, JOB_APPROVAL_STATUSES } from "@/lib/constants";
 import { useStaffPanel } from "@/components/staff/StaffPanelContext";
@@ -22,6 +23,7 @@ import {
 import { usePaginatedTable } from "@/hooks/usePaginatedTable";
 import JobThumbnail from "@/components/JobThumbnail";
 import FormSelectPicker from "@/components/form/FormSelectPicker";
+import JobDeleteConfirmModal from "@/components/staff/JobDeleteConfirmModal";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
 import { apiFetch } from "@/lib/api-client";
 import type { ApplicationStatus, ApplicationWithSeeker, Job, JobApprovalStatus, SeekerProfileDetail } from "@/lib/types";
@@ -245,6 +247,7 @@ export default function StaffApplicationsPage() {
   const [jobApplications, setJobApplications] = useState<ApplicationWithSeeker[]>([]);
   const [jobApplicationsLoading, setJobApplicationsLoading] = useState(false);
   const [expandedApplicationId, setExpandedApplicationId] = useState<string | null>(null);
+  const [pendingDeleteJob, setPendingDeleteJob] = useState<Job | null>(null);
 
   const table = usePaginatedTable<JobApplicationGroupRow | StaffApplicationRow>({
     fetchUrl: "/api/admin/applications",
@@ -314,18 +317,23 @@ export default function StaffApplicationsPage() {
     }
   };
 
-  const handleDeleteJob = async (jobId: string) => {
-    if (!confirm("この求人を削除しますか？")) return;
-    await apiFetch("/api/admin/jobs", {
+  const deleteJob = async (jobId: string) => {
+    const res = await apiFetch("/api/admin/jobs", {
       method: "DELETE",
       body: JSON.stringify({ id: jobId }),
     });
+    if (!res.ok) throw new Error("delete failed");
     if (selectedJobId === jobId) {
       setSelectedJobId(null);
       setSelectedJobMeta(null);
       setJobApplications([]);
     }
     await table.refetch();
+  };
+
+  const handleConfirmDeleteJob = async () => {
+    if (!pendingDeleteJob) return;
+    await deleteJob(pendingDeleteJob.id);
   };
 
   const companyColumns: ColumnDef<JobApplicationGroupRow>[] = [
@@ -382,7 +390,7 @@ export default function StaffApplicationsPage() {
           {group.job.approvalStatus !== "Active" && (
             <>
               <TableEditLink href={`${basePath}/jobs/${group.jobId}/edit`} />
-              <TableDeleteButton onClick={() => handleDeleteJob(group.jobId)} />
+              <TableDeleteButton onClick={() => setPendingDeleteJob(group.job)} />
             </>
           )}
         </TableRowActions>
@@ -475,22 +483,6 @@ export default function StaffApplicationsPage() {
         ? "求人がまだありません"
         : "応募はまだありません";
 
-  if (table.loading && table.items.length === 0) {
-    return (
-      <>
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            {isCompany ? "応募管理" : "応募一覧"}
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            {isCompany ? "選考ステータスの更新" : "プラットフォーム全体の応募モニタリング"}
-          </p>
-        </div>
-        <PageLoading message="応募データを読み込み中..." minHeight="min-h-[320px]" />
-      </>
-    );
-  }
-
   return (
     <>
       <div className="mb-8">
@@ -498,9 +490,11 @@ export default function StaffApplicationsPage() {
           {isCompany ? "応募管理" : "応募一覧"}
         </h1>
         <p className="mt-1 text-sm text-slate-500">
-          {isCompany
-            ? `${table.total}件の求人 · ${totalApplications}件の応募 — 求人を選択し、応募者をクリックして詳細を表示`
-            : `${table.total}件の応募`}
+          {table.loading && table.items.length === 0
+            ? "応募データを読み込み中..."
+            : isCompany
+              ? `${table.total}件の求人 · ${totalApplications}件の応募 — 求人を選択し、応募者をクリックして詳細を表示`
+              : `${table.total}件の応募`}
         </p>
       </div>
 
@@ -568,7 +562,7 @@ export default function StaffApplicationsPage() {
           </div>
 
           {jobApplicationsLoading ? (
-            <PageLoading message="応募者を読み込み中..." minHeight="min-h-[200px]" />
+            <PageLoading message="応募者を読み込み中..." minHeight="min-h-[200px]" staff />
           ) : jobApplications.length === 0 ? (
             <p className="rounded-xl border border-[var(--border)] bg-white px-4 py-8 text-center text-sm text-[var(--muted)]">
               この求人への応募はまだありません
@@ -605,6 +599,17 @@ export default function StaffApplicationsPage() {
           onUpdateStatus={updateStatus}
         />
       )}
+
+      <AnimatePresence>
+        {pendingDeleteJob && (
+          <JobDeleteConfirmModal
+            key={pendingDeleteJob.id}
+            job={pendingDeleteJob}
+            onClose={() => setPendingDeleteJob(null)}
+            onConfirm={handleConfirmDeleteJob}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }

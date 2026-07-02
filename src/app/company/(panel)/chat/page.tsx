@@ -7,7 +7,6 @@ import { AnimatePresence } from "framer-motion";
 import { ArrowLeft, Briefcase, ClipboardList, MessageCircle, User, Users } from "lucide-react";
 import ApplicationChatView from "@/components/chat/ApplicationChatView";
 import ChatColumnSearch from "@/components/chat/ChatColumnSearch";
-import CompanyLogo from "@/components/chat/CompanyLogo";
 import ColumnResizeHandle from "@/components/chat/ColumnResizeHandle";
 import ApplicationSeekerInfoModal from "@/components/staff/ApplicationSeekerInfoModal";
 import JobThumbnail from "@/components/JobThumbnail";
@@ -277,14 +276,14 @@ function CompanyChatContent() {
 
   return (
     <div className="company-chat-page flex min-h-0 w-full flex-1 flex-col">
-      <div className="mb-2 shrink-0 md:mb-3">
+      <div className="mb-6 shrink-0 md:mb-8">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">チャット</h1>
         <p className="mt-1 text-sm text-slate-500">求人を選び、応募者とメッセージのやり取り</p>
       </div>
 
       <div
         ref={panelRef}
-        className="card company-chat-panel company-chat-panel--resizable staff-ui flex min-h-0 flex-1 overflow-hidden"
+        className="company-chat-panel company-chat-panel--resizable staff-ui flex min-h-0 flex-1 overflow-hidden"
         style={
           {
             "--chat-jobs-percent": `${jobsPercent}%`,
@@ -294,7 +293,7 @@ function CompanyChatContent() {
       >
         {/* Jobs column */}
         <aside
-          className={`company-chat-column company-chat-column--jobs flex min-h-0 flex-col border-r border-slate-100 ${jobsColumnClass}`}
+          className={`company-chat-column company-chat-column--jobs flex min-h-0 flex-col ${jobsColumnClass}`}
         >
           <div className="chat-column-header">
             <div className="chat-column-header-top">
@@ -312,10 +311,10 @@ function CompanyChatContent() {
           <ul className="flex-1 overflow-y-auto">
             {loading ? (
               <li className="flex items-center justify-center py-12">
-                <PageLoading message="求人を読み込み中..." minHeight="min-h-[120px]" />
+                <PageLoading message="求人を読み込み中..." minHeight="min-h-[120px]" staff />
               </li>
             ) : filteredJobs.length === 0 ? (
-              <li className="px-4 py-8 text-center text-sm text-slate-400">条件に一致する求人がありません</li>
+              <li className="company-chat-empty company-chat-empty--inline">条件に一致する求人がありません</li>
             ) : (
               filteredJobs.map((group) => {
               const active = group.jobId === selectedJobId;
@@ -324,14 +323,14 @@ function CompanyChatContent() {
                   <button
                     type="button"
                     onClick={() => selectJob(group.jobId)}
-                    className={`flex w-full items-start gap-3 border-b border-slate-50 px-3 py-3 text-left transition ${
-                      active ? "bg-blue-50" : "hover:bg-slate-50"
-                    }`}
+                    className={`company-chat-list-item ${active ? "company-chat-list-item--active" : ""}`}
                   >
-                    <JobThumbnail job={group.job} className="h-11 w-11 shrink-0 rounded-lg object-cover" showLogoBadge={false} />
+                    <JobThumbnail job={group.job} className="company-chat-list-thumb" showLogoBadge={false} />
                     <div className="min-w-0 flex-1">
                       <p
-                        className={`chat-list-item-title text-sm ${active ? "font-semibold text-blue-900" : "font-medium text-slate-900"}`}
+                        className={`chat-list-item-title company-chat-list-item-title text-sm ${
+                          active ? "company-chat-list-item-title--active" : ""
+                        }`}
                         title={group.job.title}
                       >
                         {group.job.title}
@@ -356,7 +355,7 @@ function CompanyChatContent() {
 
         {/* Seekers column */}
         <aside
-          className={`company-chat-column company-chat-column--seekers flex min-h-0 flex-col border-r border-slate-100 ${seekersColumnClass}`}
+          className={`company-chat-column company-chat-column--seekers flex min-h-0 flex-col ${seekersColumnClass}`}
         >
           <div className="chat-column-header">
             <div className="chat-column-header-top">
@@ -386,15 +385,15 @@ function CompanyChatContent() {
           </div>
 
           {!selectedJobId ? (
-            <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 text-center text-sm text-slate-400">
-              <Briefcase className="h-8 w-8 text-slate-300" />
+            <div className="company-chat-empty">
+              <Briefcase className="company-chat-empty-icon" strokeWidth={1.75} aria-hidden />
               <p>左の求人を選択してください</p>
             </div>
           ) : applicationsLoading ? (
-            <PageLoading message="応募者を読み込み中..." minHeight="min-h-[240px]" />
+            <PageLoading message="応募者を読み込み中..." minHeight="min-h-[240px]" staff />
           ) : filteredApplications.length === 0 ? (
-            <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 text-center text-sm text-slate-400">
-              <User className="h-8 w-8 text-slate-300" />
+            <div className="company-chat-empty">
+              <User className="company-chat-empty-icon" strokeWidth={1.75} aria-hidden />
               <p>{applications.length === 0 ? "この求人への応募はまだありません" : "条件に一致する応募者がいません"}</p>
             </div>
           ) : (
@@ -404,27 +403,25 @@ function CompanyChatContent() {
                 return (
                   <li key={app.id}>
                     <div
-                      className={`flex items-center border-b border-slate-50 ${
-                        active ? "bg-blue-50" : "hover:bg-slate-50"
-                      }`}
+                      className={`company-chat-seeker-item ${active ? "company-chat-seeker-item--active" : ""}`}
                     >
                       <button
                         type="button"
                         onClick={() => selectApplication(app.id)}
                         title={app.applicantName}
-                        className="flex min-w-0 flex-1 items-center gap-2 px-3 py-2.5 text-left transition"
+                        className="company-chat-seeker-select"
                       >
                         <span
-                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                            active ? "bg-blue-600 text-white" : "bg-blue-100 text-blue-700"
+                          className={`company-chat-seeker-avatar ${
+                            active ? "company-chat-seeker-avatar--active" : ""
                           }`}
                           aria-hidden
                         >
                           {app.applicantName.charAt(0)}
                         </span>
                         <span
-                          className={`min-w-0 flex-1 truncate text-sm ${
-                            active ? "font-semibold text-blue-900" : "font-medium text-slate-900"
+                          className={`company-chat-seeker-name ${
+                            active ? "company-chat-seeker-name--active" : ""
                           }`}
                         >
                           {app.applicantName}
@@ -454,8 +451,8 @@ function CompanyChatContent() {
         >
           {selectedApplication && selectedJob ? (
             <div className="flex min-h-0 flex-1 flex-col">
-              <div className="shrink-0 border-b border-slate-100 px-4 py-3 md:hidden">
-                <div className="flex items-center gap-2">
+              <div className="company-chat-thread-bar shrink-0 md:hidden">
+                <div className="company-chat-thread-bar-inner">
                   <button
                     type="button"
                     onClick={clearApplicationSelection}
@@ -474,22 +471,6 @@ function CompanyChatContent() {
                   </div>
                 </div>
               </div>
-              <div className="hidden shrink-0 border-b border-slate-100 md:block">
-                <div className="flex items-start gap-3 px-4 py-3">
-                  <CompanyLogo
-                    company={selectedJob.job.company}
-                    logoUrl={staffProfile.companyLogoUrl ?? selectedJob.job.companyLogo}
-                    size="lg"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-base font-bold leading-snug text-slate-900">{selectedJob.job.title}</p>
-                    <p className="mt-0.5 text-sm text-slate-500">{selectedJob.job.company}</p>
-                    <p className="mt-1 text-sm font-medium text-slate-700">
-                      応募者: {selectedApplication.applicantName}
-                    </p>
-                  </div>
-                </div>
-              </div>
               <ApplicationChatView
                 key={selectedApplication.id}
                 applicationId={selectedApplication.id}
@@ -500,11 +481,12 @@ function CompanyChatContent() {
                 companyStaffAvatarUrl={staffProfile.avatarUrl}
                 emptyHint="求職者にメッセージを送って、選考や面談について連絡しましょう"
                 className="min-h-0 flex-1"
+                staffStyle
               />
             </div>
           ) : (
-            <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 text-center text-sm text-slate-400">
-              <MessageCircle className="h-8 w-8 text-slate-300" />
+            <div className="company-chat-empty">
+              <MessageCircle className="company-chat-empty-icon" strokeWidth={1.75} aria-hidden />
               <p>{selectedJobId ? "応募者を選択してチャットを開始" : "求人と応募者を選択してください"}</p>
             </div>
           )}
@@ -530,12 +512,12 @@ export default function CompanyChatPage() {
     <Suspense
       fallback={
         <div className="company-chat-page flex min-h-0 w-full flex-1 flex-col">
-          <div className="mb-2 shrink-0 md:mb-3">
+          <div className="mb-6 shrink-0 md:mb-8">
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">チャット</h1>
             <p className="mt-1 text-sm text-slate-500">求人を選び、応募者とメッセージのやり取り</p>
           </div>
-          <div className="card company-chat-panel staff-ui flex min-h-0 flex-1 overflow-hidden">
-            <PageLoading message="チャットを読み込み中..." minHeight="min-h-[480px]" />
+          <div className="company-chat-panel staff-ui flex min-h-0 flex-1 overflow-hidden">
+            <PageLoading message="チャットを読み込み中..." minHeight="min-h-[480px]" staff />
           </div>
         </div>
       }
