@@ -1,32 +1,44 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/ui/Logo";
-import { SUPPORT_EMAIL } from "@/lib/constants";
 
 export const NAV_ITEMS = [
-  { id: "top", label: "TOP" },
-  { id: "why", label: "なぜJobSwipe？" },
   { id: "plan", label: "プラン" },
-  { id: "case", label: "投稿事例" },
-  { id: "comparison", label: "比較" },
-  { id: "voice", label: "導入の声" },
   { id: "service", label: "サービス" },
   { id: "faq", label: "よくある質問" },
+  { id: "contact", label: "お問い合わせ" },
 ] as const;
 
-export const SECTION_IDS = NAV_ITEMS.map((item) => item.id);
+export const SECTION_IDS = [
+  "top",
+  "why",
+  "plan",
+  "case",
+  "comparison",
+  "voice",
+  "service",
+  "faq",
+  "contact",
+] as const;
+
+export const HEADER_SCROLL_OFFSET = 88;
+
+function smoothScrollTo(top: number) {
+  const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+  window.scrollTo({ top: Math.max(0, top), behavior });
+}
 
 export function scrollToSection(id: string) {
   if (id === "top") {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    smoothScrollTo(0);
     window.history.replaceState(null, "", "/");
     return;
   }
   const el = document.getElementById(id);
   if (!el) return;
-  el.scrollIntoView({ behavior: "smooth", block: "start" });
+  const top = el.getBoundingClientRect().top + window.scrollY - HEADER_SCROLL_OFFSET;
+  smoothScrollTo(top);
   window.history.replaceState(null, "", `#${id}`);
 }
 
@@ -35,98 +47,51 @@ type LandingHeaderProps = {
 };
 
 export default function LandingHeader({ onLandingPage = false }: LandingHeaderProps) {
-  const [drawerOpen, setDrawerOpen] = useState(false);
-
-  useEffect(() => {
-    document.body.style.overflow = drawerOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [drawerOpen]);
-
   const handleNav = (id: string) => {
-    setDrawerOpen(false);
-    if (onLandingPage) {
-      scrollToSection(id);
-    }
+    if (onLandingPage) scrollToSection(id);
   };
 
   return (
-    <>
-      <header className="lp-header">
-        <div className="lp-header__inner">
-          <Link href="/" className="lp-header__logo" onClick={() => handleNav("top")}>
-            <Logo inTopbar />
-          </Link>
+    <header className="lp-header">
+      <div className="lp-header__inner">
+        <Link
+          href="/"
+          className="lp-header__logo"
+          onClick={(e) => {
+            if (!onLandingPage) return;
+            e.preventDefault();
+            handleNav("top");
+          }}
+        >
+          <Logo inTopbar />
+        </Link>
 
-          <nav className="lp-header__nav-desktop hidden lg:flex flex-1 items-center justify-center gap-6 text-sm font-bold text-[var(--lp-text)]">
-            {NAV_ITEMS.map(({ id, label }) =>
-              onLandingPage ? (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => handleNav(id)}
-                  className="transition-colors hover:text-[var(--lp-teal)]"
-                >
-                  {label}
-                </button>
-              ) : (
-                <Link key={id} href={id === "top" ? "/" : `/#${id}`} className="transition-colors hover:text-[var(--lp-teal)]">
-                  {label}
-                </Link>
-              )
-            )}
-          </nav>
-
-          <div className="lp-header__actions">
-            <a href={`mailto:${SUPPORT_EMAIL}`} className="lp-header-btn lp-header-btn--text hidden md:inline-flex">
-              メールお問い合わせ
-              <span className="lp-header-btn__arrow" />
-            </a>
-            {onLandingPage ? (
-              <button type="button" onClick={() => handleNav("contact")} className="lp-header-btn hidden sm:inline-flex">
-                お問い合わせ
-                <span className="lp-header-btn__arrow" />
+        <nav className="lp-header__nav">
+          {NAV_ITEMS.map(({ id, label }) =>
+            onLandingPage ? (
+              <button key={id} type="button" onClick={() => handleNav(id)} className="lp-header-nav-link">
+                {label}
               </button>
             ) : (
-              <Link href="/#contact" className="lp-header-btn hidden sm:inline-flex">
-                お問い合わせ
-                <span className="lp-header-btn__arrow" />
+              <Link key={id} href={`/#${id}`} className="lp-header-nav-link">
+                {label}
               </Link>
-            )}
-            <button
-              type="button"
-              className={`lp-hamburger lg:hidden ${drawerOpen ? "is-open" : ""}`}
-              onClick={() => setDrawerOpen((v) => !v)}
-              aria-label="メニュー"
-            >
-              <span />
-              <span />
-              <span />
-            </button>
-          </div>
-        </div>
-      </header>
+            )
+          )}
+        </nav>
 
-      <div className={`lp-drawer lg:hidden ${drawerOpen ? "is-open" : ""}`} onClick={() => setDrawerOpen(false)}>
-        <div className="lp-drawer__panel" onClick={(e) => e.stopPropagation()}>
-          {NAV_ITEMS.map(({ id, label }) => (
-            <button key={id} type="button" className="lp-drawer__link w-full text-left" onClick={() => handleNav(id)}>
-              {label}
-              <span className="lp-drawer__link-arrow" />
-            </button>
-          ))}
-          <div className="px-6 pt-6 flex flex-col gap-3">
-            <a href={`mailto:${SUPPORT_EMAIL}`} className="lp-header-btn w-full justify-center">
-              メールお問い合わせ
-              <span className="lp-header-btn__arrow" />
-            </a>
-            <Link href="/register" className="lp-cta-btn w-full" onClick={() => setDrawerOpen(false)}>
-              無料で始める
-            </Link>
-          </div>
+        <div className="lp-header__actions">
+          <Link href="/company/login" className="lp-header-link lp-header-link--ghost">
+            企業ログイン
+          </Link>
+          <Link href="/login" className="lp-header-link">
+            ログイン
+          </Link>
+          <Link href="/register" className="lp-header-btn">
+            無料で始める
+          </Link>
         </div>
       </div>
-    </>
+    </header>
   );
 }

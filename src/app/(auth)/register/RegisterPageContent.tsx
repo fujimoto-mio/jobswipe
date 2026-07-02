@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Form, Formik } from "formik";
 import { Building2, ChevronLeft, ChevronRight, UserPlus, Users } from "lucide-react";
-import SeekerAuthShell from "@/components/auth/SeekerAuthShell";
+import LpAuthShell from "@/components/auth/LpAuthShell";
 import { FormPassword, FormTextInput } from "@/components/form/FormFields";
 import SeekerProfileFormFields from "@/components/form/SeekerProfileFormFields";
 import {
@@ -69,13 +69,13 @@ export default function RegisterPageContent() {
         : "1分で登録完了。応募時にプロフィールが自動入力されます";
 
   return (
-    <SeekerAuthShell
+    <LpAuthShell
       title="新規登録"
       subtitle={shellSubtitle}
       footer={
         <>
           すでにアカウントをお持ちの方は{" "}
-          <Link href={loginHref} className="font-semibold text-[var(--accent)] hover:underline">
+          <Link href={loginHref} className="lp-auth-link">
             ログイン
           </Link>
         </>
@@ -87,25 +87,15 @@ export default function RegisterPageContent() {
             const seekerStep = step === "seeker-1" ? 1 : 2;
             return (
               <div key={n} className="flex flex-1 items-center gap-2">
-                <div
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold transition ${
-                    seekerStep >= n
-                      ? "bg-[var(--accent)] text-white"
-                      : "bg-[var(--surface)] text-[var(--muted)] ring-1 ring-[var(--border)]"
-                  }`}
-                >
-                  {n}
-                </div>
+                <div className={`lp-auth-step ${seekerStep >= n ? "is-active" : "is-inactive"}`}>{n}</div>
                 <span
                   className={`hidden text-xs font-medium sm:block ${
-                    seekerStep >= n ? "text-[var(--foreground)]" : "text-[var(--muted)]"
+                    seekerStep >= n ? "text-[var(--lp-text)]" : "text-[var(--lp-muted)]"
                   }`}
                 >
                   {n === 1 ? "アカウント" : "プロフィール"}
                 </span>
-                {n === 1 && (
-                  <div className={`h-px flex-1 ${seekerStep > 1 ? "bg-[var(--accent)]" : "bg-[var(--border)]"}`} />
-                )}
+                {n === 1 && <div className={`lp-auth-step-line ${seekerStep > 1 ? "is-active" : ""}`} />}
               </div>
             );
           })}
@@ -120,38 +110,30 @@ export default function RegisterPageContent() {
 
       {step === "type" && (
         <div className="space-y-3">
-          <button
-            type="button"
-            onClick={() => selectAccountType("seeker")}
-            className="flex w-full items-start gap-4 rounded-xl border border-[var(--border)] bg-white p-4 text-left transition hover:border-[var(--accent)] hover:bg-[var(--accent-light)]/30"
-          >
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-light)] text-[var(--accent)]">
+          <button type="button" onClick={() => selectAccountType("seeker")} className="lp-auth-choice">
+            <div className="lp-auth-choice__icon">
               <Users className="h-6 w-6" />
             </div>
             <div>
-              <p className="font-semibold text-[var(--foreground)]">求職者として登録</p>
-              <p className="mt-1 text-sm text-[var(--muted)]">
+              <p className="font-semibold text-[var(--lp-text)]">求職者として登録</p>
+              <p className="mt-1 text-sm text-[var(--lp-muted)]">
                 求人動画の閲覧・応募・企業とのチャットができます
               </p>
             </div>
-            <ChevronRight className="ml-auto mt-3 h-5 w-5 shrink-0 text-[var(--muted)]" />
+            <ChevronRight className="ml-auto mt-3 h-5 w-5 shrink-0 text-[var(--lp-muted)]" />
           </button>
 
-          <button
-            type="button"
-            onClick={() => selectAccountType("company")}
-            className="flex w-full items-start gap-4 rounded-xl border border-[var(--border)] bg-white p-4 text-left transition hover:border-[var(--accent)] hover:bg-[var(--accent-light)]/30"
-          >
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+          <button type="button" onClick={() => selectAccountType("company")} className="lp-auth-choice">
+            <div className="lp-auth-choice__icon lp-auth-choice__icon--company">
               <Building2 className="h-6 w-6" />
             </div>
             <div>
-              <p className="font-semibold text-[var(--foreground)]">企業として登録</p>
-              <p className="mt-1 text-sm text-[var(--muted)]">
+              <p className="font-semibold text-[var(--lp-text)]">企業として登録</p>
+              <p className="mt-1 text-sm text-[var(--lp-muted)]">
                 求人の掲載・応募管理・求職者とのチャットができます
               </p>
             </div>
-            <ChevronRight className="ml-auto mt-3 h-5 w-5 shrink-0 text-[var(--muted)]" />
+            <ChevronRight className="ml-auto mt-3 h-5 w-5 shrink-0 text-[var(--lp-muted)]" />
           </button>
         </div>
       )}
@@ -173,7 +155,7 @@ export default function RegisterPageContent() {
                 setError("");
                 setStep("type");
               }}
-              className="flex items-center gap-1 text-sm font-medium text-[var(--muted)] hover:text-[var(--foreground)]"
+              className="lp-auth-back"
             >
               <ChevronLeft className="h-4 w-4" />
               登録タイプを選び直す
@@ -263,7 +245,7 @@ export default function RegisterPageContent() {
                     setError("");
                     setStep("seeker-1");
                   }}
-                  className="flex items-center gap-1 text-sm font-medium text-[var(--muted)] hover:text-[var(--foreground)]"
+                  className="lp-auth-back"
                 >
                   <ChevronLeft className="h-4 w-4" />
                   アカウント情報に戻る
@@ -274,7 +256,7 @@ export default function RegisterPageContent() {
 
               <input type="hidden" name="email" value={account.email} readOnly />
 
-              <p className="rounded-lg bg-[var(--surface)] px-3 py-2 text-xs leading-relaxed text-[var(--muted)]">
+              <p className="lp-auth-note">
                 登録情報は応募フォームに自動入力されます。送信前にいつでも編集できます。
               </p>
 
@@ -352,7 +334,7 @@ export default function RegisterPageContent() {
                   setError("");
                   setStep("type");
                 }}
-                className="flex items-center gap-1 text-sm font-medium text-[var(--muted)] hover:text-[var(--foreground)]"
+                className="lp-auth-back"
               >
                 <ChevronLeft className="h-4 w-4" />
                 登録タイプを選び直す
@@ -364,7 +346,7 @@ export default function RegisterPageContent() {
               <FormPassword name="password" label="パスワード" autoComplete="new-password" hint="8文字以上・英数字の組み合わせを推奨" />
               <FormPassword name="confirmPassword" label="パスワード（確認）" autoComplete="new-password" />
 
-              <p className="rounded-lg bg-[var(--surface)] px-3 py-2 text-xs leading-relaxed text-[var(--muted)]">
+              <p className="lp-auth-note">
                 登録後、管理画面から求人の作成・応募管理ができます。求人は管理者承認後に公開されます。
               </p>
 
@@ -378,6 +360,6 @@ export default function RegisterPageContent() {
           )}
         </Formik>
       )}
-    </SeekerAuthShell>
+    </LpAuthShell>
   );
 }

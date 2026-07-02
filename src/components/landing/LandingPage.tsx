@@ -108,9 +108,17 @@ export default function LandingPage() {
   }, [router]);
 
   useEffect(() => {
-    const hash = window.location.hash.replace("#", "");
-    if (!SECTION_IDS.includes(hash as (typeof SECTION_IDS)[number])) return;
-    requestAnimationFrame(() => scrollToSection(hash));
+    const scrollToHash = () => {
+      const hash = window.location.hash.replace("#", "");
+      if (!SECTION_IDS.includes(hash as (typeof SECTION_IDS)[number])) return;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => scrollToSection(hash));
+      });
+    };
+
+    scrollToHash();
+    window.addEventListener("hashchange", scrollToHash);
+    return () => window.removeEventListener("hashchange", scrollToHash);
   }, []);
 
   const logoSlides = [...PARTNER_LOGOS, ...PARTNER_LOGOS];

@@ -17,11 +17,16 @@ import {
   Building2,
   Users,
   Settings,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import Logo from "@/components/ui/Logo";
 import StaffAccountMenu from "@/components/staff/StaffAccountMenu";
+import StaffTopbarIcons from "@/components/staff/StaffTopbarIcons";
 import { useStaffPanel } from "@/components/staff/StaffPanelContext";
+
+const SIDEBAR_COLLAPSED_KEY = "jobswipe-staff-sidebar-collapsed";
 
 type StaffPanelShellProps = {
   children: React.ReactNode;
@@ -35,35 +40,34 @@ type NavItem = {
 
 function StaffSidebarContent({
   nav,
-  title,
-  role,
   isActive,
+  collapsed,
   onNavigate,
 }: {
   nav: NavItem[];
-  title: string;
-  role: "admin" | "company";
   isActive: (href: string) => boolean;
+  collapsed?: boolean;
   onNavigate?: () => void;
 }) {
   return (
     <>
       <div className="staff-sidebar-header">
-        <Logo size="sm" />
-        <p>
-          {title} · {role === "admin" ? "管理画面" : "企業パネル"}
-        </p>
+        <Link href="/" className="staff-sidebar-logo" onClick={onNavigate} aria-label="JobSwipe ホーム">
+          <Logo inTopbar showText={!collapsed} />
+        </Link>
       </div>
-      <nav className="staff-sidebar-nav">
+
+      <nav className="staff-sidebar-nav" aria-label="メインナビゲーション">
         {nav.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
             href={href}
             onClick={onNavigate}
+            title={collapsed ? label : undefined}
             className={`staff-nav-link ${isActive(href) ? "staff-nav-link-active" : ""}`}
           >
-            <Icon className="h-4 w-4 shrink-0" />
-            {label}
+            <Icon className="staff-nav-link-icon" aria-hidden />
+            <span className="staff-nav-link-label">{label}</span>
           </Link>
         ))}
       </nav>
@@ -74,19 +78,40 @@ function StaffSidebarContent({
 function StaffSidebarFooter({ onLogout }: { onLogout: () => void }) {
   return (
     <div className="staff-sidebar-footer">
-      <button type="button" onClick={onLogout} className="staff-logout-btn">
-        <LogOut className="h-4 w-4" />
-        ログアウト
+      <button type="button" onClick={onLogout} className="staff-logout-btn" title="ログアウト">
+        <LogOut className="h-4 w-4 shrink-0" />
+        <span className="staff-nav-link-label">ログアウト</span>
       </button>
     </div>
   );
 }
 
 export default function StaffPanelShell({ children }: StaffPanelShellProps) {
-  const { basePath, role, loginPath, title } = useStaffPanel();
+  const { basePath, role, loginPath } = useStaffPanel();
   const pathname = usePathname();
   const router = useRouter();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  useEffect(() => {
+    try {
+      setSidebarCollapsed(localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "1");
+    } catch {
+      setSidebarCollapsed(false);
+    }
+  }, []);
+
+  const toggleSidebarCollapsed = useCallback(() => {
+    setSidebarCollapsed((current) => {
+      const next = !current;
+      try {
+        localStorage.setItem(SIDEBAR_COLLAPSED_KEY, next ? "1" : "0");
+      } catch {
+        // ignore storage errors
+      }
+      return next;
+    });
+  }, []);
 
   const handleLogout = async () => {
     const supabase = createSupabaseBrowserClient();
@@ -152,12 +177,20 @@ export default function StaffPanelShell({ children }: StaffPanelShellProps) {
 
   return (
     <div
-      className={`staff-panel-shell staff-ui flex ${
-        isFullWidthPage ? "h-dvh max-h-dvh min-h-0 overflow-hidden" : "h-full min-h-screen overflow-y-auto"
-      }`}
+      className={`lp-root staff-panel-shell staff-ui flex ${
+        sidebarCollapsed ? "staff-panel-shell--sidebar-collapsed" : ""
+      } ${isFullWidthPage ? "h-dvh max-h-dvh min-h-0 overflow-hidden" : "h-full min-h-screen overflow-y-auto"}`}
     >
-      <aside className="staff-sidebar hidden w-60 shrink-0 flex-col md:flex">
-        <StaffSidebarContent nav={nav} title={title} role={role} isActive={isActive} />
+      <aside
+        className={`staff-sidebar hidden shrink-0 flex-col md:flex ${
+          sidebarCollapsed ? "staff-sidebar--collapsed" : ""
+        }`}
+      >
+        <StaffSidebarContent
+          nav={nav}
+          isActive={isActive}
+          collapsed={sidebarCollapsed}
+        />
         <StaffSidebarFooter onLogout={() => void handleLogout()} />
       </aside>
 
@@ -193,13 +226,7 @@ export default function StaffPanelShell({ children }: StaffPanelShellProps) {
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <StaffSidebarContent
-                nav={nav}
-                title={title}
-                role={role}
-                isActive={isActive}
-                onNavigate={closeMobileNav}
-              />
+              <StaffSidebarContent nav={nav} isActive={isActive} onNavigate={closeMobileNav} />
               <StaffSidebarFooter
                 onLogout={() => {
                   closeMobileNav();
@@ -213,18 +240,32 @@ export default function StaffPanelShell({ children }: StaffPanelShellProps) {
 
       <div className={`flex min-h-0 min-w-0 flex-1 flex-col ${isFullWidthPage ? "overflow-hidden" : ""}`}>
         <header className="staff-desktop-header page-header hidden shrink-0 md:block">
-          <div className="staff-ui flex h-14 items-center justify-between px-6">
-            <p className="text-sm font-bold text-slate-900">{pageTitle}</p>
-            <StaffAccountMenu
-              accountHref={accountMenuHref}
-              accountLabel={accountMenuLabel}
-              onLogout={handleLogout}
-            />
+          <div className="staff-header-bar staff-ui justify-between gap-4 px-6">
+            <div className="flex min-w-0 items-center gap-3">
+              <button
+                type="button"
+                onClick={toggleSidebarCollapsed}
+                className="staff-sidebar-toggle staff-sidebar-toggle--header"
+                aria-label={sidebarCollapsed ? "サイドバーを展開" : "サイドバーを折りたたむ"}
+                aria-expanded={!sidebarCollapsed}
+              >
+                {sidebarCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+              </button>
+              <p className="lp-staff-page-title truncate">{pageTitle}</p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <StaffTopbarIcons />
+              <StaffAccountMenu
+                accountHref={accountMenuHref}
+                accountLabel={accountMenuLabel}
+                onLogout={handleLogout}
+              />
+            </div>
           </div>
         </header>
 
         <header className="staff-mobile-header sticky top-0 z-50 shrink-0 md:hidden">
-          <div className="staff-ui flex h-14 items-center gap-3 px-4">
+          <div className="staff-header-bar staff-ui gap-3 px-4">
             <button
               type="button"
               onClick={() => setMobileNavOpen(true)}
@@ -234,12 +275,15 @@ export default function StaffPanelShell({ children }: StaffPanelShellProps) {
             >
               <Menu className="h-5 w-5" />
             </button>
-            <p className="min-w-0 flex-1 truncate text-sm font-bold text-slate-900">{pageTitle}</p>
-            <StaffAccountMenu
-              accountHref={accountMenuHref}
-              accountLabel={accountMenuLabel}
-              onLogout={handleLogout}
-            />
+            <p className="lp-staff-page-title min-w-0 flex-1 truncate">{pageTitle}</p>
+            <div className="flex shrink-0 items-center gap-1">
+              <StaffTopbarIcons />
+              <StaffAccountMenu
+                accountHref={accountMenuHref}
+                accountLabel={accountMenuLabel}
+                onLogout={handleLogout}
+              />
+            </div>
           </div>
         </header>
 
