@@ -23,13 +23,19 @@ type SeekerProfileFormFieldsProps = {
   showEmail?: boolean;
   emailReadOnly?: boolean;
   showCareerProfile?: boolean;
+  /** Register / auth: one field per row at full card width */
+  stackedLayout?: boolean;
 };
 
 export default function SeekerProfileFormFields({
   showEmail = false,
   emailReadOnly = true,
   showCareerProfile = false,
+  stackedLayout = false,
 }: SeekerProfileFormFieldsProps) {
+  const pairRowClass = stackedLayout
+    ? "profile-form-row profile-form-row-1"
+    : "profile-form-row profile-form-row-2";
   return (
     <div className="profile-form-fields">
       {showCareerProfile && (
@@ -54,15 +60,15 @@ export default function SeekerProfileFormFields({
 
           <div className="profile-form-section">
             <p className="profile-form-section-title">希望条件</p>
-            <div className="profile-form-row profile-form-row-2">
+            <div className={pairRowClass}>
               <FormSelect name="area" label="希望エリア" options={AREAS} />
               <FormSelect name="desiredJobType" label="希望職種" options={JOB_CATEGORIES} />
             </div>
-            <div className="profile-form-row profile-form-row-2">
+            <div className={pairRowClass}>
               <FormSelect name="employmentType" label="希望雇用形態" options={EMPLOYMENT_TYPES} />
               <FormSelect name="experience" label="社会人経験" options={EXPERIENCE_LEVELS} />
             </div>
-            <div className="profile-form-row profile-form-row-2">
+            <div className={pairRowClass}>
               <FormSelect name="desiredSalary" label="希望年収" options={SALARY_RANGES} placeholder="選択" />
               <FormSelect name="jobSearchIntent" label="転職意欲" options={JOB_SEARCH_INTENTS} placeholder="選択" />
             </div>
@@ -82,18 +88,16 @@ export default function SeekerProfileFormFields({
         {showCareerProfile && <p className="profile-form-section-title">登録情報</p>}
         <FormTextInput name="name" label="氏名" placeholder="山田 太郎" autoComplete="name" />
 
-        <div className="profile-form-row profile-form-row-2">
-          <FormSelect name="gender" label="性別" options={GENDERS} />
-          <FormBirthdayInput name="birthday" label="生年月日" />
-        </div>
+        <FormSelect name="gender" label="性別" options={GENDERS} />
+        <FormBirthdayInput name="birthday" label="生年月日" />
 
         {!showCareerProfile && (
           <>
-            <div className="profile-form-row profile-form-row-2">
+            <div className={pairRowClass}>
               <FormSelect name="area" label="希望エリア" options={AREAS} />
               <FormSelect name="desiredJobType" label="希望職種" options={JOB_CATEGORIES} />
             </div>
-            <div className="profile-form-row profile-form-row-2">
+            <div className={pairRowClass}>
               <FormSelect name="experience" label="社会人経験" options={EXPERIENCE_LEVELS} />
               <FormSelect name="employmentType" label="希望雇用形態" options={EMPLOYMENT_TYPES} />
             </div>

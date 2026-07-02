@@ -105,7 +105,7 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={() => setEditing(false)}
-              className="btn-ghost px-2 text-xs font-semibold text-slate-500"
+              className="btn-ghost px-2 text-xs font-semibold text-[rgba(22,24,35,0.55)]"
             >
               キャンセル
             </button>
@@ -123,14 +123,14 @@ export default function ProfilePage() {
         >
           {!editing && (
             <>
-              <div className="mt-4 w-full">
-                <div className="mb-1.5 flex items-center justify-between text-xs text-[#161823]/55">
+              <div className="profile-completion">
+                <div className="profile-completion-header">
                   <span>プロフィール完成度</span>
-                  <span className="font-bold text-[#161823]">{profileCompletion}%</span>
+                  <span className="profile-completion-value">{profileCompletion}%</span>
                 </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-[#161823]/10">
+                <div className="profile-completion-track">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#fe2c55] to-[#ff6b8a] transition-all duration-300"
+                    className="profile-completion-fill"
                     style={{ width: `${profileCompletion}%` }}
                   />
                 </div>
@@ -139,7 +139,7 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setEditing(true)}
-                className="btn-secondary mt-3.5 inline-flex w-full items-center justify-center gap-1.5 px-5 py-2.5 text-[13px] font-bold"
+                className="profile-edit-btn btn-secondary"
               >
                 <Pencil className="h-3.5 w-3.5" />
                 プロフィールを編集
@@ -190,12 +190,12 @@ export default function ProfilePage() {
                 }}
               >
                 {({ isSubmitting, submitForm, resetForm }) => (
-                  <Form className="profile-form">
-                    <SeekerProfileFormFields showEmail showCareerProfile emailReadOnly />
+                  <Form className="profile-form seeker-auth-form">
+                    <SeekerProfileFormFields showEmail showCareerProfile emailReadOnly stackedLayout />
                     {saveError ? (
-                      <p className="text-sm font-medium text-red-600">{saveError}</p>
+                      <p className="seeker-auth-alert seeker-auth-alert--error">{saveError}</p>
                     ) : null}
-                    <p className="profile-form-note text-xs text-slate-500">
+                    <p className="seeker-auth-note profile-form-note">
                       メールアドレスの変更はアカウント設定から行ってください。
                     </p>
                     <div className="profile-form-actions">
@@ -203,7 +203,7 @@ export default function ProfilePage() {
                         type="button"
                         onClick={() => submitForm()}
                         disabled={isSubmitting}
-                        className="profile-form-submit btn-primary flex w-full items-center justify-center gap-2"
+                        className="profile-form-submit seeker-auth-submit btn-primary flex w-full items-center justify-center gap-2"
                       >
                         {isSubmitting && <ButtonSpinner />}
                         {isSubmitting ? "保存中..." : "保存する"}

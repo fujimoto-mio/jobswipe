@@ -8,7 +8,7 @@ export default function RegisterPage() {
   return (
     <Suspense
       fallback={
-        <div className="lp-root lp-auth flex min-h-[100dvh] items-center justify-center">
+        <div className="seeker-ui seeker-auth flex min-h-[100dvh] items-center justify-center">
           <PageLoading />
         </div>
       }

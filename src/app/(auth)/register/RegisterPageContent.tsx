@@ -4,8 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Form, Formik } from "formik";
-import { Building2, ChevronLeft, ChevronRight, UserPlus, Users } from "lucide-react";
+import { Building2, Check, ChevronLeft, ChevronRight, UserPlus, Users } from "lucide-react";
 import LpAuthShell from "@/components/auth/LpAuthShell";
+import SeekerAuthShell from "@/components/auth/SeekerAuthShell";
 import { FormPassword, FormTextInput } from "@/components/form/FormFields";
 import SeekerProfileFormFields from "@/components/form/SeekerProfileFormFields";
 import {
@@ -34,6 +35,40 @@ function resolveInitialStep(presetEmail: string, presetType: string | null): Reg
   return "type";
 }
 
+function RegisterError({ message }: { message: string }) {
+  return <p className="seeker-auth-alert seeker-auth-alert--error">{message}</p>;
+}
+
+function SeekerRegisterSteps({ current }: { current: 1 | 2 }) {
+  return (
+    <nav className="seeker-auth-steps" aria-label="登録ステップ">
+      <div
+        className={`seeker-auth-step-item ${current === 1 ? "is-current" : "is-done"}`}
+        aria-current={current === 1 ? "step" : undefined}
+      >
+        <span className="seeker-auth-step__badge" aria-hidden>
+          {current > 1 ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : "1"}
+        </span>
+        <span className="seeker-auth-step__label">アカウント</span>
+      </div>
+
+      <div className="seeker-auth-step__track" aria-hidden>
+        <span className={`seeker-auth-step__track-fill ${current > 1 ? "is-complete" : ""}`} />
+      </div>
+
+      <div
+        className={`seeker-auth-step-item ${current === 2 ? "is-current" : "is-upcoming"}`}
+        aria-current={current === 2 ? "step" : undefined}
+      >
+        <span className="seeker-auth-step__badge" aria-hidden>
+          2
+        </span>
+        <span className="seeker-auth-step__label">プロフィール</span>
+      </div>
+    </nav>
+  );
+}
+
 export default function RegisterPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -41,11 +76,6 @@ export default function RegisterPageContent() {
   const presetType = searchParams.get("type");
 
   const [step, setStep] = useState<RegisterStep>(() => resolveInitialStep(presetEmail, presetType));
-  const [accountType, setAccountType] = useState<AccountType | null>(() => {
-    if (presetEmail || presetType === "seeker") return "seeker";
-    if (presetType === "company") return "company";
-    return null;
-  });
 
   const [account, setAccount] = useState<SeekerAccountValues | null>(
     presetEmail ? { email: presetEmail, password: "", confirmPassword: "" } : null
@@ -57,221 +87,36 @@ export default function RegisterPageContent() {
 
   const selectAccountType = (type: AccountType) => {
     setError("");
-    setAccountType(type);
     setStep(type === "seeker" ? "seeker-1" : "company");
   };
 
-  const shellSubtitle =
+  const seekerSubtitle =
     step === "type"
       ? "求職者か企業担当者かを選択してください"
-      : accountType === "company"
-        ? "企業アカウントを作成し、求人の掲載・応募管理ができます"
-        : "1分で登録完了。応募時にプロフィールが自動入力されます";
+      : step === "seeker-1"
+        ? "メールアドレスとパスワードを設定してください"
+        : "プロフィールを入力して登録を完了しましょう";
 
-  return (
-    <LpAuthShell
-      title="新規登録"
-      subtitle={shellSubtitle}
-      footer={
-        <>
-          すでにアカウントをお持ちの方は{" "}
-          <Link href={loginHref} className="lp-auth-link">
-            ログイン
-          </Link>
-        </>
-      }
-    >
-      {step.startsWith("seeker") && (
-        <div className="mb-6 flex items-center gap-2">
-          {[1, 2].map((n) => {
-            const seekerStep = step === "seeker-1" ? 1 : 2;
-            return (
-              <div key={n} className="flex flex-1 items-center gap-2">
-                <div className={`lp-auth-step ${seekerStep >= n ? "is-active" : "is-inactive"}`}>{n}</div>
-                <span
-                  className={`hidden text-xs font-medium sm:block ${
-                    seekerStep >= n ? "text-[var(--lp-text)]" : "text-[var(--lp-muted)]"
-                  }`}
-                >
-                  {n === 1 ? "アカウント" : "プロフィール"}
-                </span>
-                {n === 1 && <div className={`lp-auth-step-line ${seekerStep > 1 ? "is-active" : ""}`} />}
-              </div>
-            );
-          })}
-        </div>
-      )}
+  if (step === "company") {
+    return (
+      <LpAuthShell
+        title="企業アカウント登録"
+        subtitle="企業アカウントを作成し、求人の掲載・応募管理ができます"
+        footer={
+          <>
+            すでにアカウントをお持ちの方は{" "}
+            <Link href={loginHref} className="lp-auth-link">
+              ログイン
+            </Link>
+          </>
+        }
+      >
+        {error && (
+          <p className="mb-5 rounded-xl border border-red-100 bg-red-50 px-3.5 py-2.5 text-sm text-red-600">
+            {error}
+          </p>
+        )}
 
-      {error && (
-        <p className="mb-5 rounded-xl border border-red-100 bg-red-50 px-3.5 py-2.5 text-sm text-red-600">
-          {error}
-        </p>
-      )}
-
-      {step === "type" && (
-        <div className="space-y-3">
-          <button type="button" onClick={() => selectAccountType("seeker")} className="lp-auth-choice">
-            <div className="lp-auth-choice__icon">
-              <Users className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="font-semibold text-[var(--lp-text)]">求職者として登録</p>
-              <p className="mt-1 text-sm text-[var(--lp-muted)]">
-                求人動画の閲覧・応募・企業とのチャットができます
-              </p>
-            </div>
-            <ChevronRight className="ml-auto mt-3 h-5 w-5 shrink-0 text-[var(--lp-muted)]" />
-          </button>
-
-          <button type="button" onClick={() => selectAccountType("company")} className="lp-auth-choice">
-            <div className="lp-auth-choice__icon lp-auth-choice__icon--company">
-              <Building2 className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="font-semibold text-[var(--lp-text)]">企業として登録</p>
-              <p className="mt-1 text-sm text-[var(--lp-muted)]">
-                求人の掲載・応募管理・求職者とのチャットができます
-              </p>
-            </div>
-            <ChevronRight className="ml-auto mt-3 h-5 w-5 shrink-0 text-[var(--lp-muted)]" />
-          </button>
-        </div>
-      )}
-
-      {step === "seeker-1" && (
-        <Formik
-          initialValues={{ email: account?.email ?? "", password: "", confirmPassword: "" }}
-          validationSchema={seekerAccountSchema}
-          onSubmit={(values) => {
-            setError("");
-            setAccount(values);
-            setStep("seeker-2");
-          }}
-        >
-          <Form className="space-y-5">
-            <button
-              type="button"
-              onClick={() => {
-                setError("");
-                setStep("type");
-              }}
-              className="lp-auth-back"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              登録タイプを選び直す
-            </button>
-
-            <FormTextInput name="email" label="メールアドレス" type="email" placeholder="you@example.com" autoComplete="email" />
-            <FormPassword name="password" label="パスワード" autoComplete="new-password" hint="8文字以上・英数字の組み合わせを推奨" />
-            <FormPassword name="confirmPassword" label="パスワード（確認）" autoComplete="new-password" />
-
-            <button type="submit" className="btn-primary flex w-full items-center justify-center gap-2 py-3">
-              次へ：プロフィール入力
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </Form>
-        </Formik>
-      )}
-
-      {step === "seeker-2" && account && (
-        <Formik
-          initialValues={{
-            name: "",
-            gender: "",
-            birthday: "",
-            area: "",
-            desiredJobType: "",
-            experience: "",
-            employmentType: "",
-            phone: "",
-            address: "",
-            email: account.email,
-            acceptLegal: false,
-          }}
-          validationSchema={seekerRegisterFormSchema}
-          onSubmit={async (values, { setSubmitting }) => {
-            setError("");
-            setSubmitting(true);
-            try {
-              const { acceptLegal: _acceptLegal, ...profileValues } = values;
-              const supabase = createSupabaseBrowserClient();
-              if (!supabase) {
-                setError("認証サービスが設定されていません。管理者にお問い合わせください。");
-                return;
-              }
-
-              const res = await apiFetch("/api/auth/register/seeker", {
-                method: "POST",
-                body: JSON.stringify({
-                  ...profileValues,
-                  email: account.email.trim(),
-                  password: account.password,
-                }),
-              });
-
-              if (!res.ok) {
-                const data = await res.json();
-                setError(data.error ?? "登録に失敗しました");
-                if (res.status === 409) setStep("seeker-1");
-                return;
-              }
-
-              const data = await res.json();
-
-              const { error: signInError } = await supabase.auth.signInWithPassword({
-                email: account.email.trim(),
-                password: account.password,
-              });
-
-              if (signInError) {
-                setError(mapAuthError(signInError.message));
-                return;
-              }
-
-              saveProfile(data.profile);
-              router.replace(next);
-              router.refresh();
-            } finally {
-              setSubmitting(false);
-            }
-          }}
-        >
-          {({ isSubmitting }) => (
-            <Form className="space-y-4">
-              {!presetEmail && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setError("");
-                    setStep("seeker-1");
-                  }}
-                  className="lp-auth-back"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  アカウント情報に戻る
-                </button>
-              )}
-
-              <SeekerProfileFormFields />
-
-              <input type="hidden" name="email" value={account.email} readOnly />
-
-              <p className="lp-auth-note">
-                登録情報は応募フォームに自動入力されます。送信前にいつでも編集できます。
-              </p>
-
-              <LegalAgreementField name="acceptLegal" links={SEEKER_LEGAL_LINKS} />
-
-              <button type="submit" disabled={isSubmitting} className="btn-primary flex w-full items-center justify-center gap-2 py-3">
-                <UserPlus className="h-4 w-4" />
-                {isSubmitting ? "登録中..." : "登録して始める"}
-              </button>
-            </Form>
-          )}
-        </Formik>
-      )}
-
-      {step === "company" && (
         <Formik
           initialValues={{
             companyName: "",
@@ -359,7 +204,191 @@ export default function RegisterPageContent() {
             </Form>
           )}
         </Formik>
+      </LpAuthShell>
+    );
+  }
+
+  return (
+    <SeekerAuthShell
+      title="新規登録"
+      subtitle={seekerSubtitle}
+      footer={
+        <>
+          すでにアカウントをお持ちの方は{" "}
+          <Link href={loginHref} className="seeker-auth-link">
+            ログイン
+          </Link>
+        </>
+      }
+    >
+      {step.startsWith("seeker") && (
+        <SeekerRegisterSteps current={step === "seeker-1" ? 1 : 2} />
       )}
-    </LpAuthShell>
+
+      {error && <RegisterError message={error} />}
+
+      {step === "type" && (
+        <div className="seeker-auth-choices">
+          <button type="button" onClick={() => selectAccountType("seeker")} className="seeker-auth-choice">
+            <div className="seeker-auth-choice__icon">
+              <Users className="h-6 w-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="seeker-auth-choice__title">求職者として登録</p>
+              <p className="seeker-auth-choice__desc">
+                求人動画の閲覧・応募・企業とのチャットができます
+              </p>
+            </div>
+            <ChevronRight className="seeker-auth-choice__chevron" />
+          </button>
+
+          <button type="button" onClick={() => selectAccountType("company")} className="seeker-auth-choice">
+            <div className="seeker-auth-choice__icon seeker-auth-choice__icon--company">
+              <Building2 className="h-6 w-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="seeker-auth-choice__title">企業として登録</p>
+              <p className="seeker-auth-choice__desc">
+                求人の掲載・応募管理・求職者とのチャットができます
+              </p>
+            </div>
+            <ChevronRight className="seeker-auth-choice__chevron" />
+          </button>
+        </div>
+      )}
+
+      {step === "seeker-1" && (
+        <Formik
+          initialValues={{ email: account?.email ?? "", password: "", confirmPassword: "" }}
+          validationSchema={seekerAccountSchema}
+          onSubmit={(values) => {
+            setError("");
+            setAccount(values);
+            setStep("seeker-2");
+          }}
+        >
+          <Form className="seeker-auth-form">
+            <button
+              type="button"
+              onClick={() => {
+                setError("");
+                setStep("type");
+              }}
+              className="seeker-auth-back"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              登録タイプを選び直す
+            </button>
+
+            <FormTextInput name="email" label="メールアドレス" type="email" placeholder="you@example.com" autoComplete="email" />
+            <FormPassword name="password" label="パスワード" autoComplete="new-password" hint="8文字以上・英数字の組み合わせを推奨" />
+            <FormPassword name="confirmPassword" label="パスワード（確認）" autoComplete="new-password" />
+
+            <button type="submit" className="btn-primary seeker-auth-submit flex w-full items-center justify-center gap-2">
+              次へ：プロフィール入力
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </Form>
+        </Formik>
+      )}
+
+      {step === "seeker-2" && account && (
+        <Formik
+          initialValues={{
+            name: "",
+            gender: "",
+            birthday: "",
+            area: "",
+            desiredJobType: "",
+            experience: "",
+            employmentType: "",
+            phone: "",
+            address: "",
+            email: account.email,
+            acceptLegal: false,
+          }}
+          validationSchema={seekerRegisterFormSchema}
+          onSubmit={async (values, { setSubmitting }) => {
+            setError("");
+            setSubmitting(true);
+            try {
+              const { acceptLegal: _acceptLegal, ...profileValues } = values;
+              const supabase = createSupabaseBrowserClient();
+              if (!supabase) {
+                setError("認証サービスが設定されていません。管理者にお問い合わせください。");
+                return;
+              }
+
+              const res = await apiFetch("/api/auth/register/seeker", {
+                method: "POST",
+                body: JSON.stringify({
+                  ...profileValues,
+                  email: account.email.trim(),
+                  password: account.password,
+                }),
+              });
+
+              if (!res.ok) {
+                const data = await res.json();
+                setError(data.error ?? "登録に失敗しました");
+                if (res.status === 409) setStep("seeker-1");
+                return;
+              }
+
+              const data = await res.json();
+
+              const { error: signInError } = await supabase.auth.signInWithPassword({
+                email: account.email.trim(),
+                password: account.password,
+              });
+
+              if (signInError) {
+                setError(mapAuthError(signInError.message));
+                return;
+              }
+
+              saveProfile(data.profile);
+              router.replace(next);
+              router.refresh();
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        >
+          {({ isSubmitting }) => (
+            <Form className="seeker-auth-form seeker-auth-form--profile">
+              {!presetEmail && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError("");
+                    setStep("seeker-1");
+                  }}
+                  className="seeker-auth-back"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  アカウント情報に戻る
+                </button>
+              )}
+
+              <SeekerProfileFormFields stackedLayout />
+
+              <input type="hidden" name="email" value={account.email} readOnly />
+
+              <p className="seeker-auth-note">
+                登録情報は応募フォームに自動入力されます。送信前にいつでも編集できます。
+              </p>
+
+              <LegalAgreementField name="acceptLegal" links={SEEKER_LEGAL_LINKS} />
+
+              <button type="submit" disabled={isSubmitting} className="btn-primary seeker-auth-submit flex w-full items-center justify-center gap-2">
+                <UserPlus className="h-4 w-4" />
+                {isSubmitting ? "登録中..." : "登録して始める"}
+              </button>
+            </Form>
+          )}
+        </Formik>
+      )}
+    </SeekerAuthShell>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import SeekerBrandHeader from "@/components/seeker/SeekerBrandHeader";
-import Logo from "@/components/ui/Logo";
 
 type SeekerAuthShellProps = {
   title: string;
@@ -17,24 +16,21 @@ export default function SeekerAuthShell({
   children,
 }: SeekerAuthShellProps) {
   return (
-    <div className="min-h-[100dvh] bg-[var(--surface)]">
-      <header className="page-header">
-        <SeekerBrandHeader showMenu={false} logoHref="/" />
+    <div className="seeker-ui seeker-auth">
+      <header className="seeker-auth-header">
+        <SeekerBrandHeader showMenu={false} logoHref="/" className="seeker-auth-header__bar" />
       </header>
 
-      <main className="page-container py-8 pb-12 sm:py-12">
-        <div className="mx-auto w-full max-w-md">
-          <div className="mb-8 text-center">
-            <div className="mb-4 flex justify-center">
-              <Logo size="lg" showText={false} />
-            </div>
-            <h1 className="text-2xl font-bold text-[var(--foreground)]">{title}</h1>
-            <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">{subtitle}</p>
+      <main className="seeker-auth-main">
+        <div className="seeker-auth-card">
+          <div className="seeker-auth-intro">
+            <h1 className="seeker-auth-title">{title}</h1>
+            <p className="seeker-auth-subtitle">{subtitle}</p>
           </div>
 
-          <div className="card-elevated p-6 sm:p-8">{children}</div>
+          <div className="seeker-auth-body">{children}</div>
 
-          {footer && <div className="mt-6 text-center text-sm text-[var(--muted)]">{footer}</div>}
+          {footer ? <div className="seeker-auth-footer">{footer}</div> : null}
         </div>
       </main>
     </div>

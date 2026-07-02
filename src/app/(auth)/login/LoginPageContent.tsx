@@ -23,6 +23,12 @@ export default function LoginPageContent() {
   const registered = searchParams.get("registered") === "1";
   const authRequired = searchParams.get("reason") === "required";
 
+  const seekerRegisterHref = (() => {
+    const params = new URLSearchParams({ type: "seeker" });
+    if (next !== "/explore") params.set("next", next);
+    return `/register?${params.toString()}`;
+  })();
+
   return (
     <SeekerAuthShell
       title="ログイン"
@@ -30,28 +36,26 @@ export default function LoginPageContent() {
       footer={
         <>
           アカウントをお持ちでない方は{" "}
-          <Link href={`/register${next !== "/explore" ? `?next=${encodeURIComponent(next)}` : ""}`} className="font-semibold text-[var(--accent)] hover:underline">
+          <Link href={seekerRegisterHref} className="seeker-auth-link">
             新規登録
           </Link>
         </>
       }
     >
       {authRequired && (
-        <p className="mb-5 rounded-xl border border-[var(--accent-light)] bg-[var(--accent-light)] px-3.5 py-2.5 text-sm text-[var(--accent)]">
+        <p className="seeker-auth-alert seeker-auth-alert--info">
           この機能を利用するにはログインが必要です
         </p>
       )}
 
       {registered && (
-        <p className="mb-5 rounded-xl border border-emerald-100 bg-emerald-50 px-3.5 py-2.5 text-sm text-emerald-700">
+        <p className="seeker-auth-alert seeker-auth-alert--success">
           登録が完了しました。ログインしてください。
         </p>
       )}
 
       {error && (
-        <p className="mb-5 rounded-xl border border-red-100 bg-red-50 px-3.5 py-2.5 text-sm text-red-600">
-          {error}
-        </p>
+        <p className="seeker-auth-alert seeker-auth-alert--error">{error}</p>
       )}
 
       <Formik
@@ -85,14 +89,16 @@ export default function LoginPageContent() {
               return;
             }
 
-            router.replace(`/register?next=${encodeURIComponent(next)}&email=${encodeURIComponent(values.email)}`);
+            router.replace(
+              `/register?type=seeker&next=${encodeURIComponent(next)}&email=${encodeURIComponent(values.email)}`
+            );
           } finally {
             setSubmitting(false);
           }
         }}
       >
         {({ isSubmitting }) => (
-          <Form className="space-y-5">
+          <Form className="seeker-auth-form">
             <FormTextInput
               name="email"
               label="メールアドレス"
@@ -101,7 +107,7 @@ export default function LoginPageContent() {
               autoComplete="email"
             />
             <FormPassword label="パスワード" name="password" autoComplete="current-password" />
-            <button type="submit" disabled={isSubmitting} className="btn-primary flex w-full items-center justify-center gap-2 py-3">
+            <button type="submit" disabled={isSubmitting} className="btn-primary seeker-auth-submit flex w-full items-center justify-center gap-2">
               <LogIn className="h-4 w-4" />
               {isSubmitting ? "ログイン中..." : "ログイン"}
             </button>
