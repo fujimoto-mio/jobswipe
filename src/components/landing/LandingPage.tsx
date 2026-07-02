@@ -312,6 +312,15 @@ export default function LandingPage() {
             <Link href="/admin/login" className="font-medium hover:text-[var(--accent)]">
               管理者ログイン
             </Link>
+            <Link href="/terms" className="font-medium hover:text-[var(--accent)]">
+              利用規約
+            </Link>
+            <Link href="/privacy" className="font-medium hover:text-[var(--accent)]">
+              プライバシーポリシー
+            </Link>
+            <Link href="/guidelines" className="font-medium hover:text-[var(--accent)]">
+              求人掲載ガイドライン
+            </Link>
           </div>
         </div>
       </footer>

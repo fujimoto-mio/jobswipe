@@ -349,6 +349,7 @@ export default function AdminSettingsPage() {
               />
               <SettingsLinkItem href="/terms" label="利用規約" />
               <SettingsLinkItem href="/privacy" label="プライバシーポリシー" />
+              <SettingsLinkItem href="/guidelines" label="求人掲載ガイドライン" />
             </ul>
           </div>
         </section>

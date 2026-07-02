@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "cross-env TIME_ZONE=Asia/Tokyo next dev",
+    "dev": "cross-env TIME_ZONE=Asia/Tokyo next dev -p 3010",
     "build": "prisma generate && cross-env TIME_ZONE=Asia/Tokyo next build",
     "start": "cross-env TIME_ZONE=Asia/Tokyo next start",
     "lint": "eslint",

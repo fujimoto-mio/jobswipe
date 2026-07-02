@@ -161,17 +161,17 @@ export default function SettingsPage() {
           </ul>
         </SettingsPanel>
 
-        <SettingsPanel disabled>
+        <SettingsPanel>
           <SettingsSection title="サポート" />
           <ul className="divide-y divide-slate-100">
             <li>
               <SettingsLinkRow href="#" icon={Mail} label="お問い合わせ" disabled comingSoon />
             </li>
             <li>
-              <SettingsLinkRow href="/terms" icon={FileText} label="利用規約" disabled comingSoon />
+              <SettingsLinkRow href="/terms" icon={FileText} label="利用規約" />
             </li>
             <li>
-              <SettingsLinkRow href="/privacy" icon={Shield} label="プライバシーポリシー" disabled comingSoon />
+              <SettingsLinkRow href="/privacy" icon={Shield} label="プライバシーポリシー" />
             </li>
           </ul>
         </SettingsPanel>

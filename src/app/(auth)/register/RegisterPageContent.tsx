@@ -8,14 +8,19 @@ import { Building2, ChevronLeft, ChevronRight, UserPlus, Users } from "lucide-re
 import SeekerAuthShell from "@/components/auth/SeekerAuthShell";
 import { FormPassword, FormTextInput } from "@/components/form/FormFields";
 import SeekerProfileFormFields from "@/components/form/SeekerProfileFormFields";
+import {
+  COMPANY_LEGAL_LINKS,
+  LegalAgreementField,
+  SEEKER_LEGAL_LINKS,
+} from "@/components/form/LegalAgreementField";
 import { saveProfile } from "@/lib/profile";
 import { apiFetch } from "@/lib/api-client";
 import { mapAuthError } from "@/lib/auth/errors";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import {
-  companyRegisterSchema,
+  companyRegisterFormSchema,
   seekerAccountSchema,
-  seekerProfileSchema,
+  seekerRegisterFormSchema,
   type SeekerAccountValues,
 } from "@/lib/validation/schemas";
 
@@ -199,12 +204,14 @@ export default function RegisterPageContent() {
             phone: "",
             address: "",
             email: account.email,
+            acceptLegal: false,
           }}
-          validationSchema={seekerProfileSchema}
+          validationSchema={seekerRegisterFormSchema}
           onSubmit={async (values, { setSubmitting }) => {
             setError("");
             setSubmitting(true);
             try {
+              const { acceptLegal: _acceptLegal, ...profileValues } = values;
               const supabase = createSupabaseBrowserClient();
               if (!supabase) {
                 setError("認証サービスが設定されていません。管理者にお問い合わせください。");
@@ -214,7 +221,7 @@ export default function RegisterPageContent() {
               const res = await apiFetch("/api/auth/register/seeker", {
                 method: "POST",
                 body: JSON.stringify({
-                  ...values,
+                  ...profileValues,
                   email: account.email.trim(),
                   password: account.password,
                 }),
@@ -271,6 +278,8 @@ export default function RegisterPageContent() {
                 登録情報は応募フォームに自動入力されます。送信前にいつでも編集できます。
               </p>
 
+              <LegalAgreementField name="acceptLegal" links={SEEKER_LEGAL_LINKS} />
+
               <button type="submit" disabled={isSubmitting} className="btn-primary flex w-full items-center justify-center gap-2 py-3">
                 <UserPlus className="h-4 w-4" />
                 {isSubmitting ? "登録中..." : "登録して始める"}
@@ -288,12 +297,14 @@ export default function RegisterPageContent() {
             email: "",
             password: "",
             confirmPassword: "",
+            acceptLegal: false,
           }}
-          validationSchema={companyRegisterSchema}
+          validationSchema={companyRegisterFormSchema}
           onSubmit={async (values, { setSubmitting }) => {
             setError("");
             setSubmitting(true);
             try {
+              const { acceptLegal: _acceptLegal, ...registerValues } = values;
               const supabase = createSupabaseBrowserClient();
               if (!supabase) {
                 setError("認証サービスが設定されていません。管理者にお問い合わせください。");
@@ -303,10 +314,10 @@ export default function RegisterPageContent() {
               const res = await apiFetch("/api/auth/register/company", {
                 method: "POST",
                 body: JSON.stringify({
-                  email: values.email.trim(),
-                  password: values.password,
-                  companyName: values.companyName.trim(),
-                  contactName: values.contactName.trim(),
+                  email: registerValues.email.trim(),
+                  password: registerValues.password,
+                  companyName: registerValues.companyName.trim(),
+                  contactName: registerValues.contactName.trim(),
                 }),
               });
 
@@ -317,8 +328,8 @@ export default function RegisterPageContent() {
               }
 
               const { error: signInError } = await supabase.auth.signInWithPassword({
-                email: values.email.trim(),
-                password: values.password,
+                email: registerValues.email.trim(),
+                password: registerValues.password,
               });
 
               if (signInError) {
@@ -356,6 +367,8 @@ export default function RegisterPageContent() {
               <p className="rounded-lg bg-[var(--surface)] px-3 py-2 text-xs leading-relaxed text-[var(--muted)]">
                 登録後、管理画面から求人の作成・応募管理ができます。求人は管理者承認後に公開されます。
               </p>
+
+              <LegalAgreementField name="acceptLegal" links={COMPANY_LEGAL_LINKS} />
 
               <button type="submit" disabled={isSubmitting} className="btn-primary flex w-full items-center justify-center gap-2 py-3">
                 <Building2 className="h-4 w-4" />

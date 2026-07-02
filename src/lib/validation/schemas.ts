@@ -203,6 +203,19 @@ export const companyRegisterSchema = Yup.object({
     .required("確認用パスワードを入力してください"),
 });
 
+const legalAcceptance = (message: string) =>
+  Yup.boolean().oneOf([true], message).required(message);
+
+export const seekerRegisterFormSchema = seekerProfileSchema.shape({
+  acceptLegal: legalAcceptance("利用規約およびプライバシーポリシーへの同意が必要です"),
+});
+
+export const companyRegisterFormSchema = companyRegisterSchema.shape({
+  acceptLegal: legalAcceptance(
+    "利用規約、プライバシーポリシーおよび求人掲載ガイドラインへの同意が必要です"
+  ),
+});
+
 export const applySchema = Yup.object({
   name: Yup.string().trim().required("氏名を入力してください"),
   birthday: birthdayField,

@@ -42,8 +42,8 @@ export function AppHeader({
   );
 }
 
-export function AppPage({ children }: { children: ReactNode }) {
-  return <div className="page-shell bg-white text-slate-900">{children}</div>;
+export function AppPage({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return <div className={`page-shell bg-white text-slate-900 ${className}`.trim()}>{children}</div>;
 }
 
 export function AppBadge({ children }: { children: ReactNode }) {
