@@ -1,5 +1,12 @@
 import Image from "next/image";
-import { APP_NAME_HEAD, APP_NAME_TAIL, APP_TAGLINE } from "@/lib/brand";
+import {
+  APP_LOGO_FULL,
+  APP_LOGO_MARK,
+  APP_NAME_HEAD,
+  APP_NAME_TAIL,
+  APP_TAGLINE,
+  APP_TOPBAR_NAME,
+} from "@/lib/brand";
 
 type LogoProps = {
   size?: "sm" | "md" | "lg";
@@ -29,12 +36,13 @@ export default function Logo({
   const s = inTopbar ? topbarSizes : sizes[size];
   const textClass = theme === "dark" ? "text-white" : "text-slate-900";
   const subClass = theme === "dark" ? "text-white/70" : "text-slate-500";
+  const useMarkLogo = inTopbar || !showText;
 
   return (
     <div className={`flex items-center ${inTopbar ? "gap-2.5" : "gap-3.5 sm:gap-4"}`}>
       <Image
-        src="/logo.png"
-        alt={APP_NAME_HEAD + APP_NAME_TAIL}
+        src={useMarkLogo ? APP_LOGO_MARK : APP_LOGO_FULL}
+        alt={APP_TOPBAR_NAME}
         width={1181}
         height={1181}
         unoptimized
@@ -43,13 +51,21 @@ export default function Logo({
       />
       {showText && (
         <div className="min-w-0">
-          <p className={`${s.title} font-bold leading-tight tracking-normal ${textClass}`}>
-            {APP_NAME_HEAD}
-            <span className="text-[var(--accent)]">{APP_NAME_TAIL}</span>
-          </p>
-          <p className={`${s.tagline} mt-0.5 font-medium leading-snug ${subClass}`}>
-            {APP_TAGLINE}
-          </p>
+          {inTopbar ? (
+            <p className={`${s.title} font-bold leading-tight tracking-normal ${textClass}`}>
+              {APP_TOPBAR_NAME}
+            </p>
+          ) : (
+            <>
+              <p className={`${s.title} font-bold leading-tight tracking-normal ${textClass}`}>
+                {APP_NAME_HEAD}
+                <span className="text-[var(--accent)]">{APP_NAME_TAIL}</span>
+              </p>
+              <p className={`${s.tagline} mt-0.5 font-medium leading-snug ${subClass}`}>
+                {APP_TAGLINE}
+              </p>
+            </>
+          )}
         </div>
       )}
     </div>
