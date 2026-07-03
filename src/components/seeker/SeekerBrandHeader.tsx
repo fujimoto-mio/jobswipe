@@ -15,6 +15,7 @@ type SeekerBrandHeaderProps = {
   action?: ReactNode;
   menuVariant?: "default" | "overlay";
   showMenu?: boolean;
+  onMenuOpenChange?: (open: boolean) => void;
   logoHref?: string;
   className?: string;
 };
@@ -27,6 +28,7 @@ export default function SeekerBrandHeader({
   action,
   menuVariant = "default",
   showMenu = true,
+  onMenuOpenChange,
   logoHref,
   className = "",
 }: SeekerBrandHeaderProps) {
@@ -79,7 +81,7 @@ export default function SeekerBrandHeader({
 
       <div className="flex items-center justify-end gap-2 sm:justify-self-end">
         {action}
-        {showMenu ? <SeekerAccountMenu variant={menuVariant} /> : null}
+        {showMenu ? <SeekerAccountMenu variant={menuVariant} onOpenChange={onMenuOpenChange} /> : null}
       </div>
     </div>
   );

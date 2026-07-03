@@ -993,6 +993,10 @@ body {
 
 .seeker-explore-feed .seeker-video-feed-info {
   bottom: var(--seeker-video-info-bottom);
+  max-width: calc(100% - 4.5rem);
+  font-size: 10px;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
 }
 
 .seeker-explore-feed .seeker-video-feed-swipe-hint {

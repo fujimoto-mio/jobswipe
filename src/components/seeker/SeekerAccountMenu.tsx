@@ -2,16 +2,21 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { LogOut, MoreVertical, Settings } from "lucide-react";
+import { LogOut, Settings, SlidersHorizontal } from "lucide-react";
 import { seekerLogout } from "@/lib/auth/seeker-logout";
 
 type SeekerAccountMenuProps = {
   variant?: "default" | "overlay";
+  onOpenChange?: (open: boolean) => void;
 };
 
-export default function SeekerAccountMenu({ variant = "default" }: SeekerAccountMenuProps) {
+export default function SeekerAccountMenu({ variant = "default", onOpenChange }: SeekerAccountMenuProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    onOpenChange?.(open);
+  }, [open, onOpenChange]);
 
   useEffect(() => {
     if (!open) return;
@@ -24,19 +29,24 @@ export default function SeekerAccountMenu({ variant = "default" }: SeekerAccount
 
   const buttonClass =
     variant === "overlay"
-      ? "btn-pill-overlay flex h-10 w-10 items-center justify-center !p-0"
-      : "btn-icon btn-icon-muted h-10 w-10";
+      ? `flex h-10 w-10 items-center justify-center rounded-full border-0 bg-transparent p-0 text-white/92 shadow-none transition hover:bg-white/10 active:scale-95 ${
+          open ? "bg-white/15" : ""
+        }`
+      : `btn-icon btn-icon-muted h-10 w-10 transition-[border-color,background-color] ${
+          open ? "ring-2 ring-slate-300" : ""
+        }`;
 
   return (
     <div className="relative" ref={ref}>
       <button
         type="button"
+        onPointerDown={(e) => e.stopPropagation()}
         onClick={() => setOpen((v) => !v)}
         className={buttonClass}
         aria-label="メニュー"
         aria-expanded={open}
       >
-        <MoreVertical className="h-4 w-4" />
+        <SlidersHorizontal className="h-5 w-5" strokeWidth={2} />
       </button>
 
       {open && (

@@ -1,6 +1,6 @@
 "use client";
 
-import { Play, Volume2, VolumeX, Heart, Send, FileText, MapPin, Briefcase } from "lucide-react";
+import { Play, Volume2, VolumeX, Heart, Send, FileText, MapPin, Briefcase, UserRound } from "lucide-react";
 import type { Job } from "@/lib/types";
 import { useVideoPlayback } from "@/hooks/useVideoPlayback";
 
@@ -21,39 +21,38 @@ type VideoFeedItemProps = {
   onChromeActivity?: () => void;
 };
 
-function ActionButton({
+function RailIconButton({
   onClick,
   onChromeActivity,
   label,
+  className = "h-12 w-12",
   children,
-  active,
 }: {
   onClick: () => void;
   onChromeActivity?: () => void;
   label: string;
+  className?: string;
   children: React.ReactNode;
-  active?: boolean;
 }) {
   return (
     <button
       type="button"
+      aria-label={label}
+      title={label}
       onPointerDown={(e) => e.stopPropagation()}
       onClick={() => {
         onChromeActivity?.();
         onClick();
       }}
-      className="flex flex-col items-center gap-1 transition active:scale-90"
+      className={`group relative flex items-center justify-center rounded-full border-2 border-transparent transition-[transform,border-color,box-shadow] duration-150 hover:border-white/70 active:scale-90 active:border-white focus-visible:border-white/80 focus-visible:outline-none ${className}`}
     >
-      <div
-        className={`flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-md transition ${
-          active
-            ? "bg-[#fe2c55] shadow-lg shadow-[#fe2c55]/40"
-            : "bg-black/35 ring-1 ring-white/15"
-        }`}
+      {children}
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute right-[calc(100%+0.625rem)] top-1/2 z-30 -translate-y-1/2 whitespace-nowrap rounded-md bg-black/80 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100"
       >
-        {children}
-      </div>
-      <span className="text-[11px] font-semibold text-white drop-shadow-md">{label}</span>
+        {label}
+      </span>
     </button>
   );
 }
@@ -136,47 +135,44 @@ export default function VideoFeedItem({
           chromeVisible ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
-        <button
-          type="button"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={() => {
-            onChromeActivity?.();
-            onDetail();
-          }}
-          className="relative transition active:scale-90"
+        <RailIconButton onChromeActivity={onChromeActivity} onClick={onSave} label="気になる">
+          <Heart
+            className={`h-7 w-7 drop-shadow-md fill-none ${isSaved ? "text-[#fe2c55]" : "text-white"}`}
+            strokeWidth={2}
+          />
+        </RailIconButton>
+
+        <RailIconButton onChromeActivity={onChromeActivity} onClick={onApply} label="応募">
+          <Send className="h-6 w-6 text-white drop-shadow-md" />
+        </RailIconButton>
+
+        <RailIconButton onChromeActivity={onChromeActivity} onClick={onDetail} label="詳細">
+          <FileText className="h-6 w-6 text-white drop-shadow-md" />
+        </RailIconButton>
+
+        <RailIconButton
+          onChromeActivity={onChromeActivity}
+          onClick={toggleMute}
+          label={isMuted ? "ミュート解除" : "ミュート"}
+          className="h-10 w-10"
         >
-          <div className="h-12 w-12 overflow-hidden rounded-full ring-2 ring-white bg-white/10">
-            <img src={job.companyLogo} alt={job.company} className="h-full w-full object-cover" />
+          {isMuted ? (
+            <VolumeX className="h-5 w-5 text-white drop-shadow-md" />
+          ) : (
+            <Volume2 className="h-5 w-5 text-white drop-shadow-md" />
+          )}
+        </RailIconButton>
+
+        <RailIconButton
+          onChromeActivity={onChromeActivity}
+          onClick={onDetail}
+          label={job.company}
+          className="h-12 w-12"
+        >
+          <div className="h-12 w-12 overflow-hidden rounded-full bg-white">
+            <img src={job.companyLogo} alt="" className="h-full w-full object-cover" />
           </div>
-          <span className="absolute -bottom-1 left-1/2 flex h-5 w-5 -translate-x-1/2 items-center justify-center rounded-full bg-[#fe2c55] text-[10px] font-bold text-white ring-2 ring-black">
-            +
-          </span>
-        </button>
-
-        <ActionButton onChromeActivity={onChromeActivity} onClick={onSave} label="気になる" active={isSaved}>
-          <Heart className={`h-6 w-6 text-white ${isSaved ? "fill-white" : ""}`} strokeWidth={isSaved ? 0 : 2} />
-        </ActionButton>
-
-        <ActionButton onChromeActivity={onChromeActivity} onClick={onApply} label="応募">
-          <Send className="h-5 w-5 text-white" />
-        </ActionButton>
-
-        <ActionButton onChromeActivity={onChromeActivity} onClick={onDetail} label="詳細">
-          <FileText className="h-5 w-5 text-white" />
-        </ActionButton>
-
-        <button
-          type="button"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={() => {
-            onChromeActivity?.();
-            toggleMute();
-          }}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-black/35 ring-1 ring-white/15 backdrop-blur-md transition active:scale-90"
-          aria-label={isMuted ? "ミュート解除" : "ミュート"}
-        >
-          {isMuted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
-        </button>
+        </RailIconButton>
       </div>
 
       {/* Bottom-left info overlay — spec §2.3 */}
@@ -192,38 +188,35 @@ export default function VideoFeedItem({
             onChromeActivity?.();
             onDetail();
           }}
-          className="w-full text-left"
+          className="w-full text-left text-[10px] leading-snug text-white/90"
         >
-          <div className="flex items-center gap-2.5">
-            <img
-              src={job.companyLogo}
-              alt=""
-              className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-white/30"
-            />
-            <div className="min-w-0">
-              <p className="truncate text-[15px] font-bold text-white drop-shadow-lg">{job.company}</p>
-              <p className="text-xs font-medium text-white/75 drop-shadow">{job.employmentType}</p>
-            </div>
-          </div>
+          <p className="truncate text-sm font-bold leading-tight text-white drop-shadow-md">{job.company}</p>
 
-          <p className="mt-2 text-xl font-bold leading-snug text-white drop-shadow-lg">{job.title}</p>
+          <p className="mt-1.5 line-clamp-2 font-semibold text-white drop-shadow-md">{job.title}</p>
 
-          <p className="mt-1.5 flex items-start gap-1.5 text-sm text-white/90 drop-shadow-md">
-            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-white/80" aria-hidden />
-            <span>{job.location}</span>
+          {job.employmentType ? (
+            <p className="mt-1 flex items-start gap-1 font-medium text-white/85">
+              <UserRound className="mt-0.5 h-3 w-3 shrink-0 text-white/75" aria-hidden />
+              <span>{job.employmentType}</span>
+            </p>
+          ) : null}
+
+          <p className="mt-1 flex items-start gap-1 font-medium text-white/85">
+            <MapPin className="mt-0.5 h-3 w-3 shrink-0 text-white/75" aria-hidden />
+            <span className="line-clamp-2">{job.location}</span>
           </p>
 
-          <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-emerald-400 drop-shadow-md">
-            <Briefcase className="h-4 w-4 shrink-0" aria-hidden />
+          <p className="mt-0.5 flex items-center gap-1 font-medium text-emerald-300">
+            <Briefcase className="h-3 w-3 shrink-0" aria-hidden />
             <span>{job.salary}</span>
           </p>
 
           {job.tags.length > 0 && (
-            <div className="mt-2.5 flex flex-wrap gap-1.5">
+            <div className="mt-1.5 flex flex-wrap gap-1">
               {job.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="rounded-full border border-white/35 bg-white/12 px-2.5 py-1 text-xs font-medium text-white/90 backdrop-blur-sm"
+                  className="rounded-full border border-white/30 bg-white/10 px-1.5 py-0.5 text-[9px] font-medium leading-tight text-white/85 backdrop-blur-sm"
                 >
                   {displayVideoTag(tag)}
                 </span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef, Suspense } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import VideoFeed from "@/components/VideoFeed";
 import BottomNav from "@/components/BottomNav";
@@ -22,7 +22,7 @@ import {
   saveStoredExploreFilters,
 } from "@/lib/job-filters";
 
-const CHROME_AUTO_HIDE_MS = 3000;
+const CHROME_AUTO_HIDE_MS = 5000;
 
 function ExploreContent() {
   const router = useRouter();
@@ -34,6 +34,7 @@ function ExploreContent() {
   const [draftFilters, setDraftFilters] = useState<JobFilters>(() => loadStoredExploreFilters());
   const [chromeVisible, setChromeVisible] = useState(false);
   const hideChromeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const headerMenuOpenRef = useRef(false);
 
   const clearChromeHideTimer = useCallback(() => {
     if (hideChromeTimerRef.current) {
@@ -43,8 +44,10 @@ function ExploreContent() {
   }, []);
 
   const scheduleChromeHide = useCallback(() => {
+    if (headerMenuOpenRef.current) return;
     clearChromeHideTimer();
     hideChromeTimerRef.current = setTimeout(() => {
+      if (headerMenuOpenRef.current) return;
       setChromeVisible(false);
       hideChromeTimerRef.current = null;
     }, CHROME_AUTO_HIDE_MS);
@@ -58,14 +61,28 @@ function ExploreContent() {
   const keepChromeVisible = revealChrome;
 
   const hideChrome = useCallback(() => {
+    if (headerMenuOpenRef.current) return;
     clearChromeHideTimer();
     setChromeVisible(false);
   }, [clearChromeHideTimer]);
 
+  const handleHeaderMenuOpenChange = useCallback(
+    (open: boolean) => {
+      headerMenuOpenRef.current = open;
+      if (open) {
+        setChromeVisible(true);
+        clearChromeHideTimer();
+        return;
+      }
+      scheduleChromeHide();
+    },
+    [clearChromeHideTimer, scheduleChromeHide]
+  );
+
   useEffect(() => () => clearChromeHideTimer(), [clearChromeHideTimer]);
 
   const showFeed = isExploreFeedReady(searchParams);
-  const filters = parseExploreFiltersFromParams(searchParams);
+  const filters = useMemo(() => parseExploreFiltersFromParams(searchParams), [searchParams]);
   const feedParamsKey = exploreFeedParamsKey(searchParams);
 
   const refreshCounts = useCallback(() => {
@@ -168,8 +185,14 @@ function ExploreContent() {
             menuVariant="overlay"
             logoHref="/"
             className="py-1.5"
+            onMenuOpenChange={handleHeaderMenuOpenChange}
             action={
-              <button type="button" onClick={handleOpenFilterScreen} className="btn-pill-overlay">
+              <button
+                type="button"
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={handleOpenFilterScreen}
+                className="btn-pill-overlay"
+              >
                 条件変更
               </button>
             }

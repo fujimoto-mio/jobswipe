@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import SwipeCard from "./SwipeCard";
 import ApplyModal from "./ApplyModal";
@@ -42,6 +42,9 @@ export default function VideoFeed({
   const [applyJob, setApplyJob] = useState<Job | null>(null);
   const [detailJob, setDetailJob] = useState<Job | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const feedIdentityRef = useRef("");
+
+  const filterKey = exploreFeedCacheKey(filters);
 
   const buildJobsUrl = useCallback(() => {
     const params = new URLSearchParams();
@@ -49,16 +52,19 @@ export default function VideoFeed({
     if (filters.categories.length) params.set("categories", filters.categories.join(","));
     const qs = params.toString();
     return `/api/jobs${qs ? `?${qs}` : ""}`;
-  }, [filters]);
+  }, [filterKey, filters.areas, filters.categories]);
 
   const fetchData = useCallback(async () => {
     const jobsUrl = buildJobsUrl();
-    const cacheKey = exploreFeedCacheKey(filters);
-    const cached = getExploreFeedCache(cacheKey, fetchKey);
+    const feedIdentity = `${filterKey}|${fetchKey}`;
+    const isNewFeed = feedIdentityRef.current !== feedIdentity;
+    feedIdentityRef.current = feedIdentity;
+
+    const cached = getExploreFeedCache(filterKey, fetchKey);
 
     if (cached) {
       setJobs(cached.jobs);
-      setIndex(0);
+      if (isNewFeed) setIndex(0);
       setSavedIds(new Set(cached.savedIds));
       onSaveCountChange?.(cached.count);
       setLoading(false);
@@ -81,7 +87,7 @@ export default function VideoFeed({
       setIndex(0);
       setSavedIds(new Set(nextSavedIds));
       onSaveCountChange?.(nextCount);
-      setExploreFeedCache(cacheKey, fetchKey, {
+      setExploreFeedCache(filterKey, fetchKey, {
         jobs: nextJobs,
         savedIds: nextSavedIds,
         count: nextCount,
@@ -89,7 +95,7 @@ export default function VideoFeed({
     } finally {
       setLoading(false);
     }
-  }, [buildJobsUrl, fetchKey, filters, onSaveCountChange]);
+  }, [buildJobsUrl, fetchKey, filterKey, onSaveCountChange]);
 
   useEffect(() => {
     fetchData();
@@ -138,7 +144,7 @@ export default function VideoFeed({
     onSaveCountChange?.(nextCount);
     invalidateApiCache("/api/saves");
     updateExploreFeedSaves(
-      exploreFeedCacheKey(filters),
+      filterKey,
       fetchKey,
       nextSavedIds,
       nextCount
