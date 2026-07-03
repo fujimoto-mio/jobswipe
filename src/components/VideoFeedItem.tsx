@@ -1,8 +1,12 @@
 "use client";
 
-import { Play, Volume2, VolumeX, Heart, Send, FileText } from "lucide-react";
+import { Play, Volume2, VolumeX, Heart, Send, FileText, MapPin, Briefcase } from "lucide-react";
 import type { Job } from "@/lib/types";
 import { useVideoPlayback } from "@/hooks/useVideoPlayback";
+
+function displayVideoTag(tag: string) {
+  return tag.trim().replace(/^#/, "");
+}
 
 type VideoFeedItemProps = {
   job: Job;
@@ -147,14 +151,42 @@ export default function VideoFeedItem({
           onClick={onDetail}
           className="w-full text-left"
         >
-          <p className="text-[15px] font-bold text-white drop-shadow-lg">{job.company}</p>
-          <p className="mt-1 text-sm text-white/90 drop-shadow-md">
-            {job.location.split("（")[0]} · {job.salary}
+          <div className="flex items-center gap-2.5">
+            <img
+              src={job.companyLogo}
+              alt=""
+              className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-white/30"
+            />
+            <div className="min-w-0">
+              <p className="truncate text-[15px] font-bold text-white drop-shadow-lg">{job.company}</p>
+              <p className="text-xs font-medium text-white/75 drop-shadow">{job.employmentType}</p>
+            </div>
+          </div>
+
+          <p className="mt-2 text-xl font-bold leading-snug text-white drop-shadow-lg">{job.title}</p>
+
+          <p className="mt-1.5 flex items-start gap-1.5 text-sm text-white/90 drop-shadow-md">
+            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-white/80" aria-hidden />
+            <span>{job.location}</span>
           </p>
-          <p className="mt-1 text-sm font-medium text-white/95 drop-shadow-md">{job.category}</p>
-          <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-white/80 drop-shadow">
-            {job.title}
+
+          <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-emerald-400 drop-shadow-md">
+            <Briefcase className="h-4 w-4 shrink-0" aria-hidden />
+            <span>{job.salary}</span>
           </p>
+
+          {job.tags.length > 0 && (
+            <div className="mt-2.5 flex flex-wrap gap-1.5">
+              {job.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full border border-white/35 bg-white/12 px-2.5 py-1 text-xs font-medium text-white/90 backdrop-blur-sm"
+                >
+                  {displayVideoTag(tag)}
+                </span>
+              ))}
+            </div>
+          )}
         </button>
 
         <div className="mt-3 flex gap-2">
@@ -184,7 +216,7 @@ export default function VideoFeedItem({
       </div>
 
       {isActive && (
-        <div className="pointer-events-none absolute bottom-[4.75rem] left-1/2 z-10 -translate-x-1/2">
+        <div className="pointer-events-none absolute bottom-[7.5rem] left-1/2 z-10 -translate-x-1/2">
           <span className="rounded-full bg-black/30 px-2.5 py-1 text-[10px] font-medium text-white/50 backdrop-blur-sm">
             ←前 · →次
           </span>
