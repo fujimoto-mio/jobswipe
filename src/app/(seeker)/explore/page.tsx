@@ -13,6 +13,7 @@ import { PageLoading } from "@/components/ui/LoadingSpinner";
 import type { JobFilters } from "@/lib/types";
 import {
   DEFAULT_JOB_FILTERS,
+  EXPLORE_FILTERS_PARAM,
   buildExploreFeedParams,
   exploreFeedParamsKey,
   isExploreFeedReady,
@@ -75,7 +76,8 @@ function ExploreContent() {
   };
 
   const handleSkipFilters = () => {
-    navigateToFeed(DEFAULT_JOB_FILTERS, { started: true });
+    saveStoredExploreFilters(DEFAULT_JOB_FILTERS);
+    navigateToFeed(DEFAULT_JOB_FILTERS);
   };
 
   const handleDraftFiltersChange = (nextFilters: JobFilters) => {
@@ -86,7 +88,7 @@ function ExploreContent() {
   const handleOpenFilterScreen = () => {
     setDraftFilters(filters);
     saveStoredExploreFilters(filters);
-    router.replace("/explore");
+    router.replace(`/explore?${EXPLORE_FILTERS_PARAM}=1`);
   };
 
   if (!authReady || !isLoggedIn) {

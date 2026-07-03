@@ -3167,15 +3167,16 @@ body {
 }
 
 .staff-ui .input-field {
-  border: none;
+  border: 1px solid rgba(114, 144, 193, 0.24);
   border-radius: var(--staff-radius);
-  background-color: #f1f5f9;
+  background-color: #ffffff;
   padding: 0.8125rem 1rem;
   font-size: 0.9375rem;
   font-weight: 500;
   line-height: 1.35;
   color: #0f172a;
-  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .staff-ui .input-field::placeholder {
   color: #94a3b8;
@@ -3183,15 +3184,35 @@ body {
 }
 .staff-ui .input-field:focus {
   outline: none;
-  background-color: #e2e8f0;
-  box-shadow: 0 0 0 2px rgba(39, 169, 181, 0.18);
+  background-color: #ffffff;
+  border-color: rgba(39, 169, 181, 0.5);
+  box-shadow: 0 0 0 3px rgba(39, 169, 181, 0.14);
+}
+.staff-ui .input-field:read-only,
+.staff-ui .input-field:disabled {
+  background-color: #f8fafc;
+  border-color: rgba(114, 144, 193, 0.18);
+  color: #64748b;
 }
 .staff-ui .select-picker-trigger.input-field {
   appearance: none;
   -webkit-appearance: none;
   cursor: pointer;
   padding-right: 2.75rem;
-  background-color: #f1f5f9;
+  background-color: #ffffff;
+}
+
+.staff-ui .staff-form-card .input-field,
+.staff-ui .staff-form-card .select-picker-trigger.input-field,
+.staff-ui .staff-form-card textarea.input-field {
+  border: 1px solid rgba(114, 144, 193, 0.32);
+  background-color: #ffffff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+.staff-ui .staff-form-card .input-field:hover:not(:disabled):not(:read-only),
+.staff-ui .staff-form-card .select-picker-trigger.input-field:hover:not(:disabled) {
+  border-color: rgba(39, 169, 181, 0.4);
 }
 
 .staff-ui .chip {

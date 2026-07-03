@@ -45,6 +45,7 @@ export function saveStoredExploreFilters(filters: JobFilters): void {
 }
 
 export const EXPLORE_STARTED_PARAM = "started";
+export const EXPLORE_FILTERS_PARAM = "filters";
 
 export function parseExploreFiltersFromParams(searchParams: URLSearchParams): JobFilters {
   const areas = searchParams.get("areas")?.split(",").filter(Boolean) ?? [];
@@ -52,13 +53,12 @@ export function parseExploreFiltersFromParams(searchParams: URLSearchParams): Jo
   return { areas, categories };
 }
 
+export function isExploreFilterScreen(searchParams: URLSearchParams): boolean {
+  return searchParams.get(EXPLORE_FILTERS_PARAM) === "1";
+}
+
 export function isExploreFeedReady(searchParams: URLSearchParams): boolean {
-  if (searchParams.get(EXPLORE_STARTED_PARAM) === "1") return true;
-  const areas = searchParams.get("areas");
-  const categories = searchParams.get("categories");
-  if (areas) return true;
-  if (categories) return true;
-  return false;
+  return !isExploreFilterScreen(searchParams);
 }
 
 export function buildExploreFeedParams(
@@ -68,6 +68,8 @@ export function buildExploreFeedParams(
   const params = new URLSearchParams();
   if (options?.started) {
     params.set(EXPLORE_STARTED_PARAM, "1");
+    if (filters.areas.length) params.set("areas", filters.areas.join(","));
+    if (filters.categories.length) params.set("categories", filters.categories.join(","));
     return params;
   }
   if (filters.areas.length) params.set("areas", filters.areas.join(","));

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Form, Formik } from "formik";
-import { ArrowLeft, Upload, ImageIcon } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
 import JobFormFields, { type CompanyOption } from "@/components/form/JobFormFields";
 import { validateVideoFileFull } from "@/lib/video";
@@ -14,6 +14,7 @@ import { useStaffPanel } from "@/components/staff/StaffPanelContext";
 import { apiFetch } from "@/lib/api-client";
 import { jobFormSchema } from "@/lib/validation/schemas";
 import { jobFormValuesToBody, jobToFormValues } from "@/lib/validation/job-form-utils";
+import JobThumbnailUploadField from "@/components/staff/JobThumbnailUploadField";
 import JobVideoUploadField from "@/components/staff/JobVideoUploadField";
 import { uploadFile } from "@/lib/upload-client";
 type JobStaffFormPageProps = {
@@ -34,6 +35,7 @@ export default function JobStaffFormPage({ jobId }: JobStaffFormPageProps) {
   const [companyLocked, setCompanyLocked] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [videoCleared, setVideoCleared] = useState(false);
+  const [thumbnailCleared, setThumbnailCleared] = useState(false);
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
 
   useEffect(() => {
@@ -87,8 +89,17 @@ export default function JobStaffFormPage({ jobId }: JobStaffFormPageProps) {
     }
     setUploadError(null);
     setThumbnailFile(file);
+    setThumbnailCleared(false);
     if (thumbnailPreview?.startsWith("blob:")) URL.revokeObjectURL(thumbnailPreview);
     setThumbnailPreview(URL.createObjectURL(file));
+  };
+
+  const clearThumbnail = () => {
+    if (thumbnailPreview?.startsWith("blob:")) URL.revokeObjectURL(thumbnailPreview);
+    setThumbnailFile(null);
+    setThumbnailPreview(null);
+    setThumbnailCleared(true);
+    setUploadError(null);
   };
 
   const handleVideoFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -156,7 +167,7 @@ export default function JobStaffFormPage({ jobId }: JobStaffFormPageProps) {
 
           try {
             let videoUrl = values.videoUrl?.trim() ?? "";
-            let thumbnailUrl = job.thumbnailUrl;
+            let thumbnailUrl: string | undefined = job.thumbnailUrl;
 
             if (videoFile) {
               videoUrl = await uploadFile(videoFile, "video");
@@ -166,6 +177,8 @@ export default function JobStaffFormPage({ jobId }: JobStaffFormPageProps) {
 
             if (thumbnailFile) {
               thumbnailUrl = await uploadFile(thumbnailFile, "thumbnail");
+            } else if (thumbnailCleared) {
+              thumbnailUrl = "";
             }
 
             const res = await apiFetch(`/api/jobs/${jobId}`, {
@@ -187,30 +200,20 @@ export default function JobStaffFormPage({ jobId }: JobStaffFormPageProps) {
         }}
       >
         {({ isSubmitting, setFieldValue }) => (
-          <Form className="space-y-5">
-            <JobFormFields companyLocked={companyLocked} companies={companies} />
-
-            <div className="rounded-2xl border border-dashed border-[#E2E8F0] bg-[#F8FAFC] p-6">
-              <div className="mb-4 flex items-center gap-2">
-                <ImageIcon className="h-5 w-5 text-[#2563EB]" />
-                <h3 className="font-medium text-[#1E293B]">サムネイル画像</h3>
-              </div>
-
-              <label className="mb-4 flex cursor-pointer flex-col items-center gap-2 rounded-xl border border-[#E2E8F0] bg-white py-6 transition hover:bg-[#F8FAFC]">
-                <Upload className="h-6 w-6 text-[#94A3B8]" />
-                <span className="text-sm text-[#64748B]">新しいサムネイルをアップロード</span>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  className="hidden"
-                  onChange={handleThumbnailFile}
-                />
-              </label>
-
-              {thumbnailPreview && (
-                <img src={thumbnailPreview} alt="" className="h-40 w-full rounded-xl object-cover" />
-              )}
+          <Form className="staff-ui space-y-5">
+            <div className="staff-form-card space-y-5 rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+              <JobFormFields companyLocked={companyLocked} companies={companies} />
             </div>
+
+            <JobThumbnailUploadField
+              thumbnailPreview={thumbnailPreview}
+              thumbnailFile={thumbnailFile}
+              onThumbnailFile={handleThumbnailFile}
+              onClearThumbnail={clearThumbnail}
+              existingThumbnail={
+                !thumbnailFile && !thumbnailCleared && Boolean(job.thumbnailUrl && thumbnailPreview)
+              }
+            />
 
             <JobVideoUploadField
               videoPreview={videoPreview}

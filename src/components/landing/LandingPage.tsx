@@ -103,7 +103,7 @@ export default function LandingPage() {
       const role = data.session.user.app_metadata?.role ?? data.session.user.user_metadata?.role;
       if (role === "admin") router.replace("/admin");
       else if (role === "company") router.replace("/company");
-      else router.replace("/explore");
+      else router.replace("/explore?started=1");
     });
   }, [router]);
 

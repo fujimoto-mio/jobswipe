@@ -82,8 +82,10 @@ export default function RegisterPageContent() {
   );
   const [error, setError] = useState("");
 
-  const next = searchParams.get("next") || "/explore";
-  const loginHref = `/login${next !== "/explore" ? `?next=${encodeURIComponent(next)}` : ""}`;
+  const next = searchParams.get("next") || "/explore?started=1";
+  const loginHref = `/login${
+    next !== "/explore?started=1" && next !== "/explore" ? `?next=${encodeURIComponent(next)}` : ""
+  }`;
 
   const selectAccountType = (type: AccountType) => {
     setError("");

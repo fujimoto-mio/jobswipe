@@ -164,8 +164,8 @@ export default function VideoFeed({ filters, fetchKey = "", onSaveCountChange }:
             job={prevJob}
             isTop={false}
             isSaved={savedIds.has(prevJob.id)}
-            onSwipeLeft={() => {}}
-            onSwipeRight={() => {}}
+            onSwipeUp={() => {}}
+            onSwipeDown={() => {}}
             onSave={() => handleSave(prevJob)}
             onApply={() => setApplyJob(prevJob)}
             onDetail={() => setDetailJob(prevJob)}
@@ -177,8 +177,8 @@ export default function VideoFeed({ filters, fetchKey = "", onSaveCountChange }:
             job={nextJob}
             isTop={false}
             isSaved={savedIds.has(nextJob.id)}
-            onSwipeLeft={() => {}}
-            onSwipeRight={() => {}}
+            onSwipeUp={() => {}}
+            onSwipeDown={() => {}}
             onSave={() => handleSave(nextJob)}
             onApply={() => setApplyJob(nextJob)}
             onDetail={() => setDetailJob(nextJob)}
@@ -191,10 +191,10 @@ export default function VideoFeed({ filters, fetchKey = "", onSaveCountChange }:
               job={currentJob}
               isTop={true}
               isSaved={savedIds.has(currentJob.id)}
-              canSwipeLeft={canGoNext}
-              canSwipeRight={canGoPrev}
-              onSwipeLeft={goNext}
-              onSwipeRight={goPrev}
+              canSwipeUp={canGoNext}
+              canSwipeDown={canGoPrev}
+              onSwipeUp={goNext}
+              onSwipeDown={goPrev}
               onSave={() => handleSave(currentJob)}
               onApply={() => setApplyJob(currentJob)}
               onDetail={() => setDetailJob(currentJob)}

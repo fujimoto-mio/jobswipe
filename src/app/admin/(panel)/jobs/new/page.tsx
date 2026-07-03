@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Form, Formik } from "formik";
-import { ArrowLeft, Upload, ImageIcon } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import JobFormFields, { type CompanyOption } from "@/components/form/JobFormFields";
 import { validateVideoFileFull } from "@/lib/video";
 import { useStaffPanel } from "@/components/staff/StaffPanelContext";
 import { apiFetch } from "@/lib/api-client";
 import { jobFormSchema } from "@/lib/validation/schemas";
 import { emptyJobFormValues, jobFormValuesToBody } from "@/lib/validation/job-form-utils";
+import JobThumbnailUploadField from "@/components/staff/JobThumbnailUploadField";
 import JobVideoUploadField from "@/components/staff/JobVideoUploadField";
 import { uploadFile } from "@/lib/upload-client";
 export default function NewJobPage() {
@@ -77,6 +78,13 @@ export default function NewJobPage() {
     setVideoPreview(URL.createObjectURL(file));
   };
 
+  const clearThumbnail = () => {
+    if (thumbnailPreview?.startsWith("blob:")) URL.revokeObjectURL(thumbnailPreview);
+    setThumbnailFile(null);
+    setThumbnailPreview(null);
+    setUploadError(null);
+  };
+
   const clearVideo = (setFieldValue: (field: string, value: string) => void) => {
     if (videoPreview?.startsWith("blob:")) URL.revokeObjectURL(videoPreview);
     setVideoFile(null);
@@ -139,25 +147,17 @@ export default function NewJobPage() {
         }}
       >
         {({ isSubmitting, setFieldValue }) => (
-          <Form className="space-y-5">
-            <JobFormFields companyLocked={companyLocked} companies={companies} />
-
-            <div className="rounded-2xl border border-dashed border-[#E2E8F0] bg-[#F8FAFC] p-6">
-              <div className="mb-4 flex items-center gap-2">
-                <ImageIcon className="h-5 w-5 text-[#2563EB]" />
-                <h3 className="font-medium text-[#1E293B]">サムネイル画像（任意）</h3>
-              </div>
-
-              <label className="mb-4 flex cursor-pointer flex-col items-center gap-2 rounded-xl border border-[#E2E8F0] bg-white py-6 transition hover:bg-[#F8FAFC]">
-                <Upload className="h-6 w-6 text-[#94A3B8]" />
-                <span className="text-sm text-[#64748B]">JPEG / PNG を選択</span>
-                <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleThumbnailFile} />
-              </label>
-
-              {thumbnailPreview && (
-                <img src={thumbnailPreview} alt="" className="mb-4 h-40 w-full rounded-xl object-cover" />
-              )}
+          <Form className="staff-ui space-y-5">
+            <div className="staff-form-card space-y-5 rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+              <JobFormFields companyLocked={companyLocked} companies={companies} />
             </div>
+
+            <JobThumbnailUploadField
+              thumbnailPreview={thumbnailPreview}
+              thumbnailFile={thumbnailFile}
+              onThumbnailFile={handleThumbnailFile}
+              onClearThumbnail={clearThumbnail}
+            />
 
             <JobVideoUploadField
               videoPreview={videoPreview}

@@ -19,13 +19,13 @@ export default function LoginPageContent() {
   const searchParams = useSearchParams();
   const [error, setError] = useState("");
 
-  const next = searchParams.get("next") || "/explore";
+  const next = searchParams.get("next") || "/explore?started=1";
   const registered = searchParams.get("registered") === "1";
   const authRequired = searchParams.get("reason") === "required";
 
   const seekerRegisterHref = (() => {
     const params = new URLSearchParams({ type: "seeker" });
-    if (next !== "/explore") params.set("next", next);
+    if (next !== "/explore?started=1" && next !== "/explore") params.set("next", next);
     return `/register?${params.toString()}`;
   })();
 

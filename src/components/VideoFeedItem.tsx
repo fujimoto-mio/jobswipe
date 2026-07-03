@@ -197,7 +197,7 @@ export default function VideoFeedItem({
       {isActive && (
         <div className="seeker-video-feed-swipe-hint pointer-events-none absolute left-1/2 z-10 -translate-x-1/2">
           <span className="rounded-full bg-black/30 px-2.5 py-1 text-[10px] font-medium text-white/50 backdrop-blur-sm">
-            ←前 · →次
+            ↑次 · ↓前
           </span>
         </div>
       )}

@@ -1,3 +1,5 @@
+import { VIDEO_MAX_BYTES } from "@/lib/storage/constants";
+
 /** Recommended video specs for job uploads */
 export const VIDEO_SPECS = {
   format: "MP4 (H.264 + AAC)",
@@ -5,7 +7,7 @@ export const VIDEO_SPECS = {
   recommendedResolution: "720×1280",
   maxBitrate: "4 Mbps",
   recommendedBitrate: "2–3 Mbps",
-  maxFileSizeMB: 30,
+  maxFileSizeMB: VIDEO_MAX_BYTES / (1024 * 1024),
   faststart: true,
 } as const;
 

@@ -11,10 +11,10 @@ type SwipeCardProps = {
   job: Job;
   isTop: boolean;
   isSaved: boolean;
-  canSwipeLeft?: boolean;
-  canSwipeRight?: boolean;
-  onSwipeLeft: () => void;
-  onSwipeRight: () => void;
+  canSwipeUp?: boolean;
+  canSwipeDown?: boolean;
+  onSwipeUp: () => void;
+  onSwipeDown: () => void;
   onSave: () => void;
   onApply: () => void;
   onDetail: () => void;
@@ -24,47 +24,46 @@ export default function SwipeCard({
   job,
   isTop,
   isSaved,
-  canSwipeLeft = true,
-  canSwipeRight = true,
-  onSwipeLeft,
-  onSwipeRight,
+  canSwipeUp = true,
+  canSwipeDown = true,
+  onSwipeUp,
+  onSwipeDown,
   onSave,
   onApply,
   onDetail,
 }: SwipeCardProps) {
-  const x = useMotionValue(0);
-  const rotate = useTransform(x, [-200, 0, 200], [-6, 0, 6]);
-  const prevOpacity = useTransform(x, [0, 100], [0, 1]);
-  const nextOpacity = useTransform(x, [-100, 0], [1, 0]);
+  const y = useMotionValue(0);
+  const prevOpacity = useTransform(y, [0, 100], [0, 1]);
+  const nextOpacity = useTransform(y, [-100, 0], [1, 0]);
 
   useEffect(() => {
-    x.set(0);
-  }, [job.id, x]);
+    y.set(0);
+  }, [job.id, y]);
 
   const snapBack = () => {
-    animate(x, 0, { type: "spring", stiffness: 500, damping: 35 });
+    animate(y, 0, { type: "spring", stiffness: 500, damping: 35 });
   };
 
   const handleDragEnd = (_: unknown, info: PanInfo) => {
     const { offset } = info;
 
-    if (offset.x < -SWIPE_THRESHOLD) {
-      if (!canSwipeLeft) {
+    if (offset.y < -SWIPE_THRESHOLD) {
+      if (!canSwipeUp) {
         snapBack();
         return;
       }
-      animate(x, -500, { duration: 0.22 }).then(() => {
-        onSwipeLeft();
-        x.set(0);
+      animate(y, -600, { duration: 0.22 }).then(() => {
+        onSwipeUp();
+        y.set(0);
       });
-    } else if (offset.x > SWIPE_THRESHOLD) {
-      if (!canSwipeRight) {
+    } else if (offset.y > SWIPE_THRESHOLD) {
+      if (!canSwipeDown) {
         snapBack();
         return;
       }
-      animate(x, 500, { duration: 0.22 }).then(() => {
-        onSwipeRight();
-        x.set(0);
+      animate(y, 600, { duration: 0.22 }).then(() => {
+        onSwipeDown();
+        y.set(0);
       });
     } else {
       snapBack();
@@ -74,9 +73,9 @@ export default function SwipeCard({
   return (
     <motion.div
       className="absolute inset-0 cursor-grab select-none active:cursor-grabbing"
-      style={{ x, rotate, zIndex: isTop ? 10 : 0, touchAction: "none" }}
-      drag={isTop ? "x" : false}
-      dragConstraints={{ left: 0, right: 0 }}
+      style={{ y, zIndex: isTop ? 10 : 0, touchAction: "none" }}
+      drag={isTop ? "y" : false}
+      dragConstraints={{ top: 0, bottom: 0 }}
       dragElastic={0.9}
       dragMomentum={false}
       onDragEnd={handleDragEnd}
@@ -107,7 +106,7 @@ export default function SwipeCard({
             </motion.div>
             <motion.div
               style={{ opacity: nextOpacity }}
-              className="pointer-events-none absolute left-1/2 top-[38%] z-30 -translate-x-1/2"
+              className="pointer-events-none absolute left-1/2 top-[32%] z-30 -translate-x-1/2"
             >
               <div className="rounded-2xl border-[3px] border-emerald-400 px-6 py-2">
                 <span className="text-3xl font-black tracking-wide text-emerald-400">次へ</span>

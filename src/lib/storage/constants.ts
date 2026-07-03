@@ -17,6 +17,8 @@ export type UploadKind =
   | "seeker-avatar"
   | "seeker-banner";
 
+export const VIDEO_MAX_BYTES = 100 * 1024 * 1024;
+
 export const UPLOAD_KIND_CONFIG: Record<
   UploadKind,
   {
@@ -29,7 +31,7 @@ export const UPLOAD_KIND_CONFIG: Record<
   video: {
     bucket: STORAGE_BUCKETS.public,
     folder: "jobs/videos",
-    maxBytes: 30 * 1024 * 1024,
+    maxBytes: VIDEO_MAX_BYTES,
     mimePrefix: "video/",
   },
   thumbnail: {
