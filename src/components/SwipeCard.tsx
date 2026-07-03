@@ -11,10 +11,13 @@ type SwipeCardProps = {
   job: Job;
   isTop: boolean;
   isSaved: boolean;
+  chromeVisible?: boolean;
   canSwipeUp?: boolean;
   canSwipeDown?: boolean;
   onSwipeUp: () => void;
   onSwipeDown: () => void;
+  onToggleChrome?: () => void;
+  onChromeActivity?: () => void;
   onSave: () => void;
   onApply: () => void;
   onDetail: () => void;
@@ -24,10 +27,13 @@ export default function SwipeCard({
   job,
   isTop,
   isSaved,
+  chromeVisible = true,
   canSwipeUp = true,
   canSwipeDown = true,
   onSwipeUp,
   onSwipeDown,
+  onToggleChrome,
+  onChromeActivity,
   onSave,
   onApply,
   onDetail,
@@ -79,6 +85,7 @@ export default function SwipeCard({
       dragElastic={0.9}
       dragMomentum={false}
       onDragEnd={handleDragEnd}
+      onTap={isTop ? onToggleChrome : undefined}
       initial={{ scale: isTop ? 1 : 0.98, opacity: isTop ? 1 : 0.85 }}
       animate={{ scale: isTop ? 1 : 0.98, opacity: isTop ? 1 : 0.85 }}
       exit={{ opacity: 0, transition: { duration: 0.15 } }}
@@ -88,13 +95,15 @@ export default function SwipeCard({
           job={job}
           isActive={isTop}
           swipeEnabled={isTop}
+          chromeVisible={chromeVisible}
           isSaved={isSaved}
+          onChromeActivity={onChromeActivity}
           onSave={onSave}
           onApply={onApply}
           onDetail={onDetail}
         />
 
-        {isTop && (
+        {isTop && chromeVisible && (
           <>
             <motion.div
               style={{ opacity: prevOpacity }}

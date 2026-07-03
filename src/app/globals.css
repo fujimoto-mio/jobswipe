@@ -659,6 +659,12 @@ body {
   background: rgba(254, 44, 85, 0.1);
 }
 
+.seeker-ui .empty-state--seeker {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 .seeker-ui .btn-secondary {
   border-radius: 9999px;
   border: none;
@@ -991,6 +997,19 @@ body {
 
 .seeker-explore-feed .seeker-video-feed-swipe-hint {
   bottom: var(--seeker-video-swipe-hint-bottom);
+}
+
+.seeker-explore-feed--chrome-hidden .seeker-explore-feed-header,
+.seeker-explore-feed--chrome-hidden .seeker-bottom-nav {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.seeker-explore-feed--chrome-hidden {
+  --seeker-video-nav-clearance: calc(1rem + env(safe-area-inset-bottom, 0px));
+  --seeker-video-rail-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  --seeker-video-info-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  --seeker-video-swipe-hint-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
 }
 
 .seeker-ui .chip {

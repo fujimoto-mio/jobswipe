@@ -6,7 +6,7 @@ import { mapStaffPanelPath } from "@/lib/staff/paths";
 export type { AuthRole, StaffRole } from "@/lib/auth/roles";
 export { getRoleFromUser, isStaffRole } from "@/lib/auth/roles";
 
-const SEEKER_PROTECTED = ["/liked", "/profile", "/chat"];
+const SEEKER_PROTECTED = ["/liked", "/profile", "/chat", "/courses"];
 /** Auth required; route handlers enforce seeker vs staff permissions. */
 const AUTH_REQUIRED_APIS = ["/api/saves", "/api/applications", "/api/chat", "/api/profile"];
 

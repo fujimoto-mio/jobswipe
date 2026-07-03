@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, Heart, User, MessageCircle } from "lucide-react";
+import { Search, Heart, User, MessageCircle, GraduationCap } from "lucide-react";
 
 type BottomNavProps = {
   saveCount?: number;
@@ -18,6 +18,7 @@ export default function BottomNav({ saveCount = 0, chatCount = 0, theme = "light
     { href: "/explore", label: "探す", icon: Search },
     { href: "/liked", label: "保存", icon: Heart, badge: saveCount },
     { href: "/chat", label: "チャット", icon: MessageCircle, badge: chatCount },
+    { href: "/courses", label: "スキル講座", icon: GraduationCap },
     { href: "/profile", label: "プロフィール", icon: User },
   ];
 
@@ -50,7 +51,9 @@ export default function BottomNav({ saveCount = 0, chatCount = 0, theme = "light
                   </span>
                 )}
               </div>
-              <span className={`text-[10px] ${isActive ? "font-semibold" : "font-medium"}`}>{label}</span>
+              <span className={`max-w-[4.25rem] truncate text-[10px] leading-tight ${isActive ? "font-semibold" : "font-medium"}`}>
+                {label}
+              </span>
               {isActive && (
                 <span className="absolute -bottom-0.5 h-0.5 w-5 rounded-full bg-[var(--accent)]" />
               )}

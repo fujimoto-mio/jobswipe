@@ -20,9 +20,21 @@ type VideoFeedProps = {
   filters: JobFilters;
   fetchKey?: string;
   onSaveCountChange?: (count: number) => void;
+  chromeVisible?: boolean;
+  onToggleChrome?: () => void;
+  onChromeActivity?: () => void;
+  onChromeDismiss?: () => void;
 };
 
-export default function VideoFeed({ filters, fetchKey = "", onSaveCountChange }: VideoFeedProps) {
+export default function VideoFeed({
+  filters,
+  fetchKey = "",
+  onSaveCountChange,
+  chromeVisible = false,
+  onToggleChrome,
+  onChromeActivity,
+  onChromeDismiss,
+}: VideoFeedProps) {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [index, setIndex] = useState(0);
@@ -103,10 +115,17 @@ export default function VideoFeed({ filters, fetchKey = "", onSaveCountChange }:
     setTimeout(() => setToast(null), 2000);
   };
 
-  const goNext = () => setIndex((i) => Math.min(i + 1, jobs.length - 1));
-  const goPrev = () => setIndex((i) => Math.max(i - 1, 0));
+  const goNext = () => {
+    onChromeDismiss?.();
+    setIndex((i) => Math.min(i + 1, jobs.length - 1));
+  };
+  const goPrev = () => {
+    onChromeDismiss?.();
+    setIndex((i) => Math.max(i - 1, 0));
+  };
 
   const handleSave = async (job: Job) => {
+    onChromeActivity?.();
     const res = await apiFetch("/api/saves", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -164,6 +183,7 @@ export default function VideoFeed({ filters, fetchKey = "", onSaveCountChange }:
             job={prevJob}
             isTop={false}
             isSaved={savedIds.has(prevJob.id)}
+            chromeVisible={chromeVisible}
             onSwipeUp={() => {}}
             onSwipeDown={() => {}}
             onSave={() => handleSave(prevJob)}
@@ -177,6 +197,7 @@ export default function VideoFeed({ filters, fetchKey = "", onSaveCountChange }:
             job={nextJob}
             isTop={false}
             isSaved={savedIds.has(nextJob.id)}
+            chromeVisible={chromeVisible}
             onSwipeUp={() => {}}
             onSwipeDown={() => {}}
             onSave={() => handleSave(nextJob)}
@@ -191,13 +212,22 @@ export default function VideoFeed({ filters, fetchKey = "", onSaveCountChange }:
               job={currentJob}
               isTop={true}
               isSaved={savedIds.has(currentJob.id)}
+              chromeVisible={chromeVisible}
               canSwipeUp={canGoNext}
               canSwipeDown={canGoPrev}
               onSwipeUp={goNext}
               onSwipeDown={goPrev}
-              onSave={() => handleSave(currentJob)}
-              onApply={() => setApplyJob(currentJob)}
-              onDetail={() => setDetailJob(currentJob)}
+            onToggleChrome={onToggleChrome}
+            onChromeActivity={onChromeActivity}
+            onSave={() => handleSave(currentJob)}
+            onApply={() => {
+              onChromeActivity?.();
+              setApplyJob(currentJob);
+            }}
+            onDetail={() => {
+              onChromeActivity?.();
+              setDetailJob(currentJob);
+            }}
             />
           )}
         </AnimatePresence>

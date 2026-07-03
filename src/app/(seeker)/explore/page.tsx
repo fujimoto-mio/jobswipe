@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, Suspense } from "react";
+import { useEffect, useState, useCallback, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import VideoFeed from "@/components/VideoFeed";
 import BottomNav from "@/components/BottomNav";
@@ -22,6 +22,8 @@ import {
   saveStoredExploreFilters,
 } from "@/lib/job-filters";
 
+const CHROME_AUTO_HIDE_MS = 3000;
+
 function ExploreContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -30,6 +32,37 @@ function ExploreContent() {
   const [authReady, setAuthReady] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [draftFilters, setDraftFilters] = useState<JobFilters>(() => loadStoredExploreFilters());
+  const [chromeVisible, setChromeVisible] = useState(false);
+  const hideChromeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearChromeHideTimer = useCallback(() => {
+    if (hideChromeTimerRef.current) {
+      clearTimeout(hideChromeTimerRef.current);
+      hideChromeTimerRef.current = null;
+    }
+  }, []);
+
+  const scheduleChromeHide = useCallback(() => {
+    clearChromeHideTimer();
+    hideChromeTimerRef.current = setTimeout(() => {
+      setChromeVisible(false);
+      hideChromeTimerRef.current = null;
+    }, CHROME_AUTO_HIDE_MS);
+  }, [clearChromeHideTimer]);
+
+  const revealChrome = useCallback(() => {
+    setChromeVisible(true);
+    scheduleChromeHide();
+  }, [scheduleChromeHide]);
+
+  const keepChromeVisible = revealChrome;
+
+  const hideChrome = useCallback(() => {
+    clearChromeHideTimer();
+    setChromeVisible(false);
+  }, [clearChromeHideTimer]);
+
+  useEffect(() => () => clearChromeHideTimer(), [clearChromeHideTimer]);
 
   const showFeed = isExploreFeedReady(searchParams);
   const filters = parseExploreFiltersFromParams(searchParams);
@@ -111,16 +144,24 @@ function ExploreContent() {
   }
 
   return (
-    <div className="seeker-explore-feed relative h-full w-full bg-black">
+    <div
+      className={`seeker-explore-feed relative h-full w-full bg-black ${
+        chromeVisible ? "" : "seeker-explore-feed--chrome-hidden"
+      }`}
+    >
       <main className="absolute inset-0 overflow-hidden">
         <VideoFeed
           filters={filters}
           fetchKey={feedParamsKey}
           onSaveCountChange={setSaveCount}
+          chromeVisible={chromeVisible}
+          onToggleChrome={revealChrome}
+          onChromeActivity={keepChromeVisible}
+          onChromeDismiss={hideChrome}
         />
       </main>
 
-      <header className="pointer-events-none absolute inset-x-0 top-0 z-30 bg-gradient-to-b from-black/55 via-black/15 to-transparent pt-[env(safe-area-inset-top,0px)]">
+      <header className="seeker-explore-feed-header pointer-events-none absolute inset-x-0 top-0 z-30 bg-gradient-to-b from-black/55 via-black/15 to-transparent pt-[env(safe-area-inset-top,0px)] transition-opacity duration-200">
         <div className="pointer-events-auto">
           <SeekerBrandHeader
             theme="dark"

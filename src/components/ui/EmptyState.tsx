@@ -22,7 +22,7 @@ export default function EmptyState({
 
   return (
     <div
-      className={`empty-state flex flex-col items-center justify-center px-6 text-center ${
+      className={`empty-state flex w-full flex-col items-center justify-center px-5 text-center ${
         isSeeker ? "empty-state--seeker gap-3 py-12" : "gap-4 py-16"
       }`}
     >
@@ -38,17 +38,17 @@ export default function EmptyState({
         <Icon
           className={
             isSeeker
-              ? "h-7 w-7 text-[#fe2c55]"
+              ? "h-7 w-7 text-[var(--accent)]"
               : `h-8 w-8 ${dark ? "text-white/25" : "text-slate-300"}`
           }
           strokeWidth={isSeeker ? 2 : 1.5}
         />
       </div>
-      <div>
+      <div className={isSeeker ? "w-full min-w-0 max-w-[18rem] px-1" : undefined}>
         <p
           className={
             isSeeker
-              ? "text-base font-bold tracking-tight text-[#161823]"
+              ? "text-base font-bold tracking-tight text-[var(--seeker-text)]"
               : `font-semibold ${dark ? "text-white" : "text-slate-800"}`
           }
         >
@@ -58,7 +58,7 @@ export default function EmptyState({
           <p
             className={
               isSeeker
-                ? "mt-1.5 text-sm leading-relaxed text-[rgba(22,24,35,0.55)]"
+                ? "mt-1.5 break-words text-sm leading-relaxed text-[var(--seeker-text-muted)]"
                 : `mt-1.5 text-sm leading-relaxed ${dark ? "text-white/45" : "text-slate-500"}`
             }
           >
@@ -66,7 +66,9 @@ export default function EmptyState({
           </p>
         )}
       </div>
-      {action && <div className={isSeeker ? "mt-1" : undefined}>{action}</div>}
+      {action && (
+        <div className={isSeeker ? "mt-3 flex w-full min-w-0 justify-center px-1" : undefined}>{action}</div>
+      )}
     </div>
   );
 }
