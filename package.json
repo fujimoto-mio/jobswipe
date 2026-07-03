@@ -16,6 +16,7 @@
     "storage:scan": "node --env-file=.env scripts/scan-storage-urls.mjs",
     "storage:migrate": "tsx --env-file=.env scripts/migrate-supabase-storage-to-r2.ts",
     "storage:migrate:dry-run": "tsx --env-file=.env scripts/migrate-supabase-storage-to-r2.ts --dry-run",
+    "pwa:icons": "node scripts/generate-pwa-icons.mjs",
     "postinstall": "prisma generate"
   },
   "dependencies": {

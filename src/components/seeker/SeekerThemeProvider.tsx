@@ -15,6 +15,7 @@ import {
   SEEKER_THEME_CHANGE_EVENT,
   type SeekerTheme,
 } from "@/lib/seeker-theme";
+import { isStandalonePwa } from "@/lib/pwa";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
 
 type SeekerThemeContextValue = {
@@ -28,10 +29,20 @@ const SeekerThemeContext = createContext<SeekerThemeContextValue | null>(null);
 export function SeekerThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<SeekerTheme>(DEFAULT_SEEKER_THEME);
   const [ready, setReady] = useState(false);
+  const [immersiveShell, setImmersiveShell] = useState(false);
 
   useEffect(() => {
     setThemeState(loadSeekerTheme());
     setReady(true);
+  }, []);
+
+  useEffect(() => {
+    const syncImmersive = () => setImmersiveShell(isStandalonePwa());
+    syncImmersive();
+
+    const media = window.matchMedia("(display-mode: standalone)");
+    media.addEventListener("change", syncImmersive);
+    return () => media.removeEventListener("change", syncImmersive);
   }, []);
 
   useEffect(() => {
@@ -68,24 +79,30 @@ export function SeekerThemeProvider({ children }: { children: ReactNode }) {
   if (!ready) {
     return (
       <div className="min-h-[100dvh] bg-black">
-        <div
-          className={`seeker-ui seeker-theme-${DEFAULT_SEEKER_THEME} relative mx-auto flex h-[100dvh] min-h-0 w-full max-w-[1440px] flex-col overflow-hidden items-center justify-center`}
-        >
+        <div className="seeker-ui seeker-theme-dark seeker-app-shell--immersive relative flex h-[100dvh] min-h-0 w-full flex-col overflow-hidden items-center justify-center">
           <PageLoading />
         </div>
       </div>
     );
   }
 
+  const shellClass = immersiveShell
+    ? "seeker-app-shell--immersive relative flex h-[100dvh] min-h-0 w-full flex-col overflow-hidden"
+    : "relative mx-auto flex h-[100dvh] min-h-0 w-full max-w-[1440px] flex-col overflow-hidden border-transparent sm:border-x";
+
   return (
     <SeekerThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
       <div className={theme === "dark" ? "min-h-[100dvh] bg-black" : "min-h-[100dvh] bg-slate-100"}>
         <div
-          className={`seeker-ui seeker-theme-${theme} relative mx-auto flex h-[100dvh] min-h-0 w-full max-w-[1440px] flex-col overflow-hidden border-transparent sm:border-x`}
-          style={{
-            borderColor: "var(--seeker-frame-border)",
-            boxShadow: "var(--seeker-frame-shadow)",
-          }}
+          className={`seeker-ui seeker-theme-${theme} ${shellClass}`}
+          style={
+            immersiveShell
+              ? undefined
+              : {
+                  borderColor: "var(--seeker-frame-border)",
+                  boxShadow: "var(--seeker-frame-shadow)",
+                }
+          }
         >
           {children}
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef, useMemo, Suspense } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo, Suspense, type CSSProperties } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import VideoFeed from "@/components/VideoFeed";
 import BottomNav from "@/components/BottomNav";
@@ -9,6 +9,7 @@ import { apiFetch, apiFetchCached } from "@/lib/api-client";
 import { fetchSeekerUnreadTotal } from "@/lib/chat-unread";
 import { getCachedClientSession } from "@/lib/auth/client-session";
 import SeekerBrandHeader from "@/components/seeker/SeekerBrandHeader";
+import PwaInstallBanner from "@/components/pwa/PwaInstallBanner";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
 import type { JobFilters } from "@/lib/types";
 import {
@@ -34,7 +35,10 @@ function ExploreContent() {
   const [draftFilters, setDraftFilters] = useState<JobFilters>(() => loadStoredExploreFilters());
   const [chromeVisible, setChromeVisible] = useState(false);
   const hideChromeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const headerMenuOpenRef = useRef(false);
+  const headerSubmenuOpenRef = useRef({ menu: false, install: false });
+
+  const isHeaderSubmenuOpen = () =>
+    headerSubmenuOpenRef.current.menu || headerSubmenuOpenRef.current.install;
 
   const clearChromeHideTimer = useCallback(() => {
     if (hideChromeTimerRef.current) {
@@ -44,10 +48,10 @@ function ExploreContent() {
   }, []);
 
   const scheduleChromeHide = useCallback(() => {
-    if (headerMenuOpenRef.current) return;
+    if (isHeaderSubmenuOpen()) return;
     clearChromeHideTimer();
     hideChromeTimerRef.current = setTimeout(() => {
-      if (headerMenuOpenRef.current) return;
+      if (isHeaderSubmenuOpen()) return;
       setChromeVisible(false);
       hideChromeTimerRef.current = null;
     }, CHROME_AUTO_HIDE_MS);
@@ -61,22 +65,34 @@ function ExploreContent() {
   const keepChromeVisible = revealChrome;
 
   const hideChrome = useCallback(() => {
-    if (headerMenuOpenRef.current) return;
+    if (isHeaderSubmenuOpen()) return;
     clearChromeHideTimer();
     setChromeVisible(false);
   }, [clearChromeHideTimer]);
 
+  const syncHeaderSubmenuChrome = useCallback(() => {
+    if (isHeaderSubmenuOpen()) {
+      setChromeVisible(true);
+      clearChromeHideTimer();
+      return;
+    }
+    scheduleChromeHide();
+  }, [clearChromeHideTimer, scheduleChromeHide]);
+
   const handleHeaderMenuOpenChange = useCallback(
     (open: boolean) => {
-      headerMenuOpenRef.current = open;
-      if (open) {
-        setChromeVisible(true);
-        clearChromeHideTimer();
-        return;
-      }
-      scheduleChromeHide();
+      headerSubmenuOpenRef.current.menu = open;
+      syncHeaderSubmenuChrome();
     },
-    [clearChromeHideTimer, scheduleChromeHide]
+    [syncHeaderSubmenuChrome]
+  );
+
+  const handleHeaderInstallOpenChange = useCallback(
+    (open: boolean) => {
+      headerSubmenuOpenRef.current.install = open;
+      syncHeaderSubmenuChrome();
+    },
+    [syncHeaderSubmenuChrome]
   );
 
   useEffect(() => () => clearChromeHideTimer(), [clearChromeHideTimer]);
@@ -165,6 +181,13 @@ function ExploreContent() {
       className={`seeker-explore-feed relative h-full w-full bg-black ${
         chromeVisible ? "" : "seeker-explore-feed--chrome-hidden"
       }`}
+      style={
+        {
+          "--pwa-install-banner-bottom": chromeVisible
+            ? "calc(5.5rem + env(safe-area-inset-bottom, 0px))"
+            : "calc(1rem + env(safe-area-inset-bottom, 0px))",
+        } as CSSProperties
+      }
     >
       <main className="absolute inset-0 overflow-hidden">
         <VideoFeed
@@ -185,7 +208,9 @@ function ExploreContent() {
             menuVariant="overlay"
             logoHref="/"
             className="py-1.5"
+            showInstallButton
             onMenuOpenChange={handleHeaderMenuOpenChange}
+            onInstallOpenChange={handleHeaderInstallOpenChange}
             action={
               <button
                 type="button"
@@ -201,6 +226,7 @@ function ExploreContent() {
       </header>
 
       <BottomNav saveCount={saveCount} chatCount={chatCount} theme="overlay" />
+      <PwaInstallBanner />
     </div>
   );
 }

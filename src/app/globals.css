@@ -1045,6 +1045,12 @@ body {
 }
 
 /* Explore video feed — edge-to-edge with overlays on top */
+.seeker-app-shell--immersive {
+  max-width: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
 .seeker-explore-feed {
   --seeker-video-nav-clearance: calc(4.25rem + env(safe-area-inset-bottom, 0px));
   --seeker-video-rail-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));

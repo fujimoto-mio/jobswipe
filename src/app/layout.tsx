@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Montserrat, Noto_Sans_JP } from "next/font/google";
-import { APP_PAGE_TITLE } from "@/lib/brand";
+import { APP_NAME, APP_PAGE_TITLE, APP_TAGLINE } from "@/lib/brand";
 import "./globals.css";
 import "./landing.css";
 
@@ -20,11 +20,23 @@ const montserrat = Montserrat({
 
 export const metadata: Metadata = {
   title: APP_PAGE_TITLE,
-  description: "求人動画をスワイプするだけで探せる、新しい求職体験。職場の雰囲気まで伝わるから、ミスマッチの少ない転職・就活ができます。",
+  description: `${APP_TAGLINE}。求人動画をスワイプするだけで探せる、新しい求職体験。`,
   keywords: ["求人", "就活", "スワイプ", "動画", "採用", "転職"],
+  applicationName: APP_NAME,
+  appleWebApp: {
+    capable: true,
+    title: APP_NAME,
+    statusBarStyle: "black-translucent",
+  },
+  formatDetection: {
+    telephone: false,
+  },
   icons: {
-    icon: [{ url: "/logo.png", type: "image/png" }],
-    apple: [{ url: "/logo.png", type: "image/png" }],
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/icon-180.png", sizes: "180x180", type: "image/png" }],
   },
 };
 
@@ -33,7 +45,12 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#27A9B5",
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#000000" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
+  colorScheme: "dark",
 };
 
 export default function RootLayout({

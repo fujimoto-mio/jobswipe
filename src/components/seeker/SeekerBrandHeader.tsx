@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import type { ReactNode } from "react";
 import Logo from "@/components/ui/Logo";
 import SeekerAccountMenu from "@/components/seeker/SeekerAccountMenu";
+import PwaInstallTopbarButton from "@/components/pwa/PwaInstallTopbarButton";
 import { useSeekerThemeOptional } from "@/components/seeker/SeekerThemeProvider";
 
 type SeekerBrandHeaderProps = {
@@ -15,7 +16,9 @@ type SeekerBrandHeaderProps = {
   action?: ReactNode;
   menuVariant?: "default" | "overlay";
   showMenu?: boolean;
+  showInstallButton?: boolean;
   onMenuOpenChange?: (open: boolean) => void;
+  onInstallOpenChange?: (open: boolean) => void;
   logoHref?: string;
   className?: string;
 };
@@ -28,7 +31,9 @@ export default function SeekerBrandHeader({
   action,
   menuVariant = "default",
   showMenu = true,
+  showInstallButton = false,
   onMenuOpenChange,
+  onInstallOpenChange,
   logoHref,
   className = "",
 }: SeekerBrandHeaderProps) {
@@ -79,8 +84,11 @@ export default function SeekerBrandHeader({
         <span aria-hidden className="hidden w-0 sm:block" />
       )}
 
-      <div className="flex items-center justify-end gap-2 sm:justify-self-end">
+      <div className="flex items-center justify-end gap-1.5 sm:justify-self-end sm:gap-2">
         {action}
+        {showInstallButton ? (
+          <PwaInstallTopbarButton variant={menuVariant} onOpenChange={onInstallOpenChange} />
+        ) : null}
         {showMenu ? <SeekerAccountMenu variant={menuVariant} onOpenChange={onMenuOpenChange} /> : null}
       </div>
     </div>
