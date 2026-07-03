@@ -178,7 +178,7 @@ function ExploreContent() {
         />
       </main>
 
-      <header className="seeker-explore-feed-header pointer-events-none absolute inset-x-0 top-0 z-30 bg-gradient-to-b from-black/55 via-black/15 to-transparent pt-[env(safe-area-inset-top,0px)] transition-opacity duration-200">
+      <header className="seeker-explore-feed-header pointer-events-none absolute inset-x-0 top-0 z-30 pt-[env(safe-area-inset-top,0px)] transition-opacity duration-200">
         <div className="pointer-events-auto">
           <SeekerBrandHeader
             theme="dark"

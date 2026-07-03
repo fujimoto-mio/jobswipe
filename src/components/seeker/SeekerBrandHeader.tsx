@@ -36,7 +36,7 @@ export default function SeekerBrandHeader({
   const theme = themeProp ?? (seekerTheme?.theme === "light" ? "light" : "dark");
   const backButtonClass =
     theme === "dark"
-      ? "btn-icon inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white hover:bg-black/50"
+      ? "btn-icon inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-0 bg-transparent text-white/92 transition hover:bg-white/10 active:scale-95"
       : "btn-icon btn-icon-muted h-9 w-9 shrink-0";
 
   const logo = <Logo inTopbar theme={theme} />;

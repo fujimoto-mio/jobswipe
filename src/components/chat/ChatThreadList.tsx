@@ -3,10 +3,8 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { formatTimeJST } from "@/lib/datetime";
-import { APPLICATION_STATUS_LABELS } from "@/lib/constants";
-import { APPLICATION_STATUS_CHIP_COLORS } from "@/components/staff/ApplicationSeekerDetail";
 import CompanyLogo from "@/components/chat/CompanyLogo";
-import type { ApplicationStatus, ChatThread } from "@/lib/types";
+import type { ChatThread } from "@/lib/types";
 
 type ChatThreadListProps = {
   threads: ChatThread[];
@@ -60,14 +58,6 @@ export default function ChatThreadList({ threads, selectedId, onSelect }: ChatTh
   );
 }
 
-export function ChatApplicationStatusBadge({ status }: { status: ApplicationStatus }) {
-  return (
-    <span className={`badge shrink-0 ${APPLICATION_STATUS_CHIP_COLORS[status]}`}>
-      {APPLICATION_STATUS_LABELS[status]}
-    </span>
-  );
-}
-
 export function ChatJobDetailsButton({ jobId }: { jobId: string }) {
   return (
     <Link
@@ -107,23 +97,16 @@ export function ChatThreadHeader({
         className="sm:h-12 sm:w-12 sm:rounded-xl"
       />
       <div className="min-w-0 flex-1">
+        <p className="chat-thread-company-name" title={thread.job.company}>
+          {thread.job.company}
+        </p>
         <Link
           href={`/jobs/${thread.job.id}`}
-          className="text-sm font-bold leading-snug text-slate-900 line-clamp-2 hover:text-blue-700 active:text-blue-800 md:hidden"
+          className="chat-thread-job-title mt-0.5 hover:text-blue-700 active:text-blue-800"
           title={thread.job.title}
         >
           {thread.job.title}
         </Link>
-        <h2
-          className="hidden text-sm font-bold leading-snug text-slate-900 line-clamp-2 sm:text-base md:block"
-          title={thread.job.title}
-        >
-          {thread.job.title}
-        </h2>
-        <div className="mt-1.5 flex flex-wrap items-center gap-2">
-          <ChatApplicationStatusBadge status={thread.application.status} />
-          <p className="min-w-0 truncate text-xs text-slate-500 sm:text-sm">{thread.job.company}</p>
-        </div>
       </div>
       <div className="hidden shrink-0 md:block">
         <ChatJobDetailsButton jobId={thread.job.id} />
