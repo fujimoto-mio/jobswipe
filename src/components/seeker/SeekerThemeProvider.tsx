@@ -15,6 +15,7 @@ import {
   SEEKER_THEME_CHANGE_EVENT,
   type SeekerTheme,
 } from "@/lib/seeker-theme";
+import { PageLoading } from "@/components/ui/LoadingSpinner";
 
 type SeekerThemeContextValue = {
   theme: SeekerTheme;
@@ -68,8 +69,10 @@ export function SeekerThemeProvider({ children }: { children: ReactNode }) {
     return (
       <div className="min-h-[100dvh] bg-black">
         <div
-          className={`seeker-ui seeker-theme-${DEFAULT_SEEKER_THEME} relative mx-auto flex h-[100dvh] min-h-0 w-full max-w-[1440px] flex-col overflow-hidden`}
-        />
+          className={`seeker-ui seeker-theme-${DEFAULT_SEEKER_THEME} relative mx-auto flex h-[100dvh] min-h-0 w-full max-w-[1440px] flex-col overflow-hidden items-center justify-center`}
+        >
+          <PageLoading />
+        </div>
       </div>
     );
   }
