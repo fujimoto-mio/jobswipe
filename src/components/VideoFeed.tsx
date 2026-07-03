@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import SwipeCard from "./SwipeCard";
 import ApplyModal from "./ApplyModal";
+import JobDetailModal from "./JobDetailModal";
 import { preloadVideoUrl } from "@/lib/video";
 import { apiFetch, invalidateApiCache } from "@/lib/api-client";
 import {
@@ -27,6 +28,7 @@ export default function VideoFeed({ filters, fetchKey = "", onSaveCountChange }:
   const [index, setIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [applyJob, setApplyJob] = useState<Job | null>(null);
+  const [detailJob, setDetailJob] = useState<Job | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   const buildJobsUrl = useCallback(() => {
@@ -172,6 +174,7 @@ export default function VideoFeed({ filters, fetchKey = "", onSaveCountChange }:
             onSwipeRight={() => {}}
             onSave={() => handleSave(prevJob)}
             onApply={() => setApplyJob(prevJob)}
+            onDetail={() => setDetailJob(prevJob)}
           />
         )}
         {nextJob && (
@@ -184,6 +187,7 @@ export default function VideoFeed({ filters, fetchKey = "", onSaveCountChange }:
             onSwipeRight={() => {}}
             onSave={() => handleSave(nextJob)}
             onApply={() => setApplyJob(nextJob)}
+            onDetail={() => setDetailJob(nextJob)}
           />
         )}
         <AnimatePresence mode="popLayout">
@@ -199,10 +203,27 @@ export default function VideoFeed({ filters, fetchKey = "", onSaveCountChange }:
               onSwipeRight={goPrev}
               onSave={() => handleSave(currentJob)}
               onApply={() => setApplyJob(currentJob)}
+              onDetail={() => setDetailJob(currentJob)}
             />
           )}
         </AnimatePresence>
       </div>
+
+      <AnimatePresence>
+        {detailJob && (
+          <JobDetailModal
+            key={detailJob.id}
+            job={detailJob}
+            isSaved={savedIds.has(detailJob.id)}
+            onClose={() => setDetailJob(null)}
+            onSave={() => handleSave(detailJob)}
+            onApply={() => {
+              setDetailJob(null);
+              setApplyJob(detailJob);
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       {applyJob && (
         <ApplyModal

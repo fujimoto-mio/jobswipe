@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { Play, Volume2, VolumeX, Heart, Send, FileText } from "lucide-react";
 import type { Job } from "@/lib/types";
 import { useVideoPlayback } from "@/hooks/useVideoPlayback";
@@ -13,6 +12,7 @@ type VideoFeedItemProps = {
   isSaved: boolean;
   onSave: () => void;
   onApply: () => void;
+  onDetail: () => void;
 };
 
 function ActionButton({
@@ -54,8 +54,8 @@ export default function VideoFeedItem({
   isSaved,
   onSave,
   onApply,
+  onDetail,
 }: VideoFeedItemProps) {
-  const router = useRouter();
   const { videoRef, isPlaying, isBuffering, isMuted, togglePlay, toggleMute } = useVideoPlayback({
     src: job.videoUrl,
     isActive,
@@ -107,7 +107,7 @@ export default function VideoFeedItem({
       <div className="absolute bottom-[5.5rem] right-3 z-20 flex flex-col items-center gap-5">
         <button
           type="button"
-          onClick={() => router.push(`/jobs/${job.id}`)}
+          onClick={onDetail}
           className="relative transition active:scale-90"
         >
           <div className="h-12 w-12 overflow-hidden rounded-full ring-2 ring-white bg-white/10">
@@ -126,7 +126,7 @@ export default function VideoFeedItem({
           <Send className="h-5 w-5 text-white" />
         </ActionButton>
 
-        <ActionButton onClick={() => router.push(`/jobs/${job.id}`)} label="詳細">
+        <ActionButton onClick={onDetail} label="詳細">
           <FileText className="h-5 w-5 text-white" />
         </ActionButton>
 
@@ -144,7 +144,7 @@ export default function VideoFeedItem({
       <div className="absolute bottom-[5.25rem] left-0 right-16 z-20 px-4">
         <button
           type="button"
-          onClick={() => router.push(`/jobs/${job.id}`)}
+          onClick={onDetail}
           className="w-full text-left"
         >
           <p className="text-[15px] font-bold text-white drop-shadow-lg">{job.company}</p>
@@ -186,7 +186,7 @@ export default function VideoFeedItem({
       {isActive && (
         <div className="pointer-events-none absolute bottom-[4.75rem] left-1/2 z-10 -translate-x-1/2">
           <span className="rounded-full bg-black/30 px-2.5 py-1 text-[10px] font-medium text-white/50 backdrop-blur-sm">
-            ↑次 · →保存 · ↓スキップ
+            ←前 · →次
           </span>
         </div>
       )}

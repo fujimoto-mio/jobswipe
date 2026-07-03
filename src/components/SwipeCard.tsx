@@ -17,6 +17,7 @@ type SwipeCardProps = {
   onSwipeRight: () => void;
   onSave: () => void;
   onApply: () => void;
+  onDetail: () => void;
 };
 
 export default function SwipeCard({
@@ -29,6 +30,7 @@ export default function SwipeCard({
   onSwipeRight,
   onSave,
   onApply,
+  onDetail,
 }: SwipeCardProps) {
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 0, 200], [-6, 0, 6]);
@@ -90,6 +92,7 @@ export default function SwipeCard({
           isSaved={isSaved}
           onSave={onSave}
           onApply={onApply}
+          onDetail={onDetail}
         />
 
         {isTop && (
