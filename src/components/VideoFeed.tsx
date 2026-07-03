@@ -125,15 +125,6 @@ export default function VideoFeed({ filters, fetchKey = "", onSaveCountChange }:
     showToast(data.saved ? "気になるに保存しました" : "保存を解除しました");
   };
 
-  const handleSwipeRight = async (job: Job) => {
-    if (!savedIds.has(job.id)) {
-      await handleSave(job);
-    } else {
-      showToast("すでに保存済みです");
-    }
-    goNext();
-  };
-
   const handleApplySuccess = () => {
     setApplyJob(null);
     showToast("応募が完了しました");
@@ -177,8 +168,7 @@ export default function VideoFeed({ filters, fetchKey = "", onSaveCountChange }:
             job={prevJob}
             isTop={false}
             isSaved={savedIds.has(prevJob.id)}
-            onSwipeUp={() => {}}
-            onSwipeDown={() => {}}
+            onSwipeLeft={() => {}}
             onSwipeRight={() => {}}
             onSave={() => handleSave(prevJob)}
             onApply={() => setApplyJob(prevJob)}
@@ -190,8 +180,7 @@ export default function VideoFeed({ filters, fetchKey = "", onSaveCountChange }:
             job={nextJob}
             isTop={false}
             isSaved={savedIds.has(nextJob.id)}
-            onSwipeUp={() => {}}
-            onSwipeDown={() => {}}
+            onSwipeLeft={() => {}}
             onSwipeRight={() => {}}
             onSave={() => handleSave(nextJob)}
             onApply={() => setApplyJob(nextJob)}
@@ -204,11 +193,10 @@ export default function VideoFeed({ filters, fetchKey = "", onSaveCountChange }:
               job={currentJob}
               isTop={true}
               isSaved={savedIds.has(currentJob.id)}
-              canSwipeUp={canGoNext}
-              canSwipeDown={canGoPrev}
-              onSwipeUp={goNext}
-              onSwipeDown={goPrev}
-              onSwipeRight={() => handleSwipeRight(currentJob)}
+              canSwipeLeft={canGoNext}
+              canSwipeRight={canGoPrev}
+              onSwipeLeft={goNext}
+              onSwipeRight={goPrev}
               onSave={() => handleSave(currentJob)}
               onApply={() => setApplyJob(currentJob)}
             />

@@ -11,10 +11,9 @@ type SwipeCardProps = {
   job: Job;
   isTop: boolean;
   isSaved: boolean;
-  canSwipeUp?: boolean;
-  canSwipeDown?: boolean;
-  onSwipeUp: () => void;
-  onSwipeDown: () => void;
+  canSwipeLeft?: boolean;
+  canSwipeRight?: boolean;
+  onSwipeLeft: () => void;
   onSwipeRight: () => void;
   onSave: () => void;
   onApply: () => void;
@@ -24,60 +23,46 @@ export default function SwipeCard({
   job,
   isTop,
   isSaved,
-  canSwipeUp = true,
-  canSwipeDown = true,
-  onSwipeUp,
-  onSwipeDown,
+  canSwipeLeft = true,
+  canSwipeRight = true,
+  onSwipeLeft,
   onSwipeRight,
   onSave,
   onApply,
 }: SwipeCardProps) {
-  const y = useMotionValue(0);
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 0, 200], [-6, 0, 6]);
-  const likeOpacity = useTransform(x, [0, 100], [0, 1]);
-  const likeScale = useTransform(x, [0, 100], [0.6, 1]);
-  const prevOpacity = useTransform(y, [0, 100], [0, 1]);
-  const nextOpacity = useTransform(y, [-100, 0], [1, 0]);
+  const prevOpacity = useTransform(x, [0, 100], [0, 1]);
+  const nextOpacity = useTransform(x, [-100, 0], [1, 0]);
 
   useEffect(() => {
-    y.set(0);
     x.set(0);
-  }, [job.id, y, x]);
+  }, [job.id, x]);
 
   const snapBack = () => {
-    animate(y, 0, { type: "spring", stiffness: 500, damping: 35 });
     animate(x, 0, { type: "spring", stiffness: 500, damping: 35 });
   };
 
   const handleDragEnd = (_: unknown, info: PanInfo) => {
     const { offset } = info;
 
-    if (offset.y < -SWIPE_THRESHOLD) {
-      if (!canSwipeUp) {
+    if (offset.x < -SWIPE_THRESHOLD) {
+      if (!canSwipeLeft) {
         snapBack();
         return;
       }
-      animate(y, -600, { duration: 0.22 }).then(() => {
-        onSwipeUp();
-        y.set(0);
-        x.set(0);
-      });
-    } else if (offset.y > SWIPE_THRESHOLD) {
-      if (!canSwipeDown) {
-        snapBack();
-        return;
-      }
-      animate(y, 600, { duration: 0.22 }).then(() => {
-        onSwipeDown();
-        y.set(0);
+      animate(x, -500, { duration: 0.22 }).then(() => {
+        onSwipeLeft();
         x.set(0);
       });
     } else if (offset.x > SWIPE_THRESHOLD) {
+      if (!canSwipeRight) {
+        snapBack();
+        return;
+      }
       animate(x, 500, { duration: 0.22 }).then(() => {
         onSwipeRight();
         x.set(0);
-        y.set(0);
       });
     } else {
       snapBack();
@@ -87,9 +72,9 @@ export default function SwipeCard({
   return (
     <motion.div
       className="absolute inset-0 cursor-grab select-none active:cursor-grabbing"
-      style={{ y, x, rotate, zIndex: isTop ? 10 : 0, touchAction: "none" }}
-      drag={isTop}
-      dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+      style={{ x, rotate, zIndex: isTop ? 10 : 0, touchAction: "none" }}
+      drag={isTop ? "x" : false}
+      dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.9}
       dragMomentum={false}
       onDragEnd={handleDragEnd}
@@ -110,14 +95,6 @@ export default function SwipeCard({
         {isTop && (
           <>
             <motion.div
-              style={{ opacity: likeOpacity, scale: likeScale }}
-              className="pointer-events-none absolute left-1/2 top-[38%] z-30 -translate-x-1/2"
-            >
-              <div className="rounded-2xl border-[3px] border-blue-500 px-6 py-2 shadow-2xl shadow-blue-500/40">
-                <span className="text-3xl font-black tracking-wide text-blue-400">保存</span>
-              </div>
-            </motion.div>
-            <motion.div
               style={{ opacity: prevOpacity }}
               className="pointer-events-none absolute left-1/2 top-[38%] z-30 -translate-x-1/2"
             >
@@ -127,7 +104,7 @@ export default function SwipeCard({
             </motion.div>
             <motion.div
               style={{ opacity: nextOpacity }}
-              className="pointer-events-none absolute left-1/2 top-[32%] z-30 -translate-x-1/2"
+              className="pointer-events-none absolute left-1/2 top-[38%] z-30 -translate-x-1/2"
             >
               <div className="rounded-2xl border-[3px] border-emerald-400 px-6 py-2">
                 <span className="text-3xl font-black tracking-wide text-emerald-400">次へ</span>
