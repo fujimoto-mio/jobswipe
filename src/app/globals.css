@@ -938,6 +938,39 @@ body {
   box-shadow: 0 4px 14px rgb(254 44 85 / 0.35);
 }
 
+/* Explore video feed — edge-to-edge with overlays on top */
+.seeker-explore-feed {
+  --seeker-video-nav-clearance: calc(4.25rem + env(safe-area-inset-bottom, 0px));
+  --seeker-video-rail-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  --seeker-video-info-bottom: var(--seeker-video-nav-clearance);
+  --seeker-video-swipe-hint-bottom: calc(6.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+.seeker-explore-feed .seeker-bottom-nav--overlay {
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgb(0 0 0 / 0.28) 35%,
+    rgb(0 0 0 / 0.52) 100%
+  );
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: none;
+}
+
+.seeker-explore-feed .seeker-video-feed-rail {
+  bottom: var(--seeker-video-rail-bottom);
+}
+
+.seeker-explore-feed .seeker-video-feed-info {
+  bottom: var(--seeker-video-info-bottom);
+}
+
+.seeker-explore-feed .seeker-video-feed-swipe-hint {
+  bottom: var(--seeker-video-swipe-hint-bottom);
+}
+
 .seeker-ui .chip {
   border-radius: 9999px;
   border: 1px solid var(--seeker-chip-border);

@@ -109,27 +109,30 @@ function ExploreContent() {
   }
 
   return (
-    <div className="flex h-full w-full flex-col bg-black">
-      <header className="absolute left-0 right-0 top-0 z-30 bg-gradient-to-b from-black/50 to-transparent pb-4 pt-2">
-        <SeekerBrandHeader
-          theme="dark"
-          menuVariant="overlay"
-          logoHref="/"
-          action={
-            <button type="button" onClick={handleOpenFilterScreen} className="btn-pill-overlay">
-              条件変更
-            </button>
-          }
-        />
-      </header>
-
-      <main className="relative h-full w-full flex-1 overflow-hidden">
+    <div className="seeker-explore-feed relative h-full w-full bg-black">
+      <main className="absolute inset-0 overflow-hidden">
         <VideoFeed
           filters={filters}
           fetchKey={feedParamsKey}
           onSaveCountChange={setSaveCount}
         />
       </main>
+
+      <header className="pointer-events-none absolute inset-x-0 top-0 z-30 bg-gradient-to-b from-black/55 via-black/15 to-transparent pt-[env(safe-area-inset-top,0px)]">
+        <div className="pointer-events-auto">
+          <SeekerBrandHeader
+            theme="dark"
+            menuVariant="overlay"
+            logoHref="/"
+            className="py-1.5"
+            action={
+              <button type="button" onClick={handleOpenFilterScreen} className="btn-pill-overlay">
+                条件変更
+              </button>
+            }
+          />
+        </div>
+      </header>
 
       <BottomNav saveCount={saveCount} chatCount={chatCount} theme="overlay" />
     </div>

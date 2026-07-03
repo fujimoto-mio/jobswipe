@@ -158,12 +158,6 @@ export default function VideoFeed({ filters, fetchKey = "", onSaveCountChange }:
   return (
     <>
       <div className="relative h-full w-full bg-black">
-        <div className="pointer-events-none absolute left-1/2 top-14 z-20 -translate-x-1/2">
-          <span className="rounded-full bg-black/40 px-3 py-1 text-xs font-medium text-white/70 backdrop-blur-sm">
-            {index + 1} / {jobs.length}
-          </span>
-        </div>
-
         {prevJob && (
           <SwipeCard
             key={`bg-prev-${prevJob.id}`}
@@ -239,7 +233,7 @@ export default function VideoFeed({ filters, fetchKey = "", onSaveCountChange }:
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-[4.5rem] left-1/2 z-50 -translate-x-1/2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 shadow-xl ring-1 ring-slate-200"
+            className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] left-1/2 z-50 -translate-x-1/2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 shadow-xl ring-1 ring-slate-200"
           >
             {toast}
           </motion.div>

@@ -68,29 +68,33 @@ export default function VideoFeedItem({
   const showPoster = isBuffering || (!isPlaying && isActive);
 
   return (
-    <section className="relative h-full w-full shrink-0 bg-black">
-      <img
-        src={job.thumbnailUrl}
-        alt=""
-        aria-hidden
-        draggable={false}
-        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
-          showPoster ? "opacity-100" : "opacity-0"
-        } ${swipeEnabled ? "pointer-events-none" : ""}`}
-      />
+    <section className="seeker-video-feed-item relative h-full w-full shrink-0 overflow-hidden bg-black">
+      <div className="absolute inset-0">
+        <img
+          src={job.thumbnailUrl}
+          alt=""
+          aria-hidden
+          draggable={false}
+          className={`absolute left-1/2 top-1/2 h-full w-full min-h-full min-w-full -translate-x-1/2 -translate-y-1/2 object-cover transition-opacity duration-300 ${
+            showPoster ? "opacity-100" : "opacity-0"
+          } ${swipeEnabled ? "pointer-events-none" : ""}`}
+        />
 
-      <video
-        ref={videoRef}
-        poster={job.thumbnailUrl}
-        className={`h-full w-full object-cover ${swipeEnabled ? "pointer-events-none" : ""}`}
-        loop
-        muted={isMuted}
-        playsInline
-        draggable={false}
-        preload={isActive ? "auto" : isNext ? "auto" : "metadata"}
-        onDragStart={(e) => e.preventDefault()}
-        onClick={swipeEnabled ? undefined : togglePlay}
-      />
+        <video
+          ref={videoRef}
+          poster={job.thumbnailUrl}
+          className={`absolute left-1/2 top-1/2 h-full w-full min-h-full min-w-full -translate-x-1/2 -translate-y-1/2 object-cover ${
+            swipeEnabled ? "pointer-events-none" : ""
+          }`}
+          loop
+          muted={isMuted}
+          playsInline
+          draggable={false}
+          preload={isActive ? "auto" : isNext ? "auto" : "metadata"}
+          onDragStart={(e) => e.preventDefault()}
+          onClick={swipeEnabled ? undefined : togglePlay}
+        />
+      </div>
 
       {/* TikTok-style vignette */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80" />
@@ -108,7 +112,7 @@ export default function VideoFeedItem({
       )}
 
       {/* Right action rail — TikTok pattern */}
-      <div className="absolute bottom-[5.5rem] right-3 z-20 flex flex-col items-center gap-5">
+      <div className="seeker-video-feed-rail absolute right-3 z-20 flex flex-col items-center gap-5">
         <button
           type="button"
           onClick={onDetail}
@@ -145,7 +149,7 @@ export default function VideoFeedItem({
       </div>
 
       {/* Bottom-left info overlay — spec §2.3 */}
-      <div className="absolute bottom-[5.25rem] left-0 right-16 z-20 px-4">
+      <div className="seeker-video-feed-info absolute left-0 right-16 z-20 px-4">
         <button
           type="button"
           onClick={onDetail}
@@ -188,35 +192,10 @@ export default function VideoFeedItem({
             </div>
           )}
         </button>
-
-        <div className="mt-3 flex gap-2">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onSave();
-            }}
-            className={`btn-pill-video ${
-              isSaved ? "btn-pill-video-solid" : "btn-pill-video-outline"
-            }`}
-          >
-            気になる
-          </button>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onApply();
-            }}
-            className="btn-pill-video btn-pill-video-accent"
-          >
-            応募する
-          </button>
-        </div>
       </div>
 
       {isActive && (
-        <div className="pointer-events-none absolute bottom-[7.5rem] left-1/2 z-10 -translate-x-1/2">
+        <div className="seeker-video-feed-swipe-hint pointer-events-none absolute left-1/2 z-10 -translate-x-1/2">
           <span className="rounded-full bg-black/30 px-2.5 py-1 text-[10px] font-medium text-white/50 backdrop-blur-sm">
             ←前 · →次
           </span>
