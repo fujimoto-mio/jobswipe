@@ -91,7 +91,7 @@ function ExploreContent() {
 
   if (!authReady || !isLoggedIn) {
     return (
-      <div className="flex h-full items-center justify-center bg-white">
+      <div className="flex h-full items-center justify-center">
         <PageLoading message="認証を確認中..." />
       </div>
     );
@@ -140,7 +140,7 @@ export default function ExplorePage() {
   return (
     <Suspense
       fallback={
-        <div className="flex h-full items-center justify-center bg-white">
+        <div className="flex h-full items-center justify-center">
           <PageLoading />
         </div>
       }

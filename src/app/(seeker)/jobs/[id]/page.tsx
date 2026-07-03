@@ -68,7 +68,7 @@ export default function JobDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center bg-slate-50">
+      <div className="seeker-job-detail-page flex h-full items-center justify-center bg-slate-50">
         <PageLoading message="求人詳細を読み込み中..." />
       </div>
     );
@@ -76,7 +76,7 @@ export default function JobDetailPage() {
 
   if (!job) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-4 bg-slate-50 px-6">
+      <div className="seeker-job-detail-page flex h-full flex-col items-center justify-center gap-4 bg-slate-50 px-6">
         <p className="font-medium text-slate-700">求人が見つかりません</p>
         <Link href="/explore" className="btn-primary px-8">
           トップへ戻る
@@ -88,7 +88,7 @@ export default function JobDetailPage() {
   const links = job.links ?? {};
 
   return (
-    <div className="h-full overflow-y-auto bg-slate-50 pb-24">
+    <div className="seeker-job-detail-page h-full overflow-y-auto bg-slate-50 pb-24">
       <div className="relative h-52 bg-slate-200">
         <img src={job.thumbnailUrl} alt={job.title} className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-50 via-transparent to-black/40" />
@@ -178,7 +178,7 @@ export default function JobDetailPage() {
         </section>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-slate-200 bg-white/95 py-4 backdrop-blur-xl">
+      <div className="seeker-job-detail-footer fixed bottom-0 left-0 right-0 z-20 border-t border-slate-200 bg-white/95 py-4 backdrop-blur-xl">
         <div className="page-container flex gap-2.5">
           <button
             onClick={handleSave}

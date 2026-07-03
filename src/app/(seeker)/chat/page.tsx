@@ -209,7 +209,7 @@ function SeekerChatContent() {
         className={selectedId ? "max-md:hidden" : undefined}
       />
 
-      <main className="flex min-h-0 flex-1 flex-col overflow-hidden pb-[4.5rem]">
+      <main className="seeker-chat-page flex min-h-0 flex-1 flex-col overflow-hidden pb-[4.5rem]">
         {initialLoading ? (
           <PageLoading message="チャットを読み込み中..." minHeight="min-h-[50vh]" />
         ) : threads.length === 0 ? (

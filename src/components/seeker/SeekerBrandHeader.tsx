@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import type { ReactNode } from "react";
 import Logo from "@/components/ui/Logo";
 import SeekerAccountMenu from "@/components/seeker/SeekerAccountMenu";
+import { useSeekerThemeOptional } from "@/components/seeker/SeekerThemeProvider";
 
 type SeekerBrandHeaderProps = {
   title?: string;
@@ -20,7 +21,7 @@ type SeekerBrandHeaderProps = {
 
 export default function SeekerBrandHeader({
   title,
-  theme = "light",
+  theme: themeProp,
   backHref,
   onBack,
   action,
@@ -29,6 +30,8 @@ export default function SeekerBrandHeader({
   logoHref,
   className = "",
 }: SeekerBrandHeaderProps) {
+  const seekerTheme = useSeekerThemeOptional();
+  const theme = themeProp ?? (seekerTheme?.theme === "light" ? "light" : "dark");
   const backButtonClass =
     theme === "dark"
       ? "btn-icon inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white hover:bg-black/50"

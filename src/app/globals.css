@@ -13,6 +13,460 @@
   --surface: #f8fafc;
 }
 
+/* ── Seeker app theme ── */
+.seeker-ui {
+  --seeker-bg: #ffffff;
+  --seeker-surface: #f8fafc;
+  --seeker-surface-elevated: #f1f1f2;
+  --seeker-card: #ffffff;
+  --seeker-text: #0f172a;
+  --seeker-text-secondary: #334155;
+  --seeker-text-muted: #64748b;
+  --seeker-text-faint: #94a3b8;
+  --seeker-border: #e2e8f0;
+  --seeker-border-subtle: #f1f5f9;
+  --seeker-header-bg: rgba(255, 255, 255, 0.92);
+  --seeker-nav-bg: rgba(255, 255, 255, 0.95);
+  --seeker-nav-border: rgba(226, 232, 240, 0.9);
+  --seeker-nav-shadow: 0 -4px 20px rgba(15, 23, 42, 0.04);
+  --seeker-nav-text: #94a3b8;
+  --seeker-nav-text-hover: #475569;
+  --seeker-nav-badge-ring: #ffffff;
+  --seeker-input-bg: #f1f5f9;
+  --seeker-input-focus: #e2e8f0;
+  --seeker-frame-border: #e2e8f0;
+  --seeker-frame-shadow: 0 8px 30px rgb(15 23 42 / 0.06);
+  --seeker-chip-bg: #f1f1f2;
+  --seeker-chip-text: #161823;
+  --seeker-chip-border: rgba(22, 24, 35, 0.12);
+  --seeker-pagination-bg: #ffffff;
+  --seeker-pagination-surface: #f8fafc;
+  --seeker-pagination-btn-bg: #f1f5f9;
+  --seeker-pagination-btn-hover: #e2e8f0;
+  --seeker-pagination-btn-text: #64748b;
+  --seeker-pagination-btn-text-hover: #0f172a;
+  --seeker-search-bg: #f1f1f2;
+  --seeker-search-border: rgba(22, 24, 35, 0.08);
+  --seeker-search-focus-bg: #ffffff;
+  --seeker-picker-menu-bg: #ffffff;
+  --seeker-picker-option-hover: #f1f5f9;
+  --seeker-scrollbar-thumb: rgba(15, 23, 42, 0.16);
+  --seeker-scrollbar-thumb-hover: rgba(15, 23, 42, 0.28);
+  --accent: #fe2c55;
+  --accent-light: rgba(254, 44, 85, 0.12);
+  color: var(--seeker-text);
+  background: var(--seeker-bg);
+}
+
+.seeker-ui.seeker-theme-dark {
+  --seeker-bg: #0a0a0a;
+  --seeker-surface: rgba(255, 255, 255, 0.04);
+  --seeker-surface-elevated: rgba(255, 255, 255, 0.06);
+  --seeker-card: rgba(255, 255, 255, 0.08);
+  --seeker-text: #f5f5f5;
+  --seeker-text-secondary: #d4d4d4;
+  --seeker-text-muted: #a3a3a3;
+  --seeker-text-faint: #737373;
+  --seeker-border: rgba(255, 255, 255, 0.12);
+  --seeker-border-subtle: rgba(255, 255, 255, 0.08);
+  --seeker-header-bg: rgba(10, 10, 10, 0.72);
+  --seeker-nav-bg: rgba(10, 10, 10, 0.78);
+  --seeker-nav-border: rgba(255, 255, 255, 0.1);
+  --seeker-nav-shadow: 0 -4px 24px rgba(0, 0, 0, 0.35);
+  --seeker-nav-text: #737373;
+  --seeker-nav-text-hover: #d4d4d4;
+  --seeker-nav-badge-ring: #0a0a0a;
+  --seeker-input-bg: rgba(255, 255, 255, 0.08);
+  --seeker-input-focus: rgba(255, 255, 255, 0.12);
+  --seeker-frame-border: rgba(255, 255, 255, 0.08);
+  --seeker-frame-shadow: 0 8px 40px rgb(0 0 0 / 0.45);
+  --seeker-chip-bg: rgba(255, 255, 255, 0.1);
+  --seeker-chip-text: #f5f5f5;
+  --seeker-chip-border: rgba(255, 255, 255, 0.14);
+  --seeker-pagination-bg: rgba(255, 255, 255, 0.08);
+  --seeker-pagination-surface: rgba(255, 255, 255, 0.04);
+  --seeker-pagination-btn-bg: rgba(255, 255, 255, 0.1);
+  --seeker-pagination-btn-hover: rgba(255, 255, 255, 0.14);
+  --seeker-pagination-btn-text: #a3a3a3;
+  --seeker-pagination-btn-text-hover: #f5f5f5;
+  --seeker-search-bg: rgba(255, 255, 255, 0.08);
+  --seeker-search-border: rgba(255, 255, 255, 0.12);
+  --seeker-search-focus-bg: rgba(255, 255, 255, 0.12);
+  --seeker-picker-menu-bg: rgba(24, 24, 24, 0.96);
+  --seeker-picker-option-hover: rgba(255, 255, 255, 0.08);
+  --seeker-scrollbar-thumb: rgba(255, 255, 255, 0.16);
+  --seeker-scrollbar-thumb-hover: rgba(255, 255, 255, 0.3);
+  --accent-light: rgba(254, 44, 85, 0.18);
+}
+
+.seeker-ui .page-shell {
+  background: var(--seeker-bg);
+  color: var(--seeker-text);
+}
+
+.seeker-ui .page-main,
+.seeker-ui .page-scroll,
+.seeker-ui .overflow-y-auto,
+.seeker-ui .job-detail-modal-panel,
+.seeker-ui .apply-modal-panel,
+.seeker-ui .seeker-job-detail-page,
+.seeker-ui .profile-page,
+.seeker-ui .select-picker-menu,
+.seeker-ui .select-picker-sheet-panel {
+  scrollbar-width: thin;
+  scrollbar-color: var(--seeker-scrollbar-thumb) transparent;
+}
+
+.seeker-ui .page-main::-webkit-scrollbar,
+.seeker-ui .page-scroll::-webkit-scrollbar,
+.seeker-ui .overflow-y-auto::-webkit-scrollbar,
+.seeker-ui .job-detail-modal-panel::-webkit-scrollbar,
+.seeker-ui .apply-modal-panel::-webkit-scrollbar,
+.seeker-ui .seeker-job-detail-page::-webkit-scrollbar,
+.seeker-ui .profile-page::-webkit-scrollbar,
+.seeker-ui .select-picker-menu::-webkit-scrollbar,
+.seeker-ui .select-picker-sheet-panel::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.seeker-ui .page-main::-webkit-scrollbar-track,
+.seeker-ui .page-scroll::-webkit-scrollbar-track,
+.seeker-ui .overflow-y-auto::-webkit-scrollbar-track,
+.seeker-ui .job-detail-modal-panel::-webkit-scrollbar-track,
+.seeker-ui .apply-modal-panel::-webkit-scrollbar-track,
+.seeker-ui .seeker-job-detail-page::-webkit-scrollbar-track,
+.seeker-ui .profile-page::-webkit-scrollbar-track,
+.seeker-ui .select-picker-menu::-webkit-scrollbar-track,
+.seeker-ui .select-picker-sheet-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.seeker-ui .page-main::-webkit-scrollbar-thumb,
+.seeker-ui .page-scroll::-webkit-scrollbar-thumb,
+.seeker-ui .overflow-y-auto::-webkit-scrollbar-thumb,
+.seeker-ui .job-detail-modal-panel::-webkit-scrollbar-thumb,
+.seeker-ui .apply-modal-panel::-webkit-scrollbar-thumb,
+.seeker-ui .seeker-job-detail-page::-webkit-scrollbar-thumb,
+.seeker-ui .profile-page::-webkit-scrollbar-thumb,
+.seeker-ui .select-picker-menu::-webkit-scrollbar-thumb,
+.seeker-ui .select-picker-sheet-panel::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: var(--seeker-scrollbar-thumb);
+}
+
+.seeker-ui .page-main::-webkit-scrollbar-thumb:hover,
+.seeker-ui .page-scroll::-webkit-scrollbar-thumb:hover,
+.seeker-ui .overflow-y-auto::-webkit-scrollbar-thumb:hover,
+.seeker-ui .job-detail-modal-panel::-webkit-scrollbar-thumb:hover,
+.seeker-ui .apply-modal-panel::-webkit-scrollbar-thumb:hover,
+.seeker-ui .seeker-job-detail-page::-webkit-scrollbar-thumb:hover,
+.seeker-ui .profile-page::-webkit-scrollbar-thumb:hover,
+.seeker-ui .select-picker-menu::-webkit-scrollbar-thumb:hover,
+.seeker-ui .select-picker-sheet-panel::-webkit-scrollbar-thumb:hover {
+  background: var(--seeker-scrollbar-thumb-hover);
+}
+
+.seeker-ui .page-header {
+  border-bottom-color: var(--seeker-border);
+  background: var(--seeker-header-bg);
+}
+
+.seeker-ui.seeker-theme-dark .page-header,
+.seeker-ui.seeker-theme-dark .card,
+.seeker-ui.seeker-theme-dark .seeker-filter-section,
+.seeker-ui.seeker-theme-dark .seeker-filter-footer,
+.seeker-ui.seeker-theme-dark .seeker-list-pagination,
+.seeker-ui.seeker-theme-dark .bg-white {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.seeker-ui .seeker-bottom-nav {
+  border-top: 1px solid var(--seeker-nav-border);
+  background: var(--seeker-nav-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--seeker-nav-shadow);
+}
+
+.seeker-ui .seeker-bottom-nav--overlay {
+  border-top-color: rgba(255, 255, 255, 0.2);
+  background: rgba(10, 10, 10, 0.72);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.35);
+}
+
+.seeker-ui .seeker-bottom-nav-link {
+  color: var(--seeker-nav-text);
+}
+
+.seeker-ui .seeker-bottom-nav-link:hover {
+  color: var(--seeker-nav-text-hover);
+}
+
+.seeker-ui .seeker-bottom-nav-link.is-active {
+  color: var(--accent);
+}
+
+.seeker-ui .seeker-bottom-nav-badge {
+  --tw-ring-color: var(--seeker-nav-badge-ring);
+}
+
+.seeker-ui.seeker-theme-dark .bg-white {
+  background-color: var(--seeker-card) !important;
+}
+
+.seeker-ui.seeker-theme-dark .bg-slate-50 {
+  background-color: var(--seeker-surface) !important;
+}
+
+.seeker-ui.seeker-theme-dark .bg-red-50 {
+  background-color: rgba(127, 29, 29, 0.25) !important;
+}
+
+.seeker-ui.seeker-theme-dark .bg-slate-100 {
+  background-color: var(--seeker-surface-elevated) !important;
+}
+
+.seeker-ui.seeker-theme-dark .bg-slate-200 {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.seeker-ui.seeker-theme-dark .text-slate-900 {
+  color: var(--seeker-text) !important;
+}
+
+.seeker-ui.seeker-theme-dark .text-slate-800,
+.seeker-ui.seeker-theme-dark .text-slate-700,
+.seeker-ui.seeker-theme-dark .text-slate-600 {
+  color: var(--seeker-text-secondary) !important;
+}
+
+.seeker-ui.seeker-theme-dark .text-slate-500 {
+  color: var(--seeker-text-muted) !important;
+}
+
+.seeker-ui.seeker-theme-dark .text-slate-400,
+.seeker-ui.seeker-theme-dark .text-slate-300 {
+  color: var(--seeker-text-faint) !important;
+}
+
+.seeker-ui.seeker-theme-dark .border-slate-100,
+.seeker-ui.seeker-theme-dark .border-slate-200 {
+  border-color: var(--seeker-border) !important;
+}
+
+.seeker-ui.seeker-theme-dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--seeker-border-subtle);
+}
+
+.seeker-ui.seeker-theme-dark .card {
+  background: var(--seeker-card);
+  border-color: var(--seeker-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.seeker-ui.seeker-theme-dark .badge-blue {
+  background: rgba(254, 44, 85, 0.15);
+  color: #ff8da6;
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark {
+  --seeker-auth-text: #f5f5f5;
+  --seeker-auth-muted: rgba(255, 255, 255, 0.55);
+  --seeker-auth-border: rgba(255, 255, 255, 0.1);
+  background: var(--seeker-bg);
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .seeker-auth-card,
+.seeker-ui.seeker-auth.seeker-theme-dark .seeker-auth-header {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .seeker-auth-card {
+  background: var(--seeker-card);
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .seeker-auth-header {
+  background: var(--seeker-header-bg);
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark label > span:first-of-type,
+.seeker-ui.seeker-auth.seeker-theme-dark label.block > span,
+.seeker-ui.seeker-auth.seeker-theme-dark .block > span:first-of-type {
+  color: #cbd5e1 !important;
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .input-field,
+.seeker-ui.seeker-auth.seeker-theme-dark .select-picker-trigger.input-field,
+.seeker-ui.seeker-auth.seeker-theme-dark select.input-field.select-field,
+.seeker-ui.seeker-auth.seeker-theme-dark textarea.input-field {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #f5f5f5 !important;
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .input-field::placeholder,
+.seeker-ui.seeker-auth.seeker-theme-dark textarea.input-field::placeholder {
+  color: #737373;
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .input-field:focus,
+.seeker-ui.seeker-auth.seeker-theme-dark .select-picker-trigger.input-field:focus,
+.seeker-ui.seeker-auth.seeker-theme-dark select.input-field.select-field:focus,
+.seeker-ui.seeker-auth.seeker-theme-dark textarea.input-field:focus {
+  border-color: rgba(254, 44, 85, 0.35) !important;
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 0 0 2px rgba(254, 44, 85, 0.15);
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .input-field.ring-1,
+.seeker-ui.seeker-auth.seeker-theme-dark textarea.input-field.ring-1 {
+  border-color: rgba(254, 44, 85, 0.45) !important;
+  background-color: rgba(254, 44, 85, 0.1) !important;
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .input-field:read-only,
+.seeker-ui.seeker-auth.seeker-theme-dark .input-field:disabled,
+.seeker-ui.seeker-auth.seeker-theme-dark textarea.input-field:disabled {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  color: #737373 !important;
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .input-field:-webkit-autofill,
+.seeker-ui.seeker-auth.seeker-theme-dark .input-field:-webkit-autofill:hover,
+.seeker-ui.seeker-auth.seeker-theme-dark .input-field:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px rgba(28, 28, 28, 1) inset !important;
+  -webkit-text-fill-color: #f5f5f5 !important;
+  caret-color: #f5f5f5;
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .field-toggle-btn {
+  color: #a3a3a3;
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .seeker-auth-steps {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .seeker-auth-step-item.is-current .seeker-auth-step__label {
+  color: #f5f5f5 !important;
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .seeker-auth-step-item.is-done .seeker-auth-step__label,
+.seeker-ui.seeker-auth.seeker-theme-dark .seeker-auth-step-item.is-upcoming .seeker-auth-step__label {
+  color: #a3a3a3 !important;
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .seeker-auth-step-item.is-upcoming .seeker-auth-step__badge {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #a3a3a3 !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .seeker-auth-step__track {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .seeker-auth-note {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #a3a3a3;
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .seeker-auth-alert--error {
+  border-color: rgba(248, 113, 113, 0.28) !important;
+  background: rgba(127, 29, 29, 0.22) !important;
+  color: #fca5a5 !important;
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .seeker-auth-alert--info {
+  border-color: rgba(254, 44, 85, 0.22) !important;
+  background: rgba(254, 44, 85, 0.1) !important;
+  color: #ff8da6 !important;
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .seeker-auth-alert--success {
+  border-color: rgba(52, 211, 153, 0.24) !important;
+  background: rgba(16, 185, 129, 0.12) !important;
+  color: #6ee7b7 !important;
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .seeker-auth-choice {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .seeker-auth-choice:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .text-red-600 {
+  color: #f87171 !important;
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .profile-form-section-title {
+  color: #f5f5f5 !important;
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .profile-form-fields label.block > span:first-of-type,
+.seeker-ui.seeker-auth.seeker-theme-dark .profile-form-fields .block > span:first-of-type {
+  color: #cbd5e1 !important;
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .birthday-unit {
+  color: #a3a3a3;
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark .profile-work-entry {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  box-shadow: none;
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  display: grid;
+  place-content: center;
+  margin-top: 0.125rem;
+  height: 1rem;
+  width: 1rem;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  border-radius: 0.25rem;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  cursor: pointer;
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark input[type="checkbox"]::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  transform: scale(0);
+  transition: transform 0.12s ease-in-out;
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  background-color: #ffffff;
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark input[type="checkbox"]:checked {
+  background-color: #fe2c55 !important;
+  border-color: #fe2c55 !important;
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark input[type="checkbox"]:checked::before {
+  transform: scale(1);
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark input[type="checkbox"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(254, 44, 85, 0.35);
+}
+
+.seeker-ui.seeker-auth.seeker-theme-dark label.flex.items-start,
+.seeker-ui.seeker-auth.seeker-theme-dark label.flex.cursor-pointer {
+  color: #f5f5f5;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -208,15 +662,15 @@ body {
 .seeker-ui .btn-secondary {
   border-radius: 9999px;
   border: none;
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--seeker-input-bg);
+  color: var(--seeker-text);
   font-weight: 600;
   letter-spacing: -0.01em;
   padding: 0.8125rem 1.625rem;
   transition: transform 0.15s ease, background 0.15s ease;
 }
 .seeker-ui .btn-secondary:hover {
-  background: #e2e8f0;
+  background: var(--seeker-input-focus);
   border-color: transparent;
 }
 .seeker-ui .btn-secondary:active {
@@ -255,11 +709,11 @@ body {
 .seeker-ui .btn-icon-muted {
   height: 2.5rem;
   width: 2.5rem;
-  background: #f1f5f9;
-  color: #334155;
+  background: var(--seeker-input-bg);
+  color: var(--seeker-text-secondary);
 }
 .seeker-ui .btn-icon-muted:hover {
-  background: #e2e8f0;
+  background: var(--seeker-input-focus);
 }
 
 .seeker-ui .btn-icon-primary {
@@ -486,18 +940,18 @@ body {
 
 .seeker-ui .chip {
   border-radius: 9999px;
-  border: 1px solid rgba(22, 24, 35, 0.12);
-  background: #f1f1f2;
+  border: 1px solid var(--seeker-chip-border);
+  background: var(--seeker-chip-bg);
   padding: 0.5rem 1.125rem;
   font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1.35;
-  color: #161823;
+  color: var(--seeker-chip-text);
   transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 .seeker-ui .chip:hover {
-  border-color: rgba(22, 24, 35, 0.2);
-  background: #e8e8ea;
+  border-color: var(--seeker-border);
+  background: var(--seeker-input-focus);
 }
 .seeker-ui .chip:active {
   transform: scale(0.97);
@@ -520,7 +974,7 @@ body {
 }
 
 .seeker-filter-page {
-  background: #f1f1f2;
+  background: var(--seeker-surface-elevated);
 }
 
 .seeker-filter-title {
@@ -528,19 +982,19 @@ body {
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.3;
-  color: #161823;
+  color: var(--seeker-text);
 }
 
 .seeker-filter-subtitle {
   font-size: 0.875rem;
   font-weight: 400;
   line-height: 1.5;
-  color: rgba(22, 24, 35, 0.55);
+  color: var(--seeker-text-muted);
 }
 
 .seeker-filter-section {
   border-radius: 1rem;
-  background: #ffffff;
+  background: var(--seeker-card);
   padding: 1rem 1rem 1.125rem;
 }
 
@@ -566,16 +1020,478 @@ body {
   font-size: 0.9375rem;
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: #161823;
+  color: var(--seeker-text);
 }
 
 .seeker-filter-footer {
-  border-top: 1px solid rgba(22, 24, 35, 0.08);
-  background: #ffffff;
+  border-top: 1px solid var(--seeker-border);
+  background: var(--seeker-card);
 }
 
 .seeker-ui .seeker-toggle-on {
   background: #fe2c55 !important;
+}
+
+/* ── Job detail modal (dark mode color overrides only) ── */
+.seeker-ui.seeker-theme-dark .job-detail-modal-panel.bg-white {
+  background-color: #181818 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow:
+    0 24px 64px rgb(0 0 0 / 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+}
+
+.seeker-ui.seeker-theme-dark .job-detail-modal-content h2 {
+  color: #f1f5f9;
+}
+
+.seeker-ui.seeker-theme-dark .job-detail-modal-content > div:first-child p {
+  color: #94a3b8;
+}
+
+.seeker-ui.seeker-theme-dark .job-detail-modal-content > div:nth-child(2) > span:first-child {
+  color: #cbd5e1;
+}
+
+.seeker-ui.seeker-theme-dark .job-detail-modal-content > div:nth-child(2) > span:first-child svg {
+  color: #60a5fa;
+}
+
+.seeker-ui.seeker-theme-dark .job-detail-modal-content > div:nth-child(2) > span:last-child {
+  color: #34d399;
+}
+
+.seeker-ui.seeker-theme-dark .job-detail-modal-content > div:nth-child(3) span {
+  background-color: rgba(37, 99, 235, 0.16) !important;
+  color: #93c5fd !important;
+}
+
+.seeker-ui.seeker-theme-dark .job-detail-modal-content > p.text-xs {
+  color: #94a3b8;
+}
+
+.seeker-ui.seeker-theme-dark .job-detail-modal-content section h3 {
+  color: #94a3b8;
+}
+
+.seeker-ui.seeker-theme-dark .job-detail-modal-content section > p,
+.seeker-ui.seeker-theme-dark .job-detail-modal-content section li {
+  color: #cbd5e1;
+}
+
+.seeker-ui.seeker-theme-dark .job-detail-modal-content section:nth-of-type(2) li span.rounded-full {
+  background-color: #60a5fa !important;
+}
+
+.seeker-ui.seeker-theme-dark .job-detail-modal-content section:nth-of-type(3) li span.rounded-full {
+  background-color: #34d399 !important;
+}
+
+.seeker-ui.seeker-theme-dark .job-detail-modal-content section a[target="_blank"] {
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #60a5fa;
+}
+
+.seeker-ui.seeker-theme-dark .job-detail-modal-content section a[target="_blank"]:hover {
+  background-color: rgba(37, 99, 235, 0.12);
+}
+
+.seeker-ui.seeker-theme-dark .job-detail-modal-content > div:last-of-type .btn-secondary[class*="border-"] {
+  color: #60a5fa !important;
+  box-shadow: inset 0 0 0 1px #60a5fa;
+}
+
+.seeker-ui.seeker-theme-dark .job-detail-modal-content > div:last-of-type .btn-secondary svg[class*="fill-"] {
+  fill: #60a5fa;
+}
+
+.seeker-ui.seeker-theme-dark .job-detail-modal-content > a:last-child {
+  color: #94a3b8;
+}
+
+.seeker-ui.seeker-theme-dark .job-detail-modal-content > a:last-child:hover {
+  color: #60a5fa;
+}
+
+/* ── Apply modal (dark mode color overrides only) ── */
+.seeker-ui.seeker-theme-dark .apply-modal-panel.modal-sheet {
+  background-color: #181818 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow:
+    0 24px 64px rgb(0 0 0 / 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+}
+
+.seeker-ui.seeker-theme-dark .apply-modal-handle {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.seeker-ui.seeker-theme-dark .apply-modal-content h2 {
+  color: #f1f5f9 !important;
+}
+
+.seeker-ui.seeker-theme-dark .apply-modal-content > div:nth-child(2) {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+.seeker-ui.seeker-theme-dark .apply-modal-content > div:nth-child(2) p:first-child {
+  color: #94a3b8 !important;
+}
+
+.seeker-ui.seeker-theme-dark .apply-modal-content > div:nth-child(2) p:last-child {
+  color: #f1f5f9 !important;
+}
+
+.seeker-ui.seeker-theme-dark .apply-modal-content label > span:first-child {
+  color: #cbd5e1 !important;
+}
+
+.seeker-ui.seeker-theme-dark .apply-modal-content .birthday-unit {
+  color: #94a3b8;
+}
+
+.seeker-ui.seeker-theme-dark .apply-modal-content .text-slate-400 {
+  color: #737373 !important;
+}
+
+.seeker-ui.seeker-theme-dark .apply-modal-content .bg-red-50 {
+  background-color: rgba(127, 29, 29, 0.22) !important;
+  border-color: rgba(248, 113, 113, 0.28) !important;
+}
+
+.seeker-ui.seeker-theme-dark .apply-modal-content .text-red-600 {
+  color: #f87171 !important;
+}
+
+.seeker-ui.seeker-theme-dark .apply-modal-content .flex.flex-col.items-center p {
+  color: #f1f5f9 !important;
+}
+
+/* ── Seeker chat page (dark mode color overrides only) ── */
+.seeker-ui.seeker-theme-dark .seeker-chat-page .bg-white {
+  background-color: #181818 !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-chat-page .bg-slate-50 {
+  background-color: #121212 !important;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-chat-page .border-slate-100,
+.seeker-ui.seeker-theme-dark .seeker-chat-page .border-slate-200 {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-chat-page .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.seeker-ui.seeker-theme-dark .seeker-chat-page .bg-blue-50 {
+  background-color: rgba(37, 99, 235, 0.24) !important;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-chat-page .hover\:bg-slate-50:hover {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Thread list — stronger text contrast on dark sidebar */
+.seeker-ui.seeker-theme-dark .seeker-chat-page .chat-thread-list .text-slate-800,
+.seeker-ui.seeker-theme-dark .seeker-chat-page .chat-thread-list .text-slate-900 {
+  color: #f5f5f5 !important;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-chat-page .chat-thread-list .text-slate-600 {
+  color: #d4d4d4 !important;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-chat-page .chat-thread-list .text-slate-700 {
+  color: #e5e5e5 !important;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-chat-page .chat-thread-list .text-slate-400 {
+  color: #a3a3a3 !important;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-chat-page .chat-thread-list button.bg-blue-50 .text-slate-600,
+.seeker-ui.seeker-theme-dark .seeker-chat-page .chat-thread-list button.bg-blue-50 .text-slate-400 {
+  color: #e5e5e5 !important;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-chat-page .chat-thread-header .text-slate-500 {
+  color: #a3a3a3 !important;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-chat-page .chat-message-bubble--other {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(38, 38, 38, 0.95) !important;
+  color: #f1f5f9 !important;
+  box-shadow: none;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-chat-page .chat-message-bubble--own {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-chat-page .chat-message-sender {
+  color: #94a3b8;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-chat-page .chat-message-time {
+  color: #737373;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-chat-page .chat-message-avatar--seeker {
+  background: rgba(37, 99, 235, 0.22);
+  color: #93c5fd;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-chat-page .chat-message-avatar--company-hr {
+  background: rgba(16, 185, 129, 0.18);
+  color: #6ee7b7;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-chat-page .chat-message-avatar--image {
+  background: #262626;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.seeker-ui.seeker-theme-dark .seeker-chat-page .chat-thread-header a:hover,
+.seeker-ui.seeker-theme-dark .seeker-chat-page .chat-thread-header a:active {
+  color: #60a5fa;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-chat-page .badge-green {
+  background: rgba(16, 185, 129, 0.18);
+  color: #6ee7b7;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-chat-page .badge-amber {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fcd34d;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-chat-page .badge-red {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fca5a5;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-chat-page .bg-violet-100 {
+  background-color: rgba(139, 92, 246, 0.2) !important;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-chat-page .text-violet-700 {
+  color: #c4b5fd !important;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-chat-page .chat-composer .btn-send:disabled {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #525252 !important;
+  box-shadow: none !important;
+}
+
+/* ── Seeker job detail page (dark mode color overrides only) ── */
+.seeker-ui.seeker-theme-dark .seeker-job-detail-page {
+  background-color: #0a0a0a !important;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-job-detail-page .bg-slate-200 {
+  background-color: #262626 !important;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-job-detail-page > div:first-child > .absolute.inset-0.bg-gradient-to-t {
+  background-image: linear-gradient(to top, #0a0a0a 0%, transparent 45%, rgba(0, 0, 0, 0.45) 100%) !important;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-job-detail-page .text-slate-400 {
+  color: #a3a3a3 !important;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-job-detail-page .text-slate-500 {
+  color: #a3a3a3 !important;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-job-detail-page .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-job-detail-page .text-slate-700 {
+  color: #d4d4d4 !important;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-job-detail-page .text-slate-900 {
+  color: #f5f5f5 !important;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-job-detail-page .text-blue-600 {
+  color: #60a5fa !important;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-job-detail-page .text-emerald-600 {
+  color: #34d399 !important;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-job-detail-page .bg-blue-600 {
+  background-color: #60a5fa !important;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-job-detail-page .bg-emerald-500 {
+  background-color: #34d399 !important;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-job-detail-page a.border-slate-200.bg-white {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #e5e5e5 !important;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-job-detail-page a.border-slate-200.bg-white:hover {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-job-detail-page .seeker-job-detail-footer {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  background-color: rgba(24, 24, 24, 0.95) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.seeker-ui.seeker-theme-dark .seeker-job-detail-page .btn-secondary.border-blue-300 {
+  color: #60a5fa !important;
+  box-shadow: inset 0 0 0 1px #60a5fa;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-job-detail-page .btn-secondary .fill-blue-600 {
+  fill: #60a5fa;
+}
+
+/* ── Profile page (dark mode color overrides only) ── */
+.seeker-ui.seeker-theme-dark .profile-page {
+  background-color: #0a0a0a !important;
+}
+
+.seeker-ui.seeker-theme-dark .page-header .btn-ghost {
+  color: #a3a3a3 !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-hero-card,
+.seeker-ui.seeker-theme-dark .profile-page .profile-section {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  background-color: #181818 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-hero-banner-wrap > .absolute.inset-0.bg-gradient-to-b {
+  background-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.35) 0%,
+    rgba(254, 44, 85, 0.12) 48%,
+    #181818 100%
+  ) !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-section-title {
+  color: #f5f5f5 !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-field-label {
+  color: #a3a3a3 !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-field-value,
+.seeker-ui.seeker-theme-dark .profile-page .profile-info-row .profile-field-label,
+.seeker-ui.seeker-theme-dark .profile-page .profile-work-item .profile-info-value,
+.seeker-ui.seeker-theme-dark .profile-page .profile-work-item .profile-field-value {
+  color: #f5f5f5 !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-info-value {
+  color: #d4d4d4 !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-info-row .profile-info-value.is-empty,
+.seeker-ui.seeker-theme-dark .profile-page .profile-field-value-muted {
+  color: #737373 !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-work-meta {
+  color: #a3a3a3 !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-text-item + .profile-text-item {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-info-row,
+.seeker-ui.seeker-theme-dark .profile-page .profile-work-item {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-skill-chip {
+  background: rgba(254, 44, 85, 0.18);
+  color: #f5f5f5;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-skill-chip-years {
+  color: #a3a3a3;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-form-fields label.block > span:first-of-type,
+.seeker-ui.seeker-theme-dark .profile-page .profile-form-fields .block > span:first-of-type {
+  color: #cbd5e1 !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .input-field,
+.seeker-ui.seeker-theme-dark .profile-page .select-picker-trigger.input-field,
+.seeker-ui.seeker-theme-dark .profile-page select.input-field.select-field,
+.seeker-ui.seeker-theme-dark .profile-page textarea.input-field {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #f5f5f5;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .input-field:focus,
+.seeker-ui.seeker-theme-dark .profile-page .select-picker-trigger.input-field:focus,
+.seeker-ui.seeker-theme-dark .profile-page select.input-field.select-field:focus,
+.seeker-ui.seeker-theme-dark .profile-page textarea.input-field:focus {
+  border-color: rgba(254, 44, 85, 0.35) !important;
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 0 0 2px rgba(254, 44, 85, 0.15);
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .input-field.ring-1 {
+  border-color: rgba(254, 44, 85, 0.45) !important;
+  background-color: rgba(254, 44, 85, 0.1) !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .seeker-auth-alert--error {
+  border-color: rgba(248, 113, 113, 0.28) !important;
+  background-color: rgba(127, 29, 29, 0.22) !important;
+  color: #fca5a5 !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .seeker-auth-note {
+  color: #a3a3a3;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-form-section-title {
+  color: #f5f5f5 !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-work-entry {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  box-shadow: none;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .birthday-unit {
+  color: #a3a3a3;
 }
 
 /* ── Seeker auth (TikTok-style login / register) ── */
@@ -1086,27 +2002,27 @@ body {
 .seeker-ui .input-field {
   border: none;
   border-radius: 1rem;
-  background-color: #f1f5f9;
+  background-color: var(--seeker-input-bg);
   padding: 0.8125rem 1rem;
   font-size: 0.9375rem;
   font-weight: 500;
   line-height: 1.35;
-  color: #0f172a;
+  color: var(--seeker-text);
   transition: background-color 0.15s ease, box-shadow 0.15s ease;
 }
 .seeker-ui .input-field::placeholder {
-  color: #94a3b8;
+  color: var(--seeker-text-faint);
   font-weight: 400;
 }
 .seeker-ui .input-field:focus {
   outline: none;
-  background-color: #e2e8f0;
-  box-shadow: 0 0 0 2px rgb(15 23 42 / 0.08);
+  background-color: var(--seeker-input-focus);
+  box-shadow: 0 0 0 2px rgb(254 44 85 / 0.15);
 }
 .seeker-ui .input-field:read-only,
 .seeker-ui .input-field:disabled {
-  background-color: #f8fafc;
-  color: #64748b;
+  background-color: var(--seeker-surface);
+  color: var(--seeker-text-muted);
   cursor: not-allowed;
 }
 .seeker-ui .input-field.ring-1 {
@@ -1120,21 +2036,21 @@ body {
   -webkit-appearance: none;
   cursor: pointer;
   padding-right: 2.75rem;
-  background-color: #f1f5f9;
+  background-color: var(--seeker-input-bg);
   background-image: none;
 }
 .seeker-ui .select-wrap select.input-field:focus,
 .seeker-ui select.input-field.select-field:focus,
 .seeker-ui .select-picker-trigger.input-field:focus {
-  background-color: #e2e8f0;
+  background-color: var(--seeker-input-focus);
 }
 .seeker-ui .select-wrap select.input-field.select-empty,
 .seeker-ui .select-picker-trigger.select-empty {
-  color: #94a3b8;
+  color: var(--seeker-text-faint);
 }
 .seeker-ui .select-wrap select.input-field option {
-  color: #0f172a;
-  background: #ffffff;
+  color: var(--seeker-text);
+  background: var(--seeker-card);
 }
 
 /* Auth pages: card-style bordered fields */
@@ -3723,12 +4639,13 @@ body {
 .seeker-ui .data-table-card {
   border: none;
   border-radius: 1.25rem;
-  background: #ffffff;
+  background: var(--seeker-card);
   box-shadow: 0 1px 3px rgb(15 23 42 / 0.06);
 }
 
 .seeker-ui .data-table-pagination {
-  background: #f8fafc;
+  background: var(--seeker-pagination-surface);
+  color: var(--seeker-text-muted);
 }
 
 .seeker-ui .data-table-page-btn {
@@ -3737,15 +4654,15 @@ body {
   justify-content: center;
   border: none;
   border-radius: 9999px;
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--seeker-pagination-btn-bg);
+  color: var(--seeker-pagination-btn-text);
   font-weight: 600;
   transition: transform 0.12s ease, background 0.15s ease, color 0.15s ease;
 }
 
 .seeker-ui .data-table-page-btn:hover:not(:disabled) {
-  background: #e2e8f0;
-  color: #0f172a;
+  background: var(--seeker-pagination-btn-hover);
+  color: var(--seeker-pagination-btn-text-hover);
 }
 
 .seeker-ui .data-table-page-btn:active:not(:disabled) {
@@ -3766,10 +4683,10 @@ body {
 .seeker-ui .data-table-page-size {
   border: none;
   border-radius: 9999px;
-  background: #f1f5f9;
+  background: var(--seeker-pagination-btn-bg);
   padding: 0.375rem 0.75rem;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--seeker-text);
 }
 
 .seeker-ui .data-table-count-pill {
@@ -3778,11 +4695,41 @@ body {
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  background: #f1f5f9;
+  background: var(--seeker-pagination-btn-bg);
   padding: 0.25rem 0.75rem;
   font-size: 0.875rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--seeker-text);
+}
+
+.seeker-ui .data-table-pagination-meta {
+  color: var(--seeker-text-muted);
+}
+
+.seeker-ui .seeker-pagination-label {
+  color: var(--seeker-text-muted);
+}
+
+.seeker-ui .seeker-pagination-page-indicator {
+  color: var(--seeker-text);
+}
+
+.seeker-ui .seeker-pagination-ellipsis {
+  color: var(--seeker-text-faint);
+}
+
+.seeker-ui .seeker-search-bar-input.input-field {
+  border: 1px solid var(--seeker-search-border);
+  border-radius: 9999px;
+  background-color: var(--seeker-search-bg);
+  padding-left: 2.5rem;
+  font-size: 0.875rem;
+}
+
+.seeker-ui .seeker-search-bar-input.input-field:focus {
+  border-color: rgba(254, 44, 85, 0.35);
+  background-color: var(--seeker-search-focus-bg);
+  box-shadow: 0 0 0 2px rgb(254 44 85 / 0.12);
 }
 
 .seeker-ui .seeker-search-bar {
@@ -3800,7 +4747,7 @@ body {
   height: 1rem;
   width: 1rem;
   transform: translateY(-50%);
-  color: rgba(22, 24, 35, 0.45);
+  color: var(--seeker-text-faint);
 }
 
 .seeker-ui .seeker-search-bar-input {
@@ -3808,19 +4755,19 @@ body {
   min-height: 2.5rem;
   padding-left: 2.5rem;
   border-radius: 9999px;
-  border: 1px solid rgba(22, 24, 35, 0.08);
-  background: #f1f1f2;
+  border: 1px solid var(--seeker-search-border);
+  background: var(--seeker-search-bg);
   font-size: 0.875rem;
-  color: #161823;
+  color: var(--seeker-text);
 }
 
 .seeker-ui .seeker-search-bar-input::placeholder {
-  color: rgba(22, 24, 35, 0.45);
+  color: var(--seeker-text-faint);
 }
 
 .seeker-ui .seeker-search-bar-input:focus {
   border-color: rgba(254, 44, 85, 0.35);
-  background: #ffffff;
+  background: var(--seeker-search-focus-bg);
   box-shadow: 0 0 0 2px rgb(254 44 85 / 0.12);
 }
 
@@ -3828,7 +4775,7 @@ body {
   margin-top: 0.75rem;
   border: none;
   border-radius: 1rem;
-  background: #ffffff;
+  background: var(--seeker-pagination-bg);
   box-shadow: 0 1px 3px rgb(15 23 42 / 0.06);
 }
 
@@ -3860,6 +4807,7 @@ body {
 
 .seeker-ui .seeker-list-pagination.data-table-pagination {
   border-top: none;
+  background: var(--seeker-pagination-bg);
 }
 
 .seeker-ui .seeker-list-pagination .data-table-pagination-nav-compact {
@@ -3882,16 +4830,20 @@ body {
   min-width: 3.5rem;
   padding: 0.375rem 1.75rem 0.375rem 0.875rem;
   border-radius: 9999px;
-  border: 1px solid rgba(22, 24, 35, 0.12);
-  background: #f1f1f2;
+  border: 1px solid var(--seeker-chip-border);
+  background: var(--seeker-pagination-btn-bg);
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #161823;
+  color: var(--seeker-text);
 }
 
 .seeker-ui .seeker-page-size-picker .select-picker-trigger-compact:focus {
-  background: #ebebec;
+  background: var(--seeker-pagination-btn-hover);
   box-shadow: 0 0 0 2px rgb(254 44 85 / 0.18);
+}
+
+.seeker-ui .seeker-page-size-picker .select-picker-trigger-compact svg {
+  color: var(--seeker-text-muted);
 }
 
 .seeker-ui .seeker-page-size-picker .select-picker-trigger-compact span {
@@ -3931,6 +4883,74 @@ body {
 
 .seeker-ui .select-picker-sheet-list .select-picker-option-selected svg {
   color: #fe2c55;
+}
+
+.seeker-ui .select-picker-menu {
+  background: var(--seeker-picker-menu-bg);
+  box-shadow:
+    0 12px 40px rgb(0 0 0 / 0.28),
+    0 0 0 1px var(--seeker-border);
+}
+
+.seeker-ui .select-picker-option {
+  color: var(--seeker-text);
+}
+
+.seeker-ui .select-picker-option:hover,
+.seeker-ui .select-picker-option:focus-visible {
+  background: var(--seeker-picker-option-hover);
+}
+
+.seeker-ui .select-picker-option-selected {
+  background: var(--seeker-picker-option-hover);
+}
+
+.seeker-ui .select-picker-option-muted {
+  color: var(--seeker-text-faint);
+}
+
+.seeker-ui .select-picker-sheet-panel {
+  background: var(--seeker-picker-menu-bg);
+}
+
+html[data-seeker-theme="dark"] .select-picker-sheet-panel {
+  background: rgba(24, 24, 24, 0.96);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+
+html[data-seeker-theme="dark"] .select-picker-sheet-panel::-webkit-scrollbar {
+  width: 5px;
+}
+
+html[data-seeker-theme="dark"] .select-picker-sheet-panel::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+html[data-seeker-theme="dark"] .select-picker-sheet-title {
+  color: #a3a3a3;
+}
+
+html[data-seeker-theme="dark"] .select-picker-sheet-handle {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+html[data-seeker-theme="dark"] .select-picker-option {
+  color: #f5f5f5;
+}
+
+html[data-seeker-theme="dark"] .select-picker-option:hover,
+html[data-seeker-theme="dark"] .select-picker-option:focus-visible {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+html[data-seeker-theme="dark"] .select-picker-option-selected {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+html[data-seeker-theme="dark"] .select-picker-option-muted {
+  color: #737373;
 }
 
 /* ── Staff panel sidebar ── */

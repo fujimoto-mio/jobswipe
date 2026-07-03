@@ -16,7 +16,7 @@ type ChatThreadListProps = {
 
 export default function ChatThreadList({ threads, selectedId, onSelect }: ChatThreadListProps) {
   return (
-    <ul className="divide-y divide-slate-100">
+    <ul className="chat-thread-list divide-y divide-slate-100">
       {threads.map((t) => {
         const active = selectedId === t.application.id;
         const unread = t.unreadCount ?? 0;

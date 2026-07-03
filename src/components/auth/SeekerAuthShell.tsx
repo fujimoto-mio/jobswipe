@@ -1,6 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import SeekerBrandHeader from "@/components/seeker/SeekerBrandHeader";
+import {
+  DEFAULT_SEEKER_THEME,
+  loadSeekerTheme,
+  SEEKER_THEME_CHANGE_EVENT,
+  type SeekerTheme,
+} from "@/lib/seeker-theme";
 
 type SeekerAuthShellProps = {
   title: string;
@@ -15,8 +22,27 @@ export default function SeekerAuthShell({
   footer,
   children,
 }: SeekerAuthShellProps) {
+  const [theme, setTheme] = useState<SeekerTheme>(DEFAULT_SEEKER_THEME);
+
+  useEffect(() => {
+    setTheme(loadSeekerTheme());
+    const onThemeChange = (event: Event) => {
+      const next = (event as CustomEvent<SeekerTheme>).detail;
+      if (next === "light" || next === "dark") setTheme(next);
+    };
+    window.addEventListener(SEEKER_THEME_CHANGE_EVENT, onThemeChange);
+    return () => window.removeEventListener(SEEKER_THEME_CHANGE_EVENT, onThemeChange);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.seekerTheme = theme;
+    return () => {
+      delete document.documentElement.dataset.seekerTheme;
+    };
+  }, [theme]);
+
   return (
-    <div className="seeker-ui seeker-auth">
+    <div className={`seeker-ui seeker-auth seeker-theme-${theme}`}>
       <header className="seeker-auth-header">
         <SeekerBrandHeader showMenu={false} logoHref="/" className="seeker-auth-header__bar" />
       </header>

@@ -31,6 +31,7 @@ import { mapUserFacingError } from "@/lib/auth/errors";
 import { fetchSeekerUnreadTotal } from "@/lib/chat-unread";
 import { saveProfile } from "@/lib/profile";
 import { useSeekerUser } from "@/components/seeker/SeekerUserProvider";
+import { useSeekerTheme } from "@/components/seeker/SeekerThemeProvider";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { emailChangeSchema, passwordChangeSchema } from "@/lib/validation/schemas";
 
@@ -38,6 +39,7 @@ type ActiveModal = "email" | "password" | null;
 
 export default function SettingsPage() {
   const { profile, ready } = useSeekerUser();
+  const { theme, setTheme } = useSeekerTheme();
   const email = profile?.email ?? "";
   const [saveCount, setSaveCount] = useState(0);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
@@ -112,6 +114,20 @@ export default function SettingsPage() {
                 label="パスワード"
                 detail="変更する"
                 onClick={() => setActiveModal("password")}
+              />
+            </li>
+          </ul>
+        </SettingsPanel>
+
+        <SettingsPanel>
+          <SettingsSection title="表示" />
+          <ul className="divide-y divide-slate-100">
+            <li>
+              <SettingsToggleRow
+                label="ダークモード"
+                description="黒ベースのスタイリッシュな画面表示"
+                checked={theme === "dark"}
+                onChange={(checked) => setTheme(checked ? "dark" : "light")}
               />
             </li>
           </ul>

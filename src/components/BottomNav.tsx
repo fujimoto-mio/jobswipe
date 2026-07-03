@@ -23,10 +23,8 @@ export default function BottomNav({ saveCount = 0, chatCount = 0, theme = "light
 
   return (
     <nav
-      className={`absolute bottom-0 left-0 right-0 z-30 pb-[env(safe-area-inset-bottom)] ${
-        isOverlay
-          ? "border-t border-white/20 bg-white/90 backdrop-blur-xl shadow-[0_-4px_24px_rgba(15,23,42,0.08)]"
-          : "border-t border-slate-200/90 bg-white/95 backdrop-blur-xl shadow-[0_-4px_20px_rgba(15,23,42,0.04)]"
+      className={`seeker-bottom-nav absolute bottom-0 left-0 right-0 z-30 pb-[env(safe-area-inset-bottom)] ${
+        isOverlay ? "seeker-bottom-nav--overlay" : ""
       }`}
     >
       <div className="page-container flex items-stretch justify-around py-1.5">
@@ -37,19 +35,17 @@ export default function BottomNav({ saveCount = 0, chatCount = 0, theme = "light
             <Link
               key={href}
               href={href}
-              className={`relative flex flex-1 flex-col items-center gap-0.5 py-2 transition-colors ${
-                isActive ? "text-[var(--accent)]" : "text-slate-400 hover:text-slate-600"
+              className={`seeker-bottom-nav-link relative flex flex-1 flex-col items-center gap-0.5 py-2 transition-colors ${
+                isActive ? "is-active" : ""
               }`}
             >
               <div className="relative">
                 <Icon
-                  className={`h-[22px] w-[22px] ${
-                    isActive && href === "/liked" ? "fill-[var(--accent-light)] text-[var(--accent)]" : ""
-                  }`}
+                  className={`h-[22px] w-[22px] ${isActive && href === "/liked" ? "fill-current" : ""}`}
                   strokeWidth={isActive ? 2.25 : 1.75}
                 />
                 {badge !== undefined && badge > 0 && (
-                  <span className="absolute -right-2.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[var(--accent)] px-1 text-[10px] font-bold text-white ring-2 ring-white">
+                  <span className="seeker-bottom-nav-badge absolute -right-2.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[var(--accent)] px-1 text-[10px] font-bold text-white ring-2">
                     {badge > 99 ? "99+" : badge}
                   </span>
                 )}

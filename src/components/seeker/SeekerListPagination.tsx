@@ -59,7 +59,7 @@ export default function SeekerListPagination({
           {rangeStart}–{rangeEnd} / 全{totalItems}件
         </span>
         {onPageSizeChange && (
-          <div className="flex items-center gap-2 whitespace-nowrap text-xs text-[rgba(22,24,35,0.55)]">
+          <div className="seeker-pagination-label flex items-center gap-2 whitespace-nowrap text-xs">
             <span>表示件数</span>
             <div className="seeker-page-size-picker">
               <FormSelectPicker
@@ -87,7 +87,7 @@ export default function SeekerListPagination({
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
-        <span className="shrink-0 px-2 text-xs font-semibold text-[#161823]">
+        <span className="seeker-pagination-page-indicator shrink-0 px-2 text-xs font-semibold">
           {page} / {totalPages}
         </span>
         <button
@@ -114,7 +114,7 @@ export default function SeekerListPagination({
 
         {getPageNumbers(page, totalPages).map((p, i) =>
           p === "..." ? (
-            <span key={`ellipsis-${i}`} className="px-1 text-[rgba(22,24,35,0.45)]">
+            <span key={`ellipsis-${i}`} className="seeker-pagination-ellipsis px-1">
               …
             </span>
           ) : (

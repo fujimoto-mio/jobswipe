@@ -76,7 +76,7 @@ export default function JobDetailModal({
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 30, stiffness: 300 }}
-        className="max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-t-3xl bg-white sm:rounded-3xl"
+        className="job-detail-modal-panel max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-t-3xl bg-white sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="relative aspect-video bg-black">
@@ -131,7 +131,7 @@ export default function JobDetailModal({
           )}
         </div>
 
-        <div className="p-6">
+        <div className="job-detail-modal-content p-6">
           <div className="mb-4 flex items-center gap-3">
             <img src={job.companyLogo} alt={job.company} className="h-12 w-12 rounded-xl object-cover" />
             <div>

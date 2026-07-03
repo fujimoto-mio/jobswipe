@@ -47,13 +47,14 @@ export default function ApplyModal({ job, onClose, onSuccess }: ApplyModalProps)
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 30, stiffness: 300 }}
-        className="modal-sheet p-6"
+        className="apply-modal-panel modal-sheet p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-1 flex justify-center sm:hidden">
-          <div className="h-1 w-10 rounded-full bg-slate-200" />
+          <div className="apply-modal-handle h-1 w-10 rounded-full bg-slate-200" />
         </div>
 
+        <div className="apply-modal-content">
         <div className="mb-5 mt-2 flex items-center justify-between">
           <h2 className="text-lg font-bold text-slate-900">
             {step === "form" ? "応募する" : "応募完了"}
@@ -158,6 +159,7 @@ export default function ApplyModal({ job, onClose, onSuccess }: ApplyModalProps)
             </motion.div>
           )}
         </AnimatePresence>
+        </div>
       </motion.div>
     </motion.div>
   );
