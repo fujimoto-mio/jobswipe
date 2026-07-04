@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { GraduationCap, Home } from "lucide-react";
+import { GraduationCap } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import { AppHeader, AppPage } from "@/components/ui/AppShell";
 import EmptyState from "@/components/ui/EmptyState";
@@ -41,14 +40,8 @@ export default function CoursesPage() {
           <EmptyState
             variant="seeker"
             icon={GraduationCap}
-            title="スキル講座は準備中です"
-            description="転職やキャリアアップに役立つ講座を順次公開予定です。公開までしばらくお待ちください。"
-            action={
-              <Link href="/explore" className="btn-primary inline-flex items-center gap-2 px-8">
-                <Home className="h-4 w-4 shrink-0" />
-                ホームへ
-              </Link>
-            }
+            title="スキル講座は現在実装中です"
+            description="ただいま機能を準備しています。公開までしばらくお待ちください。"
           />
         </div>
       </main>

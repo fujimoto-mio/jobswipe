@@ -18,8 +18,8 @@ export default function BottomNav({ saveCount = 0, chatCount = 0, theme = "light
     { href: "/explore", label: "探す", icon: Search },
     { href: "/liked", label: "保存", icon: Heart, badge: saveCount },
     { href: "/chat", label: "チャット", icon: MessageCircle, badge: chatCount },
-    { href: "/courses", label: "スキル講座", icon: GraduationCap },
     { href: "/profile", label: "プロフィール", icon: User },
+    { href: "/courses", label: "スキル講座", icon: GraduationCap },
   ];
 
   return (
