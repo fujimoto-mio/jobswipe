@@ -11,12 +11,12 @@ import { getProfile } from "@/lib/profile";
 import { apiFetch } from "@/lib/api-client";
 import { mapUserFacingError } from "@/lib/auth/errors";
 import { applySchema } from "@/lib/validation/schemas";
-import type { JobFeedItem } from "@/lib/types";
+import type { Application, JobFeedItem } from "@/lib/types";
 
 type ApplyModalProps = {
   job: JobFeedItem;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (application?: Application) => void;
 };
 
 export default function ApplyModal({ job, onClose, onSuccess }: ApplyModalProps) {
@@ -102,8 +102,9 @@ export default function ApplyModal({ job, onClose, onSuccess }: ApplyModalProps)
                       }),
                     });
                     if (res.ok) {
+                      const data = await res.json().catch(() => ({}));
                       setStep("done");
-                      setTimeout(onSuccess, 3000);
+                      setTimeout(() => onSuccess(data.application), 3000);
                     } else {
                       const data = await res.json().catch(() => ({}));
                       setSubmitError(

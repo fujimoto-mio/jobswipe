@@ -99,7 +99,7 @@ function CompanyProfileInfoRow({ label, value }: { label: string; value?: string
     <div className="company-profile-info-row">
       <div className="company-profile-info-label">{label}</div>
       <div className="company-profile-info-value">
-        {display ? display : <span className="text-slate-400">未設定</span>}
+        {display ? display : <span className="company-profile-text--muted">未設定</span>}
       </div>
     </div>
   );
@@ -210,9 +210,9 @@ function SeekerApplicationProfileView({ profile }: { profile: UserProfile }) {
             <div className="application-seeker-work-list">
               {profile.workHistory.map((entry, index) => (
                 <div key={`${entry.company}-${index}`} className="application-seeker-work-item">
-                  <p className="font-semibold text-slate-900">{entry.company || "—"}</p>
-                  <p className="mt-0.5 text-sm text-slate-600">{entry.role || "—"}</p>
-                  <p className="mt-1 text-xs text-slate-400">{formatWorkPeriod(entry)}</p>
+                  <p className="application-seeker-work-item-company">{entry.company || "—"}</p>
+                  <p className="application-seeker-work-item-role">{entry.role || "—"}</p>
+                  <p className="application-seeker-work-item-period">{formatWorkPeriod(entry)}</p>
                   {entry.description.trim() && (
                     <p className="company-profile-text mt-3">{entry.description}</p>
                   )}

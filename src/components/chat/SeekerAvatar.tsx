@@ -13,7 +13,7 @@ type SeekerAvatarProps = {
 const SIZE_CLASS = {
   md: "h-11 w-11 text-sm",
   lg: "h-12 w-12 text-sm",
-  hero: "h-[5.5rem] w-[5.5rem] text-2xl",
+  hero: "h-[7rem] w-[7rem] text-3xl",
 } as const;
 
 export default function SeekerAvatar({
@@ -50,8 +50,8 @@ export default function SeekerAvatar({
       <img
         src={src}
         alt={name}
-        width={88}
-        height={88}
+        width={112}
+        height={112}
         loading="lazy"
         decoding="async"
         className="h-full w-full rounded-full bg-[#161823] object-cover"

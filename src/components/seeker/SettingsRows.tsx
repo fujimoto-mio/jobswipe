@@ -189,12 +189,12 @@ export function SettingsToggleRow({
         aria-checked={checked}
         disabled={isDisabled}
         onClick={() => !isDisabled && onChange(!checked)}
-        className={`relative h-7 w-12 shrink-0 rounded-full transition ${
-          checked && !isDisabled ? "seeker-toggle-on bg-[var(--accent)]" : "bg-slate-200"
-        } ${isDisabled ? "cursor-not-allowed" : ""}`}
+        className={`seeker-toggle relative h-7 w-12 shrink-0 rounded-full transition ${
+          checked && !isDisabled ? "seeker-toggle--on" : "seeker-toggle--off"
+        } ${isDisabled ? "seeker-toggle--disabled cursor-not-allowed" : ""}`}
       >
         <span
-          className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition ${
+          className={`seeker-toggle-thumb absolute top-0.5 h-6 w-6 rounded-full transition ${
             checked && !isDisabled ? "left-[22px]" : "left-0.5"
           }`}
         />

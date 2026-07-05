@@ -54,6 +54,7 @@
   --seeker-scrollbar-thumb-hover: rgba(15, 23, 42, 0.28);
   --accent: #fe2c55;
   --accent-light: rgba(254, 44, 85, 0.12);
+  --seeker-toggle-on: #fe2c55;
   color: var(--seeker-text);
   background: var(--seeker-bg);
 }
@@ -347,6 +348,21 @@
 .seeker-ui.seeker-theme-dark .badge-blue {
   background: rgba(254, 44, 85, 0.15);
   color: #ff8da6;
+}
+
+.seeker-ui.seeker-theme-dark .badge-green {
+  background: rgba(16, 185, 129, 0.18);
+  color: #6ee7b7;
+}
+
+.seeker-ui.seeker-theme-dark .badge-amber {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fcd34d;
+}
+
+.seeker-ui.seeker-theme-dark .badge-red {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fca5a5;
 }
 
 .seeker-ui.seeker-auth.seeker-theme-dark {
@@ -1236,8 +1252,40 @@ body {
   background: var(--seeker-card);
 }
 
-.seeker-ui .seeker-toggle-on {
-  background: #fe2c55 !important;
+.seeker-ui .seeker-toggle {
+  border: 1px solid transparent;
+  box-sizing: border-box;
+}
+
+.seeker-ui .seeker-toggle--off {
+  background: #e2e8f0;
+}
+
+.seeker-ui .seeker-toggle--on {
+  background: var(--seeker-toggle-on);
+}
+
+.seeker-ui .seeker-toggle-thumb {
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.2);
+}
+
+.seeker-ui.seeker-theme-dark .seeker-toggle {
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.seeker-ui.seeker-theme-dark .seeker-toggle--on {
+  border-color: var(--accent);
+}
+
+.seeker-ui.seeker-theme-dark .seeker-toggle-thumb {
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.seeker-ui.seeker-theme-dark .seeker-toggle--on .seeker-toggle-thumb {
+  background: var(--accent);
 }
 
 /* ── Job detail modal (dark mode color overrides only) ── */
@@ -1378,6 +1426,105 @@ body {
 
 .seeker-ui.seeker-theme-dark .apply-modal-content .flex.flex-col.items-center p {
   color: #f1f5f9 !important;
+}
+
+/* ── Settings form modal (dark mode) ── */
+.seeker-ui.seeker-theme-dark .settings-form-modal-panel.modal-sheet,
+.settings-form-modal-panel--dark.modal-sheet,
+html[data-seeker-theme="dark"] .settings-form-modal-panel.modal-sheet {
+  background-color: #181818 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow:
+    0 24px 64px rgb(0 0 0 / 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+}
+
+.seeker-ui.seeker-theme-dark .settings-form-modal-handle,
+.settings-form-modal-panel--dark .settings-form-modal-handle,
+html[data-seeker-theme="dark"] .settings-form-modal-handle {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.seeker-ui.seeker-theme-dark .settings-form-modal-content h2,
+.settings-form-modal-panel--dark .settings-form-modal-content h2,
+html[data-seeker-theme="dark"] .settings-form-modal-content h2 {
+  color: #f1f5f9 !important;
+}
+
+.seeker-ui.seeker-theme-dark .settings-form-modal-content label > span:first-child,
+.settings-form-modal-panel--dark .settings-form-modal-content label > span:first-child,
+html[data-seeker-theme="dark"] .settings-form-modal-content label > span:first-child {
+  color: #cbd5e1 !important;
+}
+
+.seeker-ui.seeker-theme-dark .settings-form-modal-content .input-field,
+.settings-form-modal-panel--dark .settings-form-modal-content .input-field,
+html[data-seeker-theme="dark"] .settings-form-modal-content .input-field {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #f5f5f5;
+}
+
+.seeker-ui.seeker-theme-dark .settings-form-modal-content .input-field:focus,
+.settings-form-modal-panel--dark .settings-form-modal-content .input-field:focus,
+html[data-seeker-theme="dark"] .settings-form-modal-content .input-field:focus {
+  border-color: rgba(254, 44, 85, 0.35) !important;
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 0 0 2px rgba(254, 44, 85, 0.15);
+}
+
+.seeker-ui.seeker-theme-dark .settings-form-modal-content .input-field.ring-1,
+.settings-form-modal-panel--dark .settings-form-modal-content .input-field.ring-1,
+html[data-seeker-theme="dark"] .settings-form-modal-content .input-field.ring-1 {
+  border-color: rgba(254, 44, 85, 0.45) !important;
+  background-color: rgba(254, 44, 85, 0.1) !important;
+}
+
+.seeker-ui.seeker-theme-dark .settings-form-modal-content .input-field::placeholder,
+.settings-form-modal-panel--dark .settings-form-modal-content .input-field::placeholder,
+html[data-seeker-theme="dark"] .settings-form-modal-content .input-field::placeholder {
+  color: #737373;
+}
+
+.seeker-ui.seeker-theme-dark .settings-form-modal-content .input-field:-webkit-autofill,
+.seeker-ui.seeker-theme-dark .settings-form-modal-content .input-field:-webkit-autofill:hover,
+.seeker-ui.seeker-theme-dark .settings-form-modal-content .input-field:-webkit-autofill:focus,
+.settings-form-modal-panel--dark .settings-form-modal-content .input-field:-webkit-autofill,
+.settings-form-modal-panel--dark .settings-form-modal-content .input-field:-webkit-autofill:hover,
+.settings-form-modal-panel--dark .settings-form-modal-content .input-field:-webkit-autofill:focus,
+html[data-seeker-theme="dark"] .settings-form-modal-content .input-field:-webkit-autofill,
+html[data-seeker-theme="dark"] .settings-form-modal-content .input-field:-webkit-autofill:hover,
+html[data-seeker-theme="dark"] .settings-form-modal-content .input-field:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.08) inset !important;
+  -webkit-text-fill-color: #f5f5f5 !important;
+  caret-color: #f5f5f5;
+}
+
+.seeker-ui.seeker-theme-dark .settings-form-modal-content .field-toggle-btn,
+.settings-form-modal-panel--dark .settings-form-modal-content .field-toggle-btn,
+html[data-seeker-theme="dark"] .settings-form-modal-content .field-toggle-btn {
+  color: #a3a3a3;
+}
+
+.seeker-ui.seeker-theme-dark .settings-form-modal-content .field-toggle-btn:hover,
+.settings-form-modal-panel--dark .settings-form-modal-content .field-toggle-btn:hover,
+html[data-seeker-theme="dark"] .settings-form-modal-content .field-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f5f5f5;
+}
+
+.seeker-ui.seeker-theme-dark .settings-form-modal-content .text-red-600,
+.settings-form-modal-panel--dark .settings-form-modal-content .text-red-600,
+html[data-seeker-theme="dark"] .settings-form-modal-content .text-red-600 {
+  color: #f87171 !important;
+}
+
+.seeker-ui.seeker-theme-dark .settings-form-modal-content .text-emerald-600,
+.settings-form-modal-panel--dark .settings-form-modal-content .text-emerald-600,
+html[data-seeker-theme="dark"] .settings-form-modal-content .text-emerald-600 {
+  color: #6ee7b7 !important;
 }
 
 /* ── Seeker chat page (dark mode color overrides only) ── */
@@ -1589,11 +1736,90 @@ body {
 
 /* ── Profile page (dark mode color overrides only) ── */
 .seeker-ui.seeker-theme-dark .profile-page {
-  background-color: #0a0a0a !important;
+  background-color: #000000 !important;
 }
 
 .seeker-ui.seeker-theme-dark .page-header .btn-ghost {
   color: #a3a3a3 !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-hero,
+.seeker-ui.seeker-theme-dark .profile-page .profile-hero-panel,
+.seeker-ui.seeker-theme-dark .profile-page .profile-panel {
+  background-color: #000000 !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-hero-name {
+  color: #f5f5f5 !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-hero-bio {
+  color: #a3a3a3 !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-panel-header {
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-panel-title,
+.seeker-ui.seeker-theme-dark .profile-page .profile-section-title {
+  color: #737373 !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-edit-btn {
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #f5f5f5 !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-edit-btn:active {
+  background: rgba(255, 255, 255, 0.14) !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-header-settings,
+.seeker-ui.seeker-theme-dark .page-header .profile-header-settings {
+  color: #d4d4d4 !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-header-settings:active,
+.seeker-ui.seeker-theme-dark .page-header .profile-header-settings:active {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-stats {
+  border-top-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-stat-value {
+  color: #f5f5f5 !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-stat-label {
+  color: #a3a3a3 !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-page .profile-completion-track {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+.seeker-ui.seeker-theme-dark .profile-hero-media-btn {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(24, 24, 24, 0.78);
+  color: #f5f5f5;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.seeker-ui.seeker-theme-dark .profile-hero-media-btn:active:not(:disabled) {
+  background: rgba(38, 38, 38, 0.92);
+}
+
+.seeker-ui.seeker-theme-dark .profile-hero-avatar-edit {
+  border-color: #000000;
+  background: #262626;
+  color: #f5f5f5;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
 }
 
 .seeker-ui.seeker-theme-dark .profile-page .profile-hero-card,
@@ -1690,10 +1916,6 @@ body {
   border-color: rgba(248, 113, 113, 0.28) !important;
   background-color: rgba(127, 29, 29, 0.22) !important;
   color: #fca5a5 !important;
-}
-
-.seeker-ui.seeker-theme-dark .profile-page .seeker-auth-note {
-  color: #a3a3a3;
 }
 
 .seeker-ui.seeker-theme-dark .profile-page .profile-form-section-title {
@@ -2122,14 +2344,27 @@ body {
   color: var(--seeker-auth-text);
 }
 
+.form-field-hint {
+  margin-top: 0.375rem;
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  color: var(--seeker-text-faint, var(--seeker-text-muted, var(--muted)));
+}
+
 .seeker-auth-note {
-  border: 1px solid var(--seeker-auth-border);
+  border: none;
   border-radius: 1rem;
-  background: #f8fafc;
+  background: var(--seeker-surface);
   padding: 0.875rem 1rem;
   font-size: 0.8125rem;
   line-height: 1.55;
-  color: var(--seeker-auth-muted);
+  color: var(--seeker-text-muted);
+}
+
+.seeker-ui.seeker-theme-dark .seeker-auth-note,
+html[data-seeker-theme="dark"] .seeker-ui .seeker-auth-note {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #a3a3a3 !important;
 }
 
 .seeker-auth .btn-primary {
@@ -2405,66 +2640,158 @@ body {
 
 /* Profile page — TikTok-style typography & layout */
 .profile-page {
-  background: #f8fafc;
+  background: #ffffff;
 }
 
-.seeker-ui .profile-page .profile-hero-card {
-  margin: 0.75rem 1rem 0;
-  overflow: hidden;
-  border: 1px solid rgba(22, 24, 35, 0.08);
-  border-radius: 1.25rem;
+.seeker-ui .profile-page .profile-hero {
   background: #ffffff;
-  box-shadow:
-    0 1px 3px rgba(22, 24, 35, 0.04),
-    0 8px 28px rgba(22, 24, 35, 0.06);
+}
+
+.seeker-ui .profile-page .profile-hero-banner-wrap {
+  position: relative;
+  height: 6.5rem;
+  overflow: hidden;
+}
+
+.seeker-ui .profile-page .profile-hero-banner {
+  height: 100%;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.seeker-ui .profile-page .profile-hero-banner-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.08) 0%,
+    rgba(0, 0, 0, 0.18) 100%
+  );
+}
+
+.seeker-ui .profile-page .profile-hero-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 1rem 1rem;
+  background: #ffffff;
 }
 
 .seeker-ui .profile-page .profile-hero-upload-error {
-  margin: 0.75rem 1rem 0;
+  margin: 0.5rem 1rem 0;
 }
 
-.seeker-ui .profile-page .profile-section {
-  margin: 0.75rem 1rem 0;
-  border: 1px solid rgba(22, 24, 35, 0.08);
-  border-radius: 1.25rem;
+.seeker-ui .profile-page .profile-panel {
+  margin-top: 0.5rem;
   background: #ffffff;
-  box-shadow: 0 1px 3px rgba(22, 24, 35, 0.04);
 }
 
-.seeker-ui .profile-page .profile-section:first-of-type {
-  margin-top: 0.75rem;
+.seeker-ui .profile-page .profile-panel-header {
+  padding: 0.625rem 1rem;
+  border-bottom: 0.5px solid rgba(22, 24, 35, 0.08);
 }
 
-.seeker-ui .profile-page .profile-section-header {
-  padding: 1rem 1.125rem 0.375rem;
+.seeker-ui .profile-page .profile-panel-title {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(22, 24, 35, 0.45);
 }
 
-.seeker-ui .profile-page .profile-section-content {
-  padding: 0.375rem 1.125rem 1.125rem;
+.seeker-ui .profile-page .profile-panel-body {
+  padding: 0.75rem 1rem 1rem;
 }
 
-.seeker-ui .profile-page .profile-section-content--flush {
+.seeker-ui .profile-page .profile-panel-body--flush {
   padding-top: 0.25rem;
-  padding-bottom: 0.5rem;
+  padding-bottom: 0.25rem;
   padding-left: 0;
   padding-right: 0;
+}
+
+.seeker-ui .profile-page .profile-hero-name-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 22rem;
+  min-height: 2rem;
+  margin-top: 0.875rem;
+  padding: 0 4.5rem;
+}
+
+.seeker-ui .profile-page .profile-hero-name {
+  margin-top: 0;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.seeker-ui .profile-page .profile-hero-name-action {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .seeker-ui .profile-page .profile-hero-actions {
   display: flex;
   width: 100%;
-  max-width: 20rem;
+  max-width: 22rem;
   flex-direction: column;
   align-items: stretch;
-  margin-top: 1rem;
+  margin-top: 0;
 }
 
 .seeker-ui .profile-page .profile-completion {
-  max-width: none;
+  width: 100%;
+  max-width: 22rem;
+  margin-top: 0.75rem;
 }
 
 .seeker-ui .profile-page .profile-edit-btn {
-  max-width: none;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid rgba(22, 24, 35, 0.12);
+  border-radius: 9999px;
+  background: rgba(22, 24, 35, 0.06);
+  padding: 0.3125rem 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #161823;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.seeker-ui .profile-page .profile-edit-btn:active {
+  transform: scale(0.96);
+  background: rgba(22, 24, 35, 0.1);
+}
+
+.seeker-ui .profile-page .profile-header-settings,
+.seeker-ui .page-header .profile-header-settings {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.25rem;
+  width: 2.25rem;
+  border-radius: 9999px;
+  color: rgba(22, 24, 35, 0.75);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.seeker-ui .profile-page .profile-header-settings:active,
+.seeker-ui .page-header .profile-header-settings:active {
+  background: rgba(22, 24, 35, 0.06);
 }
 
 .seeker-ui .profile-page .profile-form-section-title {
@@ -2549,14 +2876,14 @@ body {
   align-items: center;
   gap: 0.25rem;
   border-radius: 9999px;
-  border: none;
+  border: 1px solid rgba(22, 24, 35, 0.08);
   background: rgb(255 255 255 / 0.92);
   padding: 0.375rem 0.625rem;
   font-size: 0.6875rem;
   font-weight: 700;
   color: #161823;
   box-shadow: 0 2px 8px rgb(15 23 42 / 0.12);
-  transition: transform 0.15s ease, opacity 0.15s ease;
+  transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
 .seeker-ui .profile-hero-media-btn:active:not(:disabled) {
   transform: scale(0.96);
@@ -2578,18 +2905,18 @@ body {
 }
 .seeker-ui .profile-hero-avatar-wrap {
   position: relative;
-  margin-top: 0;
+  margin-top: -3.5rem;
 }
 .seeker-ui .profile-page .profile-hero-avatar-wrap {
-  margin-top: 0;
+  margin-top: -3.5rem;
 }
 .seeker-ui .profile-hero-avatar-edit {
   position: absolute;
   right: 0;
   bottom: 0;
   display: flex;
-  height: 2rem;
-  width: 2rem;
+  height: 2.25rem;
+  width: 2.25rem;
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
@@ -2615,8 +2942,8 @@ body {
   box-shadow: 0 8px 24px rgb(254 44 85 / 0.18);
 }
 .seeker-ui .seeker-avatar--hero {
-  height: 5.5rem;
-  width: 5.5rem;
+  height: 7rem;
+  width: 7rem;
 }
 .seeker-ui .seeker-avatar--lg {
   height: 3rem;
@@ -2651,22 +2978,21 @@ body {
   background: #161823;
 }
 .seeker-ui .profile-hero-name {
-  margin-top: 0.75rem;
-  font-size: 1.125rem;
-  font-weight: 800;
+  font-size: 1.25rem;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: #161823;
-  line-height: 1.3;
+  line-height: 1.25;
 }
 .seeker-ui .profile-hero-bio {
-  margin-top: 0.25rem;
-  max-width: 18rem;
+  margin-top: 0.375rem;
+  max-width: 20rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 500;
-  color: rgba(22, 24, 35, 0.55);
+  color: rgba(22, 24, 35, 0.65);
 }
 .seeker-ui .profile-hero-upload-error {
   margin-top: 0.5rem;
@@ -2680,6 +3006,7 @@ body {
   align-items: center;
   justify-content: center;
   width: 100%;
+  max-width: 22rem;
   margin-top: 1rem;
   padding-top: 0.875rem;
   border-top: 0.5px solid rgba(22, 24, 35, 0.08);
@@ -2710,9 +3037,9 @@ body {
   background: rgba(22, 24, 35, 0.1);
 }
 .seeker-ui .profile-completion {
-  margin-top: 0.875rem;
+  margin-top: 0.75rem;
   width: 100%;
-  max-width: 18rem;
+  max-width: 22rem;
 }
 .seeker-ui .profile-completion-header {
   display: flex;
@@ -2727,7 +3054,7 @@ body {
   color: #161823;
 }
 .seeker-ui .profile-completion-track {
-  height: 0.375rem;
+  height: 0.25rem;
   overflow: hidden;
   border-radius: 9999px;
   background: rgba(22, 24, 35, 0.08);
@@ -2743,29 +3070,14 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.375rem;
-  margin-top: 0.875rem;
-  width: 100%;
-  max-width: 18rem;
-  padding: 0.625rem 1.25rem;
-  font-size: 0.8125rem;
-  font-weight: 700;
 }
+.seeker-ui .profile-page .profile-panel-title,
 .seeker-ui .profile-page .profile-section-title {
-  font-size: 0.9375rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-.seeker-ui .profile-page .profile-hero-actions .profile-completion-header {
-  color: rgba(255, 255, 255, 0.82);
-}
-
-.seeker-ui .profile-page .profile-hero-actions .profile-completion-value {
-  color: #ffffff;
-}
-
-.seeker-ui .profile-page .profile-hero-actions .profile-completion-track {
-  background: rgba(255, 255, 255, 0.28);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(22, 24, 35, 0.45);
 }
 
 .seeker-ui .profile-application-cards {
@@ -2891,7 +3203,7 @@ body {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px;
+  padding: 14px 16px;
   border-bottom: 0.5px solid rgba(22, 24, 35, 0.08);
 }
 .profile-info-row:last-child {
@@ -2912,7 +3224,7 @@ body {
   color: rgba(22, 24, 35, 0.34);
 }
 .profile-work-item {
-  padding: 16px;
+  padding: 14px 16px;
   border-bottom: 0.5px solid rgba(22, 24, 35, 0.08);
 }
 .profile-work-item:last-child {
@@ -3773,22 +4085,6 @@ html[data-staff-theme="dark"] .select-picker-option-muted {
   color: var(--staff-primary);
 }
 
-.staff-ui .chat-column-search .input-field {
-  border: 1px solid var(--staff-border-strong);
-  background: var(--staff-input-bg);
-  box-shadow: var(--staff-shadow-sm);
-}
-
-.staff-ui .chat-column-search .input-field:hover:not(:disabled) {
-  border-color: rgba(39, 169, 181, 0.35);
-  background: var(--staff-input-bg);
-}
-
-.staff-ui .chat-column-search .input-field:focus {
-  border-color: var(--staff-primary);
-  box-shadow: 0 0 0 3px rgba(39, 169, 181, 0.12);
-}
-
 .staff-ui .chat-column-search-icon {
   color: var(--staff-icon-muted);
 }
@@ -3834,7 +4130,7 @@ html[data-staff-theme="dark"] .select-picker-option-muted {
 
 .company-chat-list-item-title--active {
   font-weight: 600;
-  color: #17848d;
+  color: var(--staff-primary);
 }
 
 .company-chat-seeker-item {
@@ -3877,10 +4173,10 @@ html[data-staff-theme="dark"] .select-picker-option-muted {
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  background: rgba(114, 144, 193, 0.14);
+  background: var(--staff-primary-light);
   font-size: 0.75rem;
   font-weight: 700;
-  color: #5270a8;
+  color: var(--staff-section-title);
 }
 
 .company-chat-seeker-avatar--active {
@@ -3896,12 +4192,12 @@ html[data-staff-theme="dark"] .select-picker-option-muted {
   white-space: nowrap;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #0f172a;
+  color: var(--staff-text);
 }
 
 .company-chat-seeker-name--active {
   font-weight: 600;
-  color: #17848d;
+  color: var(--staff-primary);
 }
 
 .company-chat-empty {
@@ -3930,8 +4226,8 @@ html[data-staff-theme="dark"] .select-picker-option-muted {
 }
 
 .company-chat-thread-bar {
-  border-bottom: 1px solid rgba(114, 144, 193, 0.1);
-  background: #ffffff;
+  border-bottom: 1px solid var(--staff-border);
+  background: var(--staff-surface);
 }
 
 .company-chat-thread-bar-inner {
@@ -3945,30 +4241,51 @@ html[data-staff-theme="dark"] .select-picker-option-muted {
   font-size: 1rem;
   font-weight: 700;
   line-height: 1.4;
-  color: #0f172a;
+  color: var(--staff-text);
 }
 
 .company-chat-thread-applicant {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--staff-text-secondary);
 }
 
 .company-chat-messages--staff {
-  background: rgba(114, 144, 193, 0.04);
+  background: var(--staff-surface-subtle);
 }
 
 .staff-ui.company-chat-panel .chat-message-bubble--own {
   background: var(--staff-primary);
 }
 
+.staff-ui.company-chat-panel .chat-message-bubble--other {
+  border-color: var(--staff-border);
+  background: var(--staff-card-bg);
+  color: var(--staff-text-secondary);
+  box-shadow: none;
+}
+
+.staff-ui.company-chat-panel .chat-message-sender {
+  color: var(--staff-text-muted);
+}
+
+.staff-ui.company-chat-panel .chat-message-time {
+  color: var(--staff-text-faint);
+}
+
 .staff-ui.company-chat-panel .chat-message-avatar--company-hr {
-  background: rgba(39, 169, 181, 0.14);
-  color: #17848d;
+  background: var(--staff-primary-light);
+  color: var(--staff-primary);
+}
+
+.staff-ui.company-chat-panel .chat-message-avatar--seeker {
+  background: var(--staff-primary-light);
+  color: var(--staff-primary);
 }
 
 .chat-composer-footer--staff {
-  border-top: 1px solid rgba(114, 144, 193, 0.1) !important;
+  border-top: 1px solid var(--staff-border) !important;
+  background: var(--staff-surface);
 }
 
 .staff-ui.company-chat-panel .chat-composer .btn-send {
@@ -3982,13 +4299,18 @@ html[data-staff-theme="dark"] .select-picker-option-muted {
 
 .staff-ui.company-chat-panel .chat-composer-input.input-field {
   min-height: 3.25rem;
-  border: 1px solid rgba(114, 144, 193, 0.18);
-  background: #f8fafc;
+  border: 1px solid var(--staff-border-strong);
+  background: var(--staff-input-bg);
+  color: var(--staff-text);
+}
+
+.staff-ui.company-chat-panel .chat-composer-input.input-field::placeholder {
+  color: var(--staff-text-faint);
 }
 
 .staff-ui.company-chat-panel .chat-composer-input.input-field:focus {
   border-color: var(--staff-primary);
-  background: #ffffff;
+  background: var(--staff-input-bg);
   box-shadow: 0 0 0 3px rgba(39, 169, 181, 0.12);
 }
 
@@ -4225,32 +4547,34 @@ html[data-staff-theme="dark"] .select-picker-option-muted {
   padding-left: 2.125rem;
   padding-right: 2rem;
   border-radius: var(--staff-radius);
-  border-color: #e2e8f0;
-  background: #f8fafc;
+  border: 1px solid var(--staff-border-strong);
+  background: var(--staff-input-bg);
+  color: var(--staff-text);
+  box-shadow: var(--staff-shadow-sm);
   font-size: 0.8125rem;
   line-height: 1.25rem;
   transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
 
 .staff-ui .chat-column-search .input-field::placeholder {
-  color: #94a3b8;
+  color: var(--staff-text-faint);
 }
 
 .staff-ui .chat-column-search .input-field:hover:not(:disabled) {
-  border-color: #cbd5e1;
-  background: #ffffff;
+  border-color: rgba(39, 169, 181, 0.35);
+  background: var(--staff-input-bg);
 }
 
 .staff-ui .chat-column-search .input-field:focus {
-  border-color: #27a9b5;
-  background: #ffffff;
+  border-color: var(--staff-primary);
+  background: var(--staff-input-bg);
   box-shadow: 0 0 0 3px rgba(39, 169, 181, 0.14);
 }
 
 .staff-ui .chat-column-search .input-field:disabled {
   cursor: not-allowed;
   opacity: 0.55;
-  background: #f1f5f9;
+  background: var(--staff-input-bg-disabled);
 }
 
 .staff-ui .chat-column-search .input-field::-webkit-search-cancel-button {
@@ -4267,14 +4591,14 @@ html[data-staff-theme="dark"] .select-picker-option-muted {
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  color: #64748b;
+  color: var(--staff-text-muted, #64748b);
   transform: translateY(-50%);
   transition: background 0.15s ease, color 0.15s ease;
 }
 
 .chat-column-search-clear:hover {
-  background: #e2e8f0;
-  color: #334155;
+  background: var(--staff-muted-bg-hover, #e2e8f0);
+  color: var(--staff-text-secondary, #334155);
 }
 
 .chat-column-search-clear:active {
@@ -6384,9 +6708,66 @@ html[data-staff-theme="dark"] .staff-ui {
   -webkit-backdrop-filter: none;
 }
 
+.legal-page {
+  padding-top: 80px;
+}
+
 .legal-page-frame {
   display: block;
   background: var(--surface);
+}
+
+.legal-page--dark {
+  background: #0a0a0a;
+  color: #f5f5f5;
+}
+
+.legal-page--dark .legal-page-frame {
+  background: #0a0a0a;
+}
+
+.legal-page--dark .lp-header {
+  background: rgba(10, 10, 10, 0.92);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+.legal-page--dark .lp-header__logo p {
+  color: #f5f5f5;
+}
+
+.legal-page--dark .lp-header-nav-link {
+  color: #a3a3a3;
+}
+
+.legal-page--dark .lp-header-nav-link:hover {
+  color: #fe2c55;
+}
+
+.legal-page--dark .lp-header-link {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #f5f5f5;
+}
+
+.legal-page--dark .lp-header-link:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(254, 44, 85, 0.35);
+  color: #ff8da6;
+}
+
+.legal-page--dark .lp-header-link--ghost {
+  background: transparent;
+  color: #d4d4d4;
+}
+
+.legal-page--dark .lp-header-btn {
+  background: #fe2c55;
+  color: #ffffff;
+}
+
+.legal-page--dark .lp-header-btn:hover {
+  background: #ff4d6d;
 }
 
 .page-main {
@@ -6680,14 +7061,20 @@ html[data-staff-theme="dark"] .staff-ui {
 
 .staff-ui.application-seeker-info-modal {
   max-width: 42rem;
-  background: #ffffff;
-  box-shadow: 0 16px 48px rgba(114, 144, 193, 0.16);
+  background: var(--staff-card-bg);
+  box-shadow: var(--staff-shadow-md);
   border-radius: var(--staff-radius, 0.875rem);
 }
 
-.application-seeker-info-modal-header {
-  border-bottom: 1px solid rgba(114, 144, 193, 0.1);
-  background: #ffffff;
+.application-seeker-info-modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 20;
+}
+
+.application-seeker-info-modal-body {
+  min-height: 0;
 }
 
 .application-seeker-info-modal {
@@ -6703,8 +7090,8 @@ html[data-staff-theme="dark"] .staff-ui {
 }
 
 .application-seeker-detail--modal {
-  padding: 0 1rem 1.25rem;
-  background: rgba(114, 144, 193, 0.04);
+  padding: 1.5rem 1rem 1.25rem;
+  background: var(--staff-surface-subtle);
 }
 
 .application-seeker-detail--modal .application-seeker-detail-sections {
@@ -6712,16 +7099,16 @@ html[data-staff-theme="dark"] .staff-ui {
 }
 
 .application-seeker-detail--modal .company-profile-section {
-  border: 1px solid rgba(114, 144, 193, 0.12);
+  border: 1px solid var(--staff-border);
   border-radius: var(--staff-radius, 0.875rem);
-  background: #ffffff;
+  background: var(--staff-card-bg);
   box-shadow: none;
 }
 
 .application-seeker-detail--modal .company-profile-section-title {
   font-size: 1rem;
   font-weight: 700;
-  color: #5270a8;
+  color: var(--staff-section-title);
 }
 
 .application-seeker-detail--modal .company-profile-section-header {
@@ -6733,19 +7120,19 @@ html[data-staff-theme="dark"] .staff-ui {
 }
 
 .application-seeker-detail--modal .company-profile-info-table {
-  border-color: rgba(114, 144, 193, 0.12);
+  border-color: var(--staff-border);
 }
 
 .application-seeker-detail--modal .company-profile-info-row {
-  border-bottom-color: rgba(114, 144, 193, 0.08);
+  border-bottom-color: var(--staff-border-subtle);
 }
 
 .application-seeker-detail--modal .application-seeker-profile-block--divider {
-  border-top-color: rgba(114, 144, 193, 0.1);
+  border-top-color: var(--staff-border);
 }
 
 .application-seeker-detail--modal .application-seeker-work-item {
-  border-bottom-color: rgba(114, 144, 193, 0.1);
+  border-bottom-color: var(--staff-border);
 }
 
 .application-seeker-detail--modal .application-seeker-avatar {
@@ -6775,13 +7162,13 @@ html[data-staff-theme="dark"] .staff-ui {
   margin-bottom: 0.5rem;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--staff-text-muted);
 }
 
 .application-seeker-profile-block--divider {
   margin-top: 1.25rem;
   padding-top: 1.25rem;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--staff-border);
 }
 
 .application-seeker-work-list {
@@ -6792,7 +7179,24 @@ html[data-staff-theme="dark"] .staff-ui {
 
 .application-seeker-work-item {
   padding-bottom: 1rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--staff-border);
+}
+
+.application-seeker-work-item-company {
+  font-weight: 600;
+  color: var(--staff-text);
+}
+
+.application-seeker-work-item-role {
+  margin-top: 0.125rem;
+  font-size: 0.875rem;
+  color: var(--staff-text-secondary);
+}
+
+.application-seeker-work-item-period {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--staff-text-faint);
 }
 
 .application-seeker-work-item:last-child {
@@ -6824,7 +7228,7 @@ html[data-staff-theme="dark"] .staff-ui {
   font-size: 1.125rem;
   font-weight: 700;
   line-height: 1.3;
-  color: #0f172a;
+  color: var(--staff-text);
 }
 
 .application-seeker-email {
@@ -6834,7 +7238,7 @@ html[data-staff-theme="dark"] .staff-ui {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--staff-text-muted);
 }
 
 .application-seeker-meta {
@@ -6878,9 +7282,29 @@ html[data-staff-theme="dark"] .staff-ui {
   color: #dc2626;
 }
 
+.staff-ui.staff-theme-dark .application-seeker-status-pill--new {
+  color: #fcd34d;
+}
+
+.staff-ui.staff-theme-dark .application-seeker-status-pill--scheduling {
+  color: #7dd3db;
+}
+
+.staff-ui.staff-theme-dark .application-seeker-status-pill--interview {
+  color: #c4b5fd;
+}
+
+.staff-ui.staff-theme-dark .application-seeker-status-pill--hired {
+  color: #6ee7b7;
+}
+
+.staff-ui.staff-theme-dark .application-seeker-status-pill--rejected {
+  color: #fca5a5;
+}
+
 .application-seeker-applied-date {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: var(--staff-text-faint);
 }
 
 .application-seeker-status-chips {
@@ -6891,24 +7315,24 @@ html[data-staff-theme="dark"] .staff-ui {
 
 .application-seeker-status-chip {
   border-radius: var(--staff-radius, 0.875rem);
-  border: 1px solid rgba(114, 144, 193, 0.16);
-  background: #fff;
+  border: 1px solid var(--staff-border-strong);
+  background: var(--staff-card-bg);
   padding: 0.5rem 0.875rem;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--staff-text-secondary);
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .application-seeker-status-chip:hover {
-  background: rgba(114, 144, 193, 0.06);
-  border-color: rgba(114, 144, 193, 0.24);
+  background: var(--staff-surface-subtle);
+  border-color: var(--staff-border-strong);
 }
 
 .application-seeker-status-chip-active {
-  border-color: #27a9b5;
-  background: rgba(39, 169, 181, 0.1);
-  color: #27a9b5;
+  border-color: var(--staff-primary);
+  background: var(--staff-primary-light);
+  color: var(--staff-primary);
 }
 
 .application-seeker-detail-actions .company-profile-section-body {

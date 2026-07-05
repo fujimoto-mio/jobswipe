@@ -44,15 +44,16 @@ export function scrollToSection(id: string) {
 
 type LandingHeaderProps = {
   onLandingPage?: boolean;
+  dark?: boolean;
 };
 
-export default function LandingHeader({ onLandingPage = false }: LandingHeaderProps) {
+export default function LandingHeader({ onLandingPage = false, dark = false }: LandingHeaderProps) {
   const handleNav = (id: string) => {
     if (onLandingPage) scrollToSection(id);
   };
 
   return (
-    <header className="lp-header">
+    <header className={`lp-header ${dark ? "lp-header--dark" : ""}`}>
       <div className="lp-header__inner">
         <Link
           href="/"
@@ -63,7 +64,7 @@ export default function LandingHeader({ onLandingPage = false }: LandingHeaderPr
             handleNav("top");
           }}
         >
-          <Logo inTopbar />
+          <Logo inTopbar theme={dark ? "dark" : "light"} />
         </Link>
 
         <nav className="lp-header__nav">

@@ -32,6 +32,7 @@ type FormTextInputProps = {
   className?: string;
   min?: string;
   max?: string;
+  hint?: string;
 };
 
 export function FormTextInput({
@@ -44,6 +45,7 @@ export function FormTextInput({
   className = "",
   min,
   max,
+  hint,
 }: FormTextInputProps) {
   const [field, meta] = useField(name);
 
@@ -60,6 +62,7 @@ export function FormTextInput({
         max={max}
         className={`${fieldClass(meta.error, meta.touched)} ${className}`}
       />
+      {hint && !meta.error && <p className="form-field-hint">{hint}</p>}
       <FormError name={name} />
     </label>
   );

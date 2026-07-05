@@ -68,11 +68,11 @@ function ProfileSectionShell({
   flush?: boolean;
 }) {
   return (
-    <section className="profile-section">
-      <div className="profile-section-header">
-        <p className="profile-section-title">{title}</p>
+    <section className="profile-panel">
+      <div className="profile-panel-header">
+        <p className="profile-panel-title">{title}</p>
       </div>
-      <div className={`profile-section-content ${flush ? "profile-section-content--flush" : ""}`}>{children}</div>
+      <div className={`profile-panel-body ${flush ? "profile-panel-body--flush" : ""}`}>{children}</div>
     </section>
   );
 }

@@ -45,27 +45,32 @@ export default function ApplicationSeekerInfoModal({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.98, y: 8 }}
         transition={{ type: "spring", damping: 28, stiffness: 320 }}
-        className="modal-sheet application-seeker-info-modal staff-ui max-h-[92vh] w-full overflow-y-auto p-0"
+        className="modal-sheet application-seeker-info-modal staff-ui relative flex max-h-[92vh] w-full flex-col overflow-hidden p-0"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-label="応募者プロフィール"
       >
-        <div className="application-seeker-info-modal-header sticky top-0 z-10 flex items-center justify-end px-4 py-3 sm:px-5">
-          <button type="button" onClick={onClose} className="btn-icon btn-icon-muted shrink-0" aria-label="閉じる">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="application-seeker-info-modal-close btn-icon btn-icon-muted"
+          aria-label="閉じる"
+        >
+          <X className="h-5 w-5" />
+        </button>
 
-        <ApplicationDetailBody
-          application={application}
-          seeker={application.seeker}
-          basePath={basePath}
-          isCompany
-          onUpdateStatus={onUpdateStatus}
-          showChatLink={false}
-          layout="modal"
-        />
+        <div className="application-seeker-info-modal-body min-h-0 flex-1 overflow-y-auto">
+          <ApplicationDetailBody
+            application={application}
+            seeker={application.seeker}
+            basePath={basePath}
+            isCompany
+            onUpdateStatus={onUpdateStatus}
+            showChatLink={false}
+            layout="modal"
+          />
+        </div>
       </motion.div>
     </motion.div>
   );

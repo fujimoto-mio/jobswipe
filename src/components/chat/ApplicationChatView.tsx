@@ -325,7 +325,7 @@ export default function ApplicationChatView({
         )}
       </div>
 
-      <div className={`chat-composer-footer border-t bg-white px-4 py-3 ${staffStyle ? "chat-composer-footer--staff" : "border-slate-200"}`}>
+      <div className={`chat-composer-footer border-t px-4 py-3 ${staffStyle ? "chat-composer-footer--staff" : "border-slate-200 bg-white"}`}>
         <ChatComposer
           applicationId={applicationId}
           sender={sender}
