@@ -23,7 +23,7 @@ import {
   saveStoredExploreFilters,
 } from "@/lib/job-filters";
 
-const CHROME_AUTO_HIDE_MS = 5000;
+const CHROME_AUTO_HIDE_MS = 3000;
 
 function ExploreContent() {
   const router = useRouter();
@@ -194,7 +194,7 @@ function ExploreContent() {
         />
       </main>
 
-      <header className="seeker-explore-feed-header pointer-events-none absolute inset-x-0 top-0 z-30 pt-[env(safe-area-inset-top,0px)] transition-opacity duration-700">
+      <header className="seeker-explore-feed-header pointer-events-none absolute inset-x-0 top-0 z-30 pt-[env(safe-area-inset-top,0px)]">
         <div className="pointer-events-auto">
           <SeekerBrandHeader
             theme="dark"

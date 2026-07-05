@@ -1,6 +1,6 @@
 "use client";
 
-import { Play, Volume2, VolumeX, Heart, Send, FileText, MapPin, Briefcase, UserRound } from "lucide-react";
+import { Volume2, VolumeX, Heart, Send, FileText, MapPin, Briefcase, UserRound } from "lucide-react";
 import type { JobFeedItem } from "@/lib/types";
 import { useVideoPlayback } from "@/hooks/useVideoPlayback";
 
@@ -11,6 +11,7 @@ function displayVideoTag(tag: string) {
 type VideoFeedItemProps = {
   job: JobFeedItem;
   isActive: boolean;
+  preloadVideo?: boolean;
   isNext?: boolean;
   swipeEnabled?: boolean;
   chromeVisible?: boolean;
@@ -60,6 +61,7 @@ function RailIconButton({
 export default function VideoFeedItem({
   job,
   isActive,
+  preloadVideo = false,
   isNext = false,
   swipeEnabled = false,
   chromeVisible = true,
@@ -69,29 +71,21 @@ export default function VideoFeedItem({
   onDetail,
   onChromeActivity,
 }: VideoFeedItemProps) {
-  const { videoRef, isPlaying, isBuffering, isMuted, togglePlay, toggleMute } = useVideoPlayback({
+  const { videoRef, isMuted, toggleMute } = useVideoPlayback({
     src: job.videoUrl,
     isActive,
+    preload: preloadVideo,
   });
-
-  const showPoster = isBuffering || (!isPlaying && isActive);
+  const shouldAttachSrc = isActive || preloadVideo;
+  const chromeOffClass = chromeVisible ? "" : "seeker-video-feed-chrome--off";
+  const vignetteOffClass = chromeVisible ? "" : "seeker-video-feed-vignette--off";
 
   return (
-    <section className="seeker-video-feed-item relative h-full w-full shrink-0 overflow-hidden bg-black">
+    <section className="seeker-video-feed-item relative h-full w-full shrink-0 overflow-hidden">
       <div className="absolute inset-0">
-        <img
-          src={job.thumbnailUrl}
-          alt=""
-          aria-hidden
-          draggable={false}
-          className={`absolute left-1/2 top-1/2 h-full w-full min-h-full min-w-full -translate-x-1/2 -translate-y-1/2 object-cover transition-opacity duration-300 ${
-            showPoster ? "opacity-100" : "opacity-0"
-          } ${swipeEnabled ? "pointer-events-none" : ""}`}
-        />
-
         <video
           ref={videoRef}
-          poster={job.thumbnailUrl}
+          src={shouldAttachSrc ? job.videoUrl : undefined}
           className={`absolute left-1/2 top-1/2 h-full w-full min-h-full min-w-full -translate-x-1/2 -translate-y-1/2 object-cover ${
             swipeEnabled ? "pointer-events-none" : ""
           }`}
@@ -99,41 +93,22 @@ export default function VideoFeedItem({
           muted={isMuted}
           playsInline
           draggable={false}
-          preload={isActive ? "auto" : isNext ? "auto" : "metadata"}
+          preload={isActive || preloadVideo || isNext ? "auto" : "metadata"}
           onDragStart={(e) => e.preventDefault()}
-          onClick={swipeEnabled ? undefined : togglePlay}
         />
       </div>
 
       {/* TikTok-style vignette */}
       <div
-        className={`pointer-events-none absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80 transition-opacity duration-700 ${
-          chromeVisible ? "opacity-100" : "opacity-0"
-        }`}
+        className={`seeker-video-feed-vignette pointer-events-none absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80 ${vignetteOffClass}`}
       />
       <div
-        className={`pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/20 transition-opacity duration-700 ${
-          chromeVisible ? "opacity-100" : "opacity-0"
-        }`}
+        className={`seeker-video-feed-vignette pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/20 ${vignetteOffClass}`}
       />
-
-      {!isPlaying && isActive && !isBuffering && chromeVisible && (
-        <button
-          type="button"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={togglePlay}
-          className="seeker-video-feed-chrome absolute left-1/2 top-1/2 z-[6] flex h-[72px] w-[72px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/25 ring-1 ring-white/20 backdrop-blur-sm transition active:scale-95"
-          aria-label="再生"
-        >
-          <Play className="ml-1 h-9 w-9 fill-white text-white" />
-        </button>
-      )}
 
       {/* Right action rail — TikTok pattern */}
       <div
-        className={`seeker-video-feed-chrome seeker-video-feed-rail absolute right-3 z-20 flex flex-col items-center gap-5 transition-opacity duration-700 ${
-          chromeVisible ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
+        className={`seeker-video-feed-chrome seeker-video-feed-rail absolute right-3 z-20 flex flex-col items-center gap-5 ${chromeOffClass}`}
       >
         <RailIconButton onChromeActivity={onChromeActivity} onClick={onSave} label="気になる">
           <Heart
@@ -177,9 +152,7 @@ export default function VideoFeedItem({
 
       {/* Bottom-left info overlay — spec §2.3 */}
       <div
-        className={`seeker-video-feed-chrome seeker-video-feed-info absolute left-0 right-16 z-20 px-4 transition-opacity duration-700 ${
-          chromeVisible ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
+        className={`seeker-video-feed-chrome seeker-video-feed-info absolute left-0 right-16 z-20 px-4 ${chromeOffClass}`}
       >
         <button
           type="button"
@@ -228,9 +201,7 @@ export default function VideoFeedItem({
 
       {isActive && (
         <div
-          className={`seeker-video-feed-chrome seeker-video-feed-swipe-hint pointer-events-none absolute left-1/2 z-10 -translate-x-1/2 transition-opacity duration-700 ${
-            chromeVisible ? "opacity-100" : "opacity-0"
-          }`}
+          className={`seeker-video-feed-chrome seeker-video-feed-swipe-hint pointer-events-none absolute left-1/2 z-10 -translate-x-1/2 ${chromeOffClass}`}
         >
           <span className="rounded-full bg-black/30 px-2.5 py-1 text-[10px] font-medium text-white/50 backdrop-blur-sm">
             ↑次 · ↓前

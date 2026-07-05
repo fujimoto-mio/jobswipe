@@ -13,7 +13,6 @@ import {
   ExternalLink,
   FileText,
   MessageCircle,
-  Play,
   Volume2,
   VolumeX,
 } from "lucide-react";
@@ -56,12 +55,11 @@ export default function JobDetailModal({
   onApply,
 }: JobDetailModalProps) {
   const links = job.links ?? {};
-  const { videoRef, isPlaying, isBuffering, isMuted, togglePlay, toggleMute } = useVideoPlayback({
+  const { videoRef, isMuted, toggleMute } = useVideoPlayback({
     src: job.videoUrl,
     isActive: true,
     muted: true,
   });
-  const showPoster = isBuffering || !isPlaying;
 
   return (
     <motion.div
@@ -79,24 +77,14 @@ export default function JobDetailModal({
         className="job-detail-modal-panel max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-t-3xl bg-white sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="relative aspect-video bg-black">
-          <img
-            src={job.thumbnailUrl}
-            alt=""
-            aria-hidden
-            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
-              showPoster ? "opacity-100" : "opacity-0"
-            }`}
-          />
+        <div className="relative aspect-video">
           <video
             ref={videoRef}
-            poster={job.thumbnailUrl}
             className="h-full w-full object-cover"
             loop
             muted={isMuted}
             playsInline
             preload="auto"
-            onClick={togglePlay}
           />
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30" />
           <button
@@ -119,16 +107,6 @@ export default function JobDetailModal({
               <Volume2 className="h-4 w-4 text-white" />
             )}
           </button>
-          {!isPlaying && !isBuffering && (
-            <button
-              type="button"
-              onClick={togglePlay}
-              className="absolute left-1/2 top-1/2 z-10 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/35 ring-1 ring-white/20 backdrop-blur-sm transition active:scale-95"
-              aria-label="再生"
-            >
-              <Play className="ml-1 h-8 w-8 fill-white text-white" />
-            </button>
-          )}
         </div>
 
         <div className="job-detail-modal-content p-6">

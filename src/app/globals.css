@@ -1056,6 +1056,36 @@ body {
   --seeker-video-rail-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
   --seeker-video-info-bottom: var(--seeker-video-nav-clearance);
   --seeker-video-swipe-hint-bottom: calc(6.75rem + env(safe-area-inset-bottom, 0px));
+  --seeker-chrome-fade-in-duration: 0.55s;
+  --seeker-chrome-fade-in-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --seeker-chrome-fade-out-duration: 1.15s;
+  --seeker-chrome-fade-out-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.seeker-video-feed-chrome,
+.seeker-video-feed-vignette,
+.seeker-explore-feed-header,
+.seeker-explore-feed .seeker-bottom-nav {
+  transition: opacity var(--seeker-chrome-fade-out-duration) var(--seeker-chrome-fade-out-ease);
+}
+
+.seeker-explore-feed:not(.seeker-explore-feed--chrome-hidden) .seeker-video-feed-chrome,
+.seeker-explore-feed:not(.seeker-explore-feed--chrome-hidden) .seeker-video-feed-vignette,
+.seeker-explore-feed:not(.seeker-explore-feed--chrome-hidden) .seeker-explore-feed-header,
+.seeker-explore-feed:not(.seeker-explore-feed--chrome-hidden) .seeker-bottom-nav {
+  transition-duration: var(--seeker-chrome-fade-in-duration);
+  transition-timing-function: var(--seeker-chrome-fade-in-ease);
+}
+
+.seeker-video-feed-chrome,
+.seeker-video-feed-vignette {
+  opacity: 1;
+}
+
+.seeker-video-feed-chrome--off,
+.seeker-video-feed-vignette--off {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .seeker-explore-feed .seeker-bottom-nav--overlay {
@@ -1088,21 +1118,15 @@ body {
 }
 
 .seeker-explore-feed--chrome-hidden .seeker-explore-feed-header,
-.seeker-explore-feed--chrome-hidden .seeker-bottom-nav {
+.seeker-explore-feed--chrome-hidden .seeker-bottom-nav,
+.seeker-explore-feed--chrome-hidden .seeker-video-feed-chrome,
+.seeker-explore-feed--chrome-hidden .seeker-video-feed-vignette {
   opacity: 0;
   pointer-events: none;
-  transition: opacity 700ms ease;
-}
-
-.seeker-explore-feed .seeker-bottom-nav {
-  transition: opacity 700ms ease;
 }
 
 .seeker-explore-feed--chrome-hidden {
-  --seeker-video-nav-clearance: calc(1rem + env(safe-area-inset-bottom, 0px));
-  --seeker-video-rail-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
-  --seeker-video-info-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
-  --seeker-video-swipe-hint-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  --pwa-install-banner-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
 }
 
 .seeker-ui .chip {

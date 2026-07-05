@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -10,12 +10,14 @@ import {
   CheckCircle,
   Gift,
   Pencil,
-  Play,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
 import { formatDateTimeJST } from "@/lib/datetime";
 import { JOB_APPROVAL_BADGE_CLASS, JOB_APPROVAL_LABELS } from "@/lib/constants";
 import { useStaffPanel } from "@/components/staff/StaffPanelContext";
+import { useVideoPlayback } from "@/hooks/useVideoPlayback";
 import { apiFetch } from "@/lib/api-client";
 import type { Job } from "@/lib/types";
 
@@ -28,49 +30,31 @@ function JobViewHero({
   job: Job;
   basePath: string;
 }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
   const videoUrl = job.videoUrl?.trim() ?? "";
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.pause();
-    setIsPlaying(false);
-  }, [videoUrl]);
-
-  const togglePlay = () => {
-    if (!videoUrl) return;
-    const video = videoRef.current;
-    if (!video) return;
-    if (video.paused) void video.play();
-    else video.pause();
-  };
+  const { videoRef, isMuted, toggleMute } = useVideoPlayback({
+    src: videoUrl,
+    isActive: Boolean(videoUrl),
+    muted: true,
+  });
 
   return (
     <section className="company-profile-hero overflow-hidden">
-      <div className="relative h-52 bg-slate-200 sm:h-60">
-        {!isPlaying && (
-          <img src={job.thumbnailUrl} alt={job.title} className="h-full w-full object-cover" />
-        )}
-
-        {videoUrl && (
+      <div className="relative h-52 bg-slate-900 sm:h-60">
+        {videoUrl ? (
           <video
             ref={videoRef}
             src={videoUrl}
+            className="absolute inset-0 h-full w-full object-cover"
+            loop
+            muted={isMuted}
             playsInline
-            preload="metadata"
-            controls={isPlaying}
-            className={`absolute inset-0 h-full w-full object-cover ${isPlaying ? "z-[2]" : "pointer-events-none z-[1] opacity-0"}`}
-            onPlay={() => setIsPlaying(true)}
-            onPause={() => setIsPlaying(false)}
-            onEnded={() => setIsPlaying(false)}
+            preload="auto"
           />
+        ) : (
+          <div className="absolute inset-0 bg-slate-200" />
         )}
 
-        {!isPlaying && (
-          <div className="pointer-events-none absolute inset-0 z-[3] bg-gradient-to-t from-slate-900/50 via-transparent to-black/40" />
-        )}
+        <div className="pointer-events-none absolute inset-0 z-[3] bg-gradient-to-t from-slate-900/50 via-transparent to-black/40" />
 
         <Link
           href={`${basePath}/jobs`}
@@ -80,16 +64,14 @@ function JobViewHero({
           <ArrowLeft className="h-5 w-5" />
         </Link>
 
-        {videoUrl && !isPlaying && (
+        {videoUrl && (
           <button
             type="button"
-            onClick={togglePlay}
-            className="absolute inset-0 z-[5] flex items-center justify-center"
-            aria-label="再生"
+            onClick={toggleMute}
+            className="absolute right-4 top-4 z-[10] flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition hover:bg-black/55"
+            aria-label={isMuted ? "ミュート解除" : "ミュート"}
           >
-            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[#2563eb] shadow-lg shadow-blue-600/40 ring-4 ring-white transition active:scale-95">
-              <Play className="ml-1 h-8 w-8 fill-white text-white" strokeWidth={1.5} />
-            </span>
+            {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
           </button>
         )}
       </div>

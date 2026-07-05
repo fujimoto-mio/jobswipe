@@ -139,6 +139,25 @@ export default function VideoFeed({
   }, [index, jobs, queueViewCount, onActiveVideoChange]);
 
   useEffect(() => {
+    const urls = [jobs[index + 1]?.videoUrl, jobs[index - 1]?.videoUrl].filter(Boolean) as string[];
+    const links: HTMLLinkElement[] = [];
+
+    for (const url of urls) {
+      if (document.querySelector(`link[data-feed-video-preload="${CSS.escape(url)}"]`)) continue;
+      const link = document.createElement("link");
+      link.rel = "prefetch";
+      link.href = url;
+      link.setAttribute("data-feed-video-preload", url);
+      document.head.appendChild(link);
+      links.push(link);
+    }
+
+    return () => {
+      for (const link of links) link.remove();
+    };
+  }, [index, jobs]);
+
+  useEffect(() => {
     return () => {
       if (flushViewsTimerRef.current) clearTimeout(flushViewsTimerRef.current);
       flushViewCounts();
@@ -222,58 +241,25 @@ export default function VideoFeed({
   return (
     <>
       <div className="relative h-full w-full bg-black">
-        {prevJob && (
-          <SwipeCard
-            key={`bg-prev-${prevJob.id}`}
-            job={prevJob}
-            isTop={false}
-            isSaved={savedIds.has(prevJob.id)}
-            chromeVisible={chromeVisible}
-            onSwipeUp={() => {}}
-            onSwipeDown={() => {}}
-            onSave={() => handleSave(prevJob)}
-            onApply={() => setApplyJob(prevJob)}
-            onDetail={() => void openDetail(prevJob)}
-          />
-        )}
-        {nextJob && (
-          <SwipeCard
-            key={`bg-next-${nextJob.id}`}
-            job={nextJob}
-            isTop={false}
-            isNext
-            isSaved={savedIds.has(nextJob.id)}
-            chromeVisible={chromeVisible}
-            onSwipeUp={() => {}}
-            onSwipeDown={() => {}}
-            onSave={() => handleSave(nextJob)}
-            onApply={() => setApplyJob(nextJob)}
-            onDetail={() => void openDetail(nextJob)}
-          />
-        )}
-        <AnimatePresence mode="popLayout">
-          {currentJob && (
-            <SwipeCard
-              key={currentJob.id}
-              job={currentJob}
-              isTop={true}
-              isSaved={savedIds.has(currentJob.id)}
-              chromeVisible={chromeVisible}
-              canSwipeUp={canGoNext}
-              canSwipeDown={canGoPrev}
-              onSwipeUp={goNext}
-              onSwipeDown={goPrev}
-              onToggleChrome={onToggleChrome}
-              onChromeActivity={onChromeActivity}
-              onSave={() => handleSave(currentJob)}
-              onApply={() => {
-                onChromeActivity?.();
-                setApplyJob(currentJob);
-              }}
-              onDetail={() => void openDetail(currentJob)}
-            />
-          )}
-        </AnimatePresence>
+        <SwipeCard
+          prevJob={prevJob}
+          currentJob={currentJob}
+          nextJob={nextJob}
+          isSaved={(jobId) => savedIds.has(jobId)}
+          chromeVisible={chromeVisible}
+          canSwipeUp={canGoNext}
+          canSwipeDown={canGoPrev}
+          onSwipeUp={goNext}
+          onSwipeDown={goPrev}
+          onToggleChrome={onToggleChrome}
+          onChromeActivity={onChromeActivity}
+          onSave={handleSave}
+          onApply={(job) => {
+            onChromeActivity?.();
+            setApplyJob(job);
+          }}
+          onDetail={(job) => void openDetail(job)}
+        />
       </div>
 
       <AnimatePresence>

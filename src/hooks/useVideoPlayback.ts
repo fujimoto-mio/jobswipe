@@ -4,17 +4,39 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 type PlaybackState = "idle" | "loading" | "playing" | "buffering" | "paused" | "error";
 
+function videoMatchesSrc(video: HTMLVideoElement, src: string) {
+  if (!src) return false;
+  return video.src === src || video.currentSrc === src || video.src.endsWith(src);
+}
+
+function warmVideoElement(video: HTMLVideoElement, src: string) {
+  const srcChanged = !videoMatchesSrc(video, src);
+  if (srcChanged) {
+    video.src = src;
+  }
+  video.preload = "auto";
+  video.muted = true;
+  video.playsInline = true;
+  if (srcChanged || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+    video.load();
+  }
+}
+
 type UseVideoPlaybackOptions = {
   src: string;
   isActive: boolean;
+  /** Preload src/buffer for off-screen adjacent feed slides. */
+  preload?: boolean;
   muted?: boolean;
 };
 
-export function useVideoPlayback({ src, isActive, muted = true }: UseVideoPlaybackOptions) {
+export function useVideoPlayback({ src, isActive, preload = false, muted = true }: UseVideoPlaybackOptions) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [state, setState] = useState<PlaybackState>("idle");
+  const [hasFrame, setHasFrame] = useState(false);
   const [isMuted, setIsMuted] = useState(muted);
   const retryCount = useRef(0);
+  const shouldWarm = isActive || preload;
 
   const play = useCallback(async () => {
     const video = videoRef.current;
@@ -54,37 +76,52 @@ export function useVideoPlayback({ src, isActive, muted = true }: UseVideoPlayba
     if (!video) return;
 
     if (isActive) {
-      if (video.src !== src) video.src = src;
-      video.preload = "auto";
-      video.load();
-      setState("loading");
-      play();
+      if (!videoMatchesSrc(video, src)) {
+        video.src = src;
+        video.preload = "auto";
+        video.load();
+        setState("loading");
+      } else if (video.readyState >= 2) {
+        setState("playing");
+      } else {
+        video.preload = "auto";
+        setState("loading");
+      }
+      void play();
+    } else if (shouldWarm) {
+      warmVideoElement(video, src);
+      video.pause();
+      setState("idle");
     } else {
       video.pause();
       setState("idle");
-      // Release buffer for off-screen videos (keep src for quick return)
       if (video.readyState > 0) {
         video.preload = "metadata";
       }
     }
-  }, [isActive, src, play]);
+  }, [isActive, shouldWarm, src, play]);
 
   // Wire up media events
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    const onWaiting = () => setState("buffering");
+    const onWaiting = () => {
+      if (isActive) setState("buffering");
+    };
     const onPlaying = () => {
       setState("playing");
+      setHasFrame(true);
       retryCount.current = 0;
     };
     const onPause = () => {
       if (isActive) setState("paused");
     };
     const onCanPlay = () => {
+      setHasFrame(true);
       if (isActive && video.paused) play();
     };
+    const onLoadedData = () => setHasFrame(true);
     const onError = () => setState("error");
     const onStalled = () => {
       setState("buffering");
@@ -99,6 +136,7 @@ export function useVideoPlayback({ src, isActive, muted = true }: UseVideoPlayba
     video.addEventListener("playing", onPlaying);
     video.addEventListener("pause", onPause);
     video.addEventListener("canplay", onCanPlay);
+    video.addEventListener("loadeddata", onLoadedData);
     video.addEventListener("error", onError);
     video.addEventListener("stalled", onStalled);
 
@@ -107,10 +145,63 @@ export function useVideoPlayback({ src, isActive, muted = true }: UseVideoPlayba
       video.removeEventListener("playing", onPlaying);
       video.removeEventListener("pause", onPause);
       video.removeEventListener("canplay", onCanPlay);
+      video.removeEventListener("loadeddata", onLoadedData);
       video.removeEventListener("error", onError);
       video.removeEventListener("stalled", onStalled);
     };
   }, [isActive, play]);
+
+  useEffect(() => {
+    setHasFrame(false);
+  }, [src]);
+
+  // Prime adjacent slides: muted play/pause forces buffering on mobile Safari.
+  useEffect(() => {
+    if (isActive || !preload) return;
+    const video = videoRef.current;
+    if (!video) return;
+
+    let cancelled = false;
+
+    const markReady = () => {
+      if (!cancelled && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+        setHasFrame(true);
+      }
+    };
+
+    const prime = async () => {
+      if (cancelled) return;
+      markReady();
+      if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) return;
+      try {
+        video.muted = true;
+        await video.play();
+        if (cancelled) return;
+        video.pause();
+        if (video.currentTime > 0.01) {
+          video.currentTime = 0;
+        }
+        setHasFrame(true);
+      } catch {
+        markReady();
+      }
+    };
+
+    if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+      void prime();
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    video.addEventListener("canplay", () => void prime(), { once: true });
+    video.addEventListener("loadeddata", markReady);
+
+    return () => {
+      cancelled = true;
+      video.removeEventListener("loadeddata", markReady);
+    };
+  }, [isActive, preload, src]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -120,9 +211,10 @@ export function useVideoPlayback({ src, isActive, muted = true }: UseVideoPlayba
   return {
     videoRef,
     state,
+    hasFrame,
     isMuted,
     isPlaying: state === "playing",
-    isBuffering: state === "loading" || state === "buffering",
+    isBuffering: isActive && (state === "loading" || state === "buffering"),
     togglePlay,
     toggleMute,
     play,
