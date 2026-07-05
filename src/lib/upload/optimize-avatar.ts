@@ -10,7 +10,7 @@ export function isAvatarUploadKind(kind: string): boolean {
 }
 
 export async function optimizeAvatarImage(input: Buffer): Promise<Buffer> {
-  return sharp(input, { failOn: "none" })
+  const optimized = await sharp(input, { failOn: "none" })
     .rotate()
     .resize(AVATAR_PIXEL_SIZE, AVATAR_PIXEL_SIZE, {
       fit: "cover",
@@ -18,6 +18,8 @@ export async function optimizeAvatarImage(input: Buffer): Promise<Buffer> {
     })
     .webp({ quality: 82, effort: 4 })
     .toBuffer();
+
+  return Buffer.from(optimized);
 }
 
 export function toOptimizedAvatarFilename(filename: string): string {

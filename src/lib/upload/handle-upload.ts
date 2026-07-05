@@ -93,7 +93,7 @@ export async function handleUploadRequest(request: Request) {
     let filename = file.name;
 
     if (isAvatarUploadKind(kind) && contentType.startsWith("image/")) {
-      buffer = await optimizeAvatarImage(buffer);
+      buffer = Buffer.from(await optimizeAvatarImage(buffer));
       contentType = "image/webp";
       filename = toOptimizedAvatarFilename(filename);
     }
