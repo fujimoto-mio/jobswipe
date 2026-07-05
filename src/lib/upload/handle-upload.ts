@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { getStaffUser } from "@/lib/auth/admin";
 import { getSupabaseUserFromRequest } from "@/lib/auth/supabase-user";
 import { uploadByKind, resolveUploadContentType, type UploadKind } from "@/lib/storage";
+import {
+  isAvatarUploadKind,
+  optimizeAvatarImage,
+  toOptimizedAvatarFilename,
+} from "@/lib/upload/optimize-avatar";
 
 const STAFF_KINDS = new Set<UploadKind>(["video", "thumbnail", "image", "company-logo", "company-banner", "staff-avatar"]);
 const SEEKER_KINDS = new Set<UploadKind>(["image", "resume", "seeker-avatar", "seeker-banner"]);
@@ -83,9 +88,17 @@ export async function handleUploadRequest(request: Request) {
       return NextResponse.json({ error: "Invalid kind" }, { status: 400 });
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const contentType = resolveUploadContentType(file.name, file.type || "");
-    const url = await uploadByKind(kind, buffer, file.name, contentType, {
+    let buffer = Buffer.from(await file.arrayBuffer());
+    let contentType = resolveUploadContentType(file.name, file.type || "");
+    let filename = file.name;
+
+    if (isAvatarUploadKind(kind) && contentType.startsWith("image/")) {
+      buffer = await optimizeAvatarImage(buffer);
+      contentType = "image/webp";
+      filename = toOptimizedAvatarFilename(filename);
+    }
+
+    const url = await uploadByKind(kind, buffer, filename, contentType, {
       userId: staff?.id ?? user?.id,
     });
 

@@ -24,10 +24,10 @@ const PLAN_FEATURES = [
 ];
 
 const CASE_ITEMS = [
-  { src: "/companies/job-001.jpg", label: "IT・Web業界" },
-  { src: "/companies/job-002.jpg", label: "スタートアップ" },
-  { src: "/companies/job-003.jpg", label: "クリエイティブ" },
-  { src: "/companies/job-004.jpg", label: "メディア" },
+  { src: "/companies/job-001.webp", label: "IT・Web業界" },
+  { src: "/companies/job-002.webp", label: "スタートアップ" },
+  { src: "/companies/job-003.webp", label: "クリエイティブ" },
+  { src: "/companies/job-004.webp", label: "メディア" },
 ];
 
 const COMPARISON_ROWS = [
@@ -160,8 +160,8 @@ export default function LandingPage() {
             </button>
           </div>
           <div className="lp-hero__visual">
-            <PhoneMock src="/companies/job-001.jpg" alt="求人動画サンプル1" />
-            <PhoneMock src="/companies/job-003.jpg" alt="求人動画サンプル2" />
+            <PhoneMock src="/companies/job-001.webp" alt="求人動画サンプル1" />
+            <PhoneMock src="/companies/job-003.webp" alt="求人動画サンプル2" />
           </div>
         </div>
       </section>

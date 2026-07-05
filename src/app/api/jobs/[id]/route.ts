@@ -18,10 +18,12 @@ async function staffCanAccessJob(
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const { searchParams } = new URL(request.url);
+  const trackView = searchParams.get("trackView") !== "false";
   const staff = await getStaffUser();
   const job = await getJobById(id);
 
@@ -33,7 +35,9 @@ export async function GET(
     if (job.approvalStatus !== "Active") {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
-    await incrementJobView(id);
+    if (trackView) {
+      await incrementJobView(id);
+    }
   } else if (staff.role === "company") {
     const allowed = await staffCanAccessJob(staff, id);
     if (!allowed) {

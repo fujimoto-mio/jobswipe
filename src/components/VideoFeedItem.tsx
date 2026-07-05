@@ -1,7 +1,7 @@
 "use client";
 
 import { Play, Volume2, VolumeX, Heart, Send, FileText, MapPin, Briefcase, UserRound } from "lucide-react";
-import type { Job } from "@/lib/types";
+import type { JobFeedItem } from "@/lib/types";
 import { useVideoPlayback } from "@/hooks/useVideoPlayback";
 
 function displayVideoTag(tag: string) {
@@ -9,7 +9,7 @@ function displayVideoTag(tag: string) {
 }
 
 type VideoFeedItemProps = {
-  job: Job;
+  job: JobFeedItem;
   isActive: boolean;
   isNext?: boolean;
   swipeEnabled?: boolean;
@@ -107,12 +107,12 @@ export default function VideoFeedItem({
 
       {/* TikTok-style vignette */}
       <div
-        className={`pointer-events-none absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80 transition-opacity duration-200 ${
+        className={`pointer-events-none absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80 transition-opacity duration-700 ${
           chromeVisible ? "opacity-100" : "opacity-0"
         }`}
       />
       <div
-        className={`pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/20 transition-opacity duration-200 ${
+        className={`pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/20 transition-opacity duration-700 ${
           chromeVisible ? "opacity-100" : "opacity-0"
         }`}
       />
@@ -131,7 +131,7 @@ export default function VideoFeedItem({
 
       {/* Right action rail — TikTok pattern */}
       <div
-        className={`seeker-video-feed-chrome seeker-video-feed-rail absolute right-3 z-20 flex flex-col items-center gap-5 transition-opacity duration-200 ${
+        className={`seeker-video-feed-chrome seeker-video-feed-rail absolute right-3 z-20 flex flex-col items-center gap-5 transition-opacity duration-700 ${
           chromeVisible ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
@@ -177,7 +177,7 @@ export default function VideoFeedItem({
 
       {/* Bottom-left info overlay — spec §2.3 */}
       <div
-        className={`seeker-video-feed-chrome seeker-video-feed-info absolute left-0 right-16 z-20 px-4 transition-opacity duration-200 ${
+        className={`seeker-video-feed-chrome seeker-video-feed-info absolute left-0 right-16 z-20 px-4 transition-opacity duration-700 ${
           chromeVisible ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
@@ -228,7 +228,7 @@ export default function VideoFeedItem({
 
       {isActive && (
         <div
-          className={`seeker-video-feed-chrome seeker-video-feed-swipe-hint pointer-events-none absolute left-1/2 z-10 -translate-x-1/2 transition-opacity duration-200 ${
+          className={`seeker-video-feed-chrome seeker-video-feed-swipe-hint pointer-events-none absolute left-1/2 z-10 -translate-x-1/2 transition-opacity duration-700 ${
             chromeVisible ? "opacity-100" : "opacity-0"
           }`}
         >

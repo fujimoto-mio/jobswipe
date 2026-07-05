@@ -7,7 +7,7 @@ import BottomNav from "@/components/BottomNav";
 import FilterScreen from "@/components/FilterScreen";
 import { apiFetch, apiFetchCached } from "@/lib/api-client";
 import { fetchSeekerUnreadTotal } from "@/lib/chat-unread";
-import { getCachedClientSession } from "@/lib/auth/client-session";
+import { useSeekerUser } from "@/components/seeker/SeekerUserProvider";
 import SeekerBrandHeader from "@/components/seeker/SeekerBrandHeader";
 import PwaInstallBanner from "@/components/pwa/PwaInstallBanner";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
@@ -28,12 +28,11 @@ const CHROME_AUTO_HIDE_MS = 5000;
 function ExploreContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { ready: authReady, loggedIn: isLoggedIn } = useSeekerUser();
   const [saveCount, setSaveCount] = useState(0);
   const [chatCount, setChatCount] = useState(0);
-  const [authReady, setAuthReady] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [draftFilters, setDraftFilters] = useState<JobFilters>(() => loadStoredExploreFilters());
-  const [chromeVisible, setChromeVisible] = useState(false);
+  const [chromeVisible, setChromeVisible] = useState(true);
   const hideChromeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const headerSubmenuOpenRef = useRef({ menu: false, install: false });
 
@@ -63,12 +62,6 @@ function ExploreContent() {
   }, [scheduleChromeHide]);
 
   const keepChromeVisible = revealChrome;
-
-  const hideChrome = useCallback(() => {
-    if (isHeaderSubmenuOpen()) return;
-    clearChromeHideTimer();
-    setChromeVisible(false);
-  }, [clearChromeHideTimer]);
 
   const syncHeaderSubmenuChrome = useCallback(() => {
     if (isHeaderSubmenuOpen()) {
@@ -101,22 +94,22 @@ function ExploreContent() {
   const filters = useMemo(() => parseExploreFiltersFromParams(searchParams), [searchParams]);
   const feedParamsKey = exploreFeedParamsKey(searchParams);
 
+  useEffect(() => {
+    if (!showFeed) return;
+    revealChrome();
+  }, [showFeed, revealChrome]);
+
   const refreshCounts = useCallback(() => {
-    void apiFetchCached<{ count?: number }>("/api/saves", 20_000).then((d) =>
+    void apiFetchCached<{ count?: number }>("/api/saves?summary=1", 20_000).then((d) =>
       setSaveCount(d.count ?? 0)
     );
     void fetchSeekerUnreadTotal().then(setChatCount);
   }, []);
 
   useEffect(() => {
-    void getCachedClientSession().then((loggedIn) => {
-      setIsLoggedIn(loggedIn);
-      setAuthReady(true);
-      if (loggedIn) {
-        refreshCounts();
-      }
-    });
-  }, [refreshCounts]);
+    if (!authReady || !isLoggedIn) return;
+    refreshCounts();
+  }, [authReady, isLoggedIn, refreshCounts]);
 
   useEffect(() => {
     if (!authReady || isLoggedIn) return;
@@ -197,11 +190,11 @@ function ExploreContent() {
           chromeVisible={chromeVisible}
           onToggleChrome={revealChrome}
           onChromeActivity={keepChromeVisible}
-          onChromeDismiss={hideChrome}
+          onActiveVideoChange={revealChrome}
         />
       </main>
 
-      <header className="seeker-explore-feed-header pointer-events-none absolute inset-x-0 top-0 z-30 pt-[env(safe-area-inset-top,0px)] transition-opacity duration-200">
+      <header className="seeker-explore-feed-header pointer-events-none absolute inset-x-0 top-0 z-30 pt-[env(safe-area-inset-top,0px)] transition-opacity duration-700">
         <div className="pointer-events-auto">
           <SeekerBrandHeader
             theme="dark"

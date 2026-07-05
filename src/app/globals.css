@@ -1091,6 +1091,11 @@ body {
 .seeker-explore-feed--chrome-hidden .seeker-bottom-nav {
   opacity: 0;
   pointer-events: none;
+  transition: opacity 700ms ease;
+}
+
+.seeker-explore-feed .seeker-bottom-nav {
+  transition: opacity 700ms ease;
 }
 
 .seeker-explore-feed--chrome-hidden {
@@ -5476,6 +5481,18 @@ html[data-seeker-theme="dark"] .select-picker-option-muted {
   border-top-color: var(--staff-primary, #27a9b5);
 }
 
+.loading-spinner-default {
+  animation: loading-spin 0.9s linear infinite;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.button-spinner-default {
+  animation: loading-spin 0.9s linear infinite;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
 .staff-ui .loading-spinner-message:not(.loading-spinner-message--dark),
 .loading-spinner--staff .loading-spinner-message:not(.loading-spinner-message--dark) {
   color: #64748b;
@@ -5745,8 +5762,10 @@ html[data-seeker-theme="dark"] .select-picker-option-muted {
   max-width: 100%;
   object-fit: contain;
   transform-origin: center center;
-  animation: seeker-loader-logo 5s ease-in-out infinite;
-  will-change: transform, opacity;
+  animation: seeker-loader-logo 1.6s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .seeker-ui.seeker-theme-light .loading-spinner-seeker-logo,
@@ -5755,81 +5774,53 @@ html[data-seeker-theme="dark"] .select-picker-option-muted {
 }
 
 .loading-spinner-seeker--sm .loading-spinner-seeker-logo {
-  height: 5rem;
+  height: 3rem;
 }
 
 .loading-spinner-seeker--md .loading-spinner-seeker-logo {
-  height: 6.5rem;
+  height: 4rem;
 }
 
 .loading-spinner-seeker--lg .loading-spinner-seeker-logo {
-  height: 8rem;
+  height: 5rem;
 }
 
 @keyframes seeker-loader-logo {
-  0% {
-    transform: scale(0.16);
-    opacity: 0.6;
-  }
-
-  3.3% {
-    transform: scale(0.94);
-    opacity: 1;
-  }
-
-  10% {
-    transform: scale(0.76);
-    opacity: 1;
-  }
-
-  20% {
-    transform: scale(1);
-    opacity: 1;
-  }
-
-  30% {
-    transform: scale(0.74);
-    opacity: 1;
-  }
-
-  40% {
-    transform: scale(0.98);
-    opacity: 1;
-  }
-
-  50% {
-    transform: scale(0.72);
-    opacity: 1;
-  }
-
-  56.7% {
-    transform: scale(1);
-    opacity: 1;
-  }
-
-  66.7% {
-    transform: scale(0.76);
-    opacity: 1;
-  }
-
-  76.7% {
-    transform: scale(0.96);
-    opacity: 1;
-  }
-
-  86.7% {
-    transform: scale(0.73);
-    opacity: 1;
-  }
-
-  93.3% {
-    transform: scale(1);
-    opacity: 1;
-  }
-
+  0%,
   100% {
-    transform: scale(0.16);
-    opacity: 0.6;
+    transform: scale(0.9) translateZ(0);
+    opacity: 0.9;
+  }
+
+  18% {
+    transform: scale(1) translateZ(0);
+    opacity: 1;
+  }
+
+  36% {
+    transform: scale(0.94) translateZ(0);
+    opacity: 0.96;
+  }
+
+  54% {
+    transform: scale(1) translateZ(0);
+    opacity: 1;
+  }
+
+  72% {
+    transform: scale(0.94) translateZ(0);
+    opacity: 0.96;
+  }
+
+  90% {
+    transform: scale(0.9) translateZ(0);
+    opacity: 0.9;
+  }
+}
+
+@keyframes loading-spin {
+  to {
+    transform: rotate(360deg) translateZ(0);
   }
 }
 
@@ -5845,7 +5836,9 @@ html[data-seeker-theme="dark"] .select-picker-option-muted {
   width: auto;
   object-fit: contain;
   transform-origin: center center;
-  animation: seeker-loader-logo 5s ease-in-out infinite;
+  animation: seeker-loader-logo 1.4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .seeker-ui.seeker-theme-light .button-spinner-seeker-logo,

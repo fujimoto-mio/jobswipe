@@ -11,6 +11,13 @@ type StaffAvatarProps = {
   className?: string;
 };
 
+const SIZE_PX = {
+  sm: 32,
+  md: 44,
+  lg: 48,
+  xl: 64,
+} as const;
+
 const SIZE_CLASS = {
   sm: "h-8 w-8 text-xs",
   md: "h-11 w-11 text-sm",
@@ -49,6 +56,10 @@ export default function StaffAvatar({
     <img
       src={src}
       alt={name}
+      width={SIZE_PX[size]}
+      height={SIZE_PX[size]}
+      loading="lazy"
+      decoding="async"
       className={`chat-message-avatar chat-message-avatar--image ${SIZE_CLASS[size]} ${className}`}
       onError={() => {
         if (src !== fallback) setSrc(fallback);

@@ -45,14 +45,14 @@ export default function LoadingSpinner({
 
   return (
     <div
-      className={`loading-spinner flex flex-col items-center justify-center gap-3 ${
+      className={`loading-spinner flex flex-col items-center justify-center gap-2 ${
         staff ? "loading-spinner--staff" : ""
       } ${useSeekerLoader ? "loading-spinner--seeker" : ""} ${
         useSeekerLoader && seekerTheme?.theme === "dark" ? "loading-spinner--seeker-dark" : ""
       } ${className}`}
     >
       <div
-        className={`loading-spinner-default animate-spin rounded-full border-solid ${sizeClass[size]} ${
+        className={`loading-spinner-default rounded-full border-solid ${sizeClass[size]} ${
           messageDark
             ? "border-white/20 border-t-white"
             : "border-[var(--border)] border-t-[var(--accent)]"
@@ -126,7 +126,7 @@ export function ButtonSpinner({ seeker }: { seeker?: boolean } = {}) {
 
   return (
     <span
-      className="inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white/35 border-t-white"
+      className="button-spinner-default inline-block h-4 w-4 shrink-0 rounded-full border-2 border-white/35 border-t-white"
       aria-hidden="true"
     />
   );

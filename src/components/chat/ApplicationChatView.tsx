@@ -43,6 +43,10 @@ function ChatAvatar({
       <img
         src={imageUrl}
         alt=""
+        width={32}
+        height={32}
+        loading="lazy"
+        decoding="async"
         className="chat-message-avatar chat-message-avatar--image"
       />
     );

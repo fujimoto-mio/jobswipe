@@ -45,7 +45,7 @@ export default function JobDetailPage() {
 
   useEffect(() => {
     const id = params.id as string;
-    Promise.all([apiFetch(`/api/jobs/${id}`), apiFetch("/api/saves")]).then(async ([jobRes, savesRes]) => {
+    Promise.all([apiFetch(`/api/jobs/${id}`), apiFetch("/api/saves?summary=1")]).then(async ([jobRes, savesRes]) => {
       if (jobRes.ok) {
         const jobData = await jobRes.json();
         setJob(jobData.job);

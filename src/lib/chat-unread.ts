@@ -5,7 +5,7 @@ type ChatSummary = {
 };
 
 export async function fetchSeekerUnreadTotal(): Promise<number> {
-  const data = await apiFetchCached<ChatSummary>("/api/chat", 10_000);
+  const data = await apiFetchCached<ChatSummary>("/api/chat/unread", 10_000);
   return data.unreadTotal ?? 0;
 }
 
@@ -16,6 +16,7 @@ export async function markSeekerChatRead(applicationId: string): Promise<number>
   });
   const data = await res.json();
   invalidateApiCache("/api/chat");
+  invalidateApiCache("/api/chat/unread");
   return typeof data.unreadTotal === "number" ? data.unreadTotal : 0;
 }
 

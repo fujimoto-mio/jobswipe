@@ -3,13 +3,14 @@
 import { useEffect } from "react";
 import { motion, useMotionValue, useTransform, animate, PanInfo } from "framer-motion";
 import VideoFeedItem from "./VideoFeedItem";
-import type { Job } from "@/lib/types";
+import type { JobFeedItem } from "@/lib/types";
 
 const SWIPE_THRESHOLD = 80;
 
 type SwipeCardProps = {
-  job: Job;
+  job: JobFeedItem;
   isTop: boolean;
+  isNext?: boolean;
   isSaved: boolean;
   chromeVisible?: boolean;
   canSwipeUp?: boolean;
@@ -30,6 +31,7 @@ export default function SwipeCard({
   chromeVisible = true,
   canSwipeUp = true,
   canSwipeDown = true,
+  isNext = false,
   onSwipeUp,
   onSwipeDown,
   onToggleChrome,
@@ -94,6 +96,7 @@ export default function SwipeCard({
         <VideoFeedItem
           job={job}
           isActive={isTop}
+          isNext={isNext}
           swipeEnabled={isTop}
           chromeVisible={chromeVisible}
           isSaved={isSaved}

@@ -37,7 +37,7 @@ function SeekerChatContent() {
   const refreshThreads = useCallback(async () => {
     const [chatRes, savesRes] = await Promise.all([
       apiFetch("/api/chat"),
-      apiFetch("/api/saves"),
+      apiFetch("/api/saves?summary=1"),
     ]);
     const chatData = await chatRes.json();
     const saves = await savesRes.json();

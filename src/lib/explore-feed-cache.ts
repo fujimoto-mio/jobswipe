@@ -1,7 +1,7 @@
-import type { Job, JobFilters } from "@/lib/types";
+import type { JobFeedItem, JobFilters } from "@/lib/types";
 
 export type ExploreFeedCacheEntry = {
-  jobs: Job[];
+  jobs: JobFeedItem[];
   savedIds: string[];
   count: number;
   fetchKey: string;

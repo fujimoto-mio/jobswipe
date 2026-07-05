@@ -25,11 +25,23 @@ export async function GET(request: Request) {
   if (session instanceof NextResponse) return session;
 
   const { searchParams } = new URL(request.url);
+  const isSummary = searchParams.get("summary") === "1";
   const isPaginated =
     searchParams.has("page") ||
     searchParams.has("limit") ||
     searchParams.has("search") ||
     searchParams.has("sort");
+
+  if (isSummary) {
+    const [savedIds, count] = await Promise.all([
+      getSavedJobIds(session.seekerId),
+      getSavedCount(session.seekerId),
+    ]);
+    return NextResponse.json(
+      { savedIds, count },
+      { headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=30" } }
+    );
+  }
 
   if (isPaginated) {
     const page = parsePage(searchParams.get("page"));

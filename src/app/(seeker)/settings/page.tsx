@@ -61,7 +61,7 @@ export default function SettingsPage() {
     let cancelled = false;
 
     void Promise.all([
-      apiFetch("/api/saves")
+      apiFetch("/api/saves?summary=1")
         .then((r) => r.json())
         .then((data) => {
           if (!cancelled) setSaveCount(data.count ?? 0);

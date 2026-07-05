@@ -11,6 +11,7 @@ import type {
   ChatMessage,
   Job,
   JobApprovalStatus,
+  JobFeedItem,
   UserProfile,
 } from "@/lib/types";
 
@@ -43,6 +44,24 @@ export function mapJob(row: JobWithCompany): Job {
     links: resolveJobLinks(row.company, row.links),
     approvalStatus: row.approvalStatus as JobApprovalStatus,
     viewCount: row.viewCount,
+  };
+}
+
+export function mapJobFeed(row: JobWithCompany): JobFeedItem {
+  return {
+    id: row.id,
+    title: row.title,
+    company: row.company.name,
+    companyLogo: row.company.logoUrl ?? getCompanyLogoUrl(row.company.name),
+    location: row.location,
+    area: row.area,
+    category: row.category,
+    salary: row.salaryDisplay,
+    employmentType: row.employmentType as JobFeedItem["employmentType"],
+    tags: asJsonStringArray(row.tags),
+    videoUrl: row.videoUrl,
+    thumbnailUrl: row.thumbnailUrl ?? getCompanyLogoUrl(row.company.name),
+    postedAt: formatDateISOJST(row.postedAt),
   };
 }
 
@@ -88,6 +107,10 @@ export function mapChatMessage(row: PrismaChatMessage): ChatMessage {
 
 export async function mapJobResolved(row: JobWithCompany): Promise<Job> {
   return resolveJobMedia(mapJob(row));
+}
+
+export async function mapJobFeedResolved(row: JobWithCompany): Promise<JobFeedItem> {
+  return resolveJobMedia(mapJobFeed(row));
 }
 
 export async function mapChatMessageResolved(row: PrismaChatMessage): Promise<ChatMessage> {

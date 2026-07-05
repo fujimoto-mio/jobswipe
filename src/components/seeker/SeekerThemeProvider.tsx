@@ -16,7 +16,6 @@ import {
   type SeekerTheme,
 } from "@/lib/seeker-theme";
 import { isStandalonePwa } from "@/lib/pwa";
-import { PageLoading } from "@/components/ui/LoadingSpinner";
 
 type SeekerThemeContextValue = {
   theme: SeekerTheme;
@@ -28,12 +27,10 @@ const SeekerThemeContext = createContext<SeekerThemeContextValue | null>(null);
 
 export function SeekerThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<SeekerTheme>(DEFAULT_SEEKER_THEME);
-  const [ready, setReady] = useState(false);
   const [immersiveShell, setImmersiveShell] = useState(false);
 
   useEffect(() => {
     setThemeState(loadSeekerTheme());
-    setReady(true);
   }, []);
 
   useEffect(() => {
@@ -75,16 +72,6 @@ export function SeekerThemeProvider({ children }: { children: ReactNode }) {
       delete document.documentElement.dataset.seekerTheme;
     };
   }, [theme]);
-
-  if (!ready) {
-    return (
-      <div className="min-h-[100dvh] bg-black">
-        <div className="seeker-ui seeker-theme-dark seeker-app-shell--immersive relative flex h-[100dvh] min-h-0 w-full flex-col overflow-hidden items-center justify-center">
-          <PageLoading />
-        </div>
-      </div>
-    );
-  }
 
   const shellClass = immersiveShell
     ? "seeker-app-shell--immersive relative flex h-[100dvh] min-h-0 w-full flex-col overflow-hidden"

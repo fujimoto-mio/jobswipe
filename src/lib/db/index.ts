@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { JobApprovalStatus as PrismaJobApprovalStatus, Prisma, SeekerStatus } from "@prisma/client";
-import { mapApplication, mapChatMessageResolved, mapJobResolved, mapSeekerProfileResolved } from "@/lib/db/mappers";
+import { mapApplication, mapChatMessageResolved, mapJobFeedResolved, mapJobResolved, mapSeekerProfileResolved } from "@/lib/db/mappers";
 import { fetchSavedApplyMessages, resolveApplicationMessage } from "@/lib/db/saved-job-message";
 import { now } from "@/lib/datetime";
 import { parseBirthday } from "@/lib/birthday";
@@ -12,6 +12,7 @@ import type {
   CreateApplicationInput,
   CreateJobInput,
   Job,
+  JobFeedItem,
   JobApprovalStatus,
   JobFilters,
   UpdateJobInput,
@@ -39,6 +40,20 @@ export async function getAllJobs(filters?: JobFilters, includeUnapproved = false
   return Promise.all(rows.map(mapJobResolved));
 }
 
+export async function getFeedJobs(filters?: JobFilters): Promise<JobFeedItem[]> {
+  const rows = await prisma.job.findMany({
+    where: {
+      approvalStatus: PrismaJobApprovalStatus.Active,
+      ...(filters?.areas.length ? { area: { in: filters.areas } } : {}),
+      ...(filters?.categories.length ? { category: { in: filters.categories } } : {}),
+    },
+    include: jobInclude,
+    orderBy: { postedAt: "desc" },
+  });
+
+  return Promise.all(rows.map(mapJobFeedResolved));
+}
+
 export async function getJobById(id: string): Promise<Job | null> {
   const row = await prisma.job.findUnique({ where: { id }, include: jobInclude });
   return row ? mapJobResolved(row) : null;
@@ -49,6 +64,20 @@ export async function incrementJobView(id: string): Promise<void> {
     where: { id },
     data: { viewCount: { increment: 1 } },
   });
+}
+
+export async function incrementJobViews(ids: string[]): Promise<void> {
+  const uniqueIds = [...new Set(ids.filter(Boolean))];
+  if (!uniqueIds.length) return;
+
+  await prisma.$transaction(
+    uniqueIds.map((id) =>
+      prisma.job.update({
+        where: { id },
+        data: { viewCount: { increment: 1 } },
+      })
+    )
+  );
 }
 
 export async function createJob(
@@ -275,8 +304,12 @@ async function upsertSavedJobApplyMessage(
 }
 
 export async function getSavedJobIds(seekerId: string): Promise<string[]> {
-  const jobs = await getSavedJobs(seekerId);
-  return jobs.map((j) => j.id);
+  const rows = await prisma.savedJob.findMany({
+    where: { seekerId, job: { approvalStatus: PrismaJobApprovalStatus.Active } },
+    select: { jobId: true },
+    orderBy: { createdAt: "desc" },
+  });
+  return rows.map((row) => row.jobId);
 }
 
 export async function getSavedCount(seekerId?: string): Promise<number> {

@@ -50,6 +50,10 @@ export default function SeekerAvatar({
       <img
         src={src}
         alt={name}
+        width={88}
+        height={88}
+        loading="lazy"
+        decoding="async"
         className="h-full w-full rounded-full bg-[#161823] object-cover"
         onError={() => {
           if (src !== fallback) setSrc(fallback);

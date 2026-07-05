@@ -1,11 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
 import SwipeCard from "./SwipeCard";
-import ApplyModal from "./ApplyModal";
-import JobDetailModal from "./JobDetailModal";
-import { preloadVideoUrl } from "@/lib/video";
 import { apiFetch, invalidateApiCache } from "@/lib/api-client";
 import {
   exploreFeedCacheKey,
@@ -14,7 +12,10 @@ import {
   updateExploreFeedSaves,
 } from "@/lib/explore-feed-cache";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import type { Job, JobFilters } from "@/lib/types";
+import type { Job, JobFeedItem, JobFilters } from "@/lib/types";
+
+const ApplyModal = dynamic(() => import("./ApplyModal"), { ssr: false });
+const JobDetailModal = dynamic(() => import("./JobDetailModal"), { ssr: false });
 
 type VideoFeedProps = {
   filters: JobFilters;
@@ -23,7 +24,7 @@ type VideoFeedProps = {
   chromeVisible?: boolean;
   onToggleChrome?: () => void;
   onChromeActivity?: () => void;
-  onChromeDismiss?: () => void;
+  onActiveVideoChange?: () => void;
 };
 
 export default function VideoFeed({
@@ -33,16 +34,19 @@ export default function VideoFeed({
   chromeVisible = false,
   onToggleChrome,
   onChromeActivity,
-  onChromeDismiss,
+  onActiveVideoChange,
 }: VideoFeedProps) {
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobs, setJobs] = useState<JobFeedItem[]>([]);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [index, setIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [applyJob, setApplyJob] = useState<Job | null>(null);
+  const [applyJob, setApplyJob] = useState<JobFeedItem | null>(null);
   const [detailJob, setDetailJob] = useState<Job | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const feedIdentityRef = useRef("");
+  const pendingViewsRef = useRef<Set<string>>(new Set());
+  const flushViewsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const filterKey = exploreFeedCacheKey(filters);
 
@@ -53,6 +57,31 @@ export default function VideoFeed({
     const qs = params.toString();
     return `/api/jobs${qs ? `?${qs}` : ""}`;
   }, [filterKey, filters.areas, filters.categories]);
+
+  const flushViewCounts = useCallback(() => {
+    const jobIds = [...pendingViewsRef.current];
+    pendingViewsRef.current.clear();
+    if (!jobIds.length) return;
+
+    void apiFetch("/api/jobs/views", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jobIds }),
+    }).catch(() => {});
+  }, []);
+
+  const queueViewCount = useCallback(
+    (jobId: string) => {
+      if (!jobId || pendingViewsRef.current.has(jobId)) return;
+      pendingViewsRef.current.add(jobId);
+      if (flushViewsTimerRef.current) clearTimeout(flushViewsTimerRef.current);
+      flushViewsTimerRef.current = setTimeout(() => {
+        flushViewsTimerRef.current = null;
+        flushViewCounts();
+      }, 1200);
+    },
+    [flushViewCounts]
+  );
 
   const fetchData = useCallback(async () => {
     const jobsUrl = buildJobsUrl();
@@ -75,11 +104,11 @@ export default function VideoFeed({
     try {
       const [jobsRes, savedRes] = await Promise.all([
         apiFetch(jobsUrl),
-        apiFetch("/api/saves"),
+        apiFetch("/api/saves?summary=1"),
       ]);
       const jobsData = await jobsRes.json();
       const savedData = await savedRes.json();
-      const nextJobs = jobsData.jobs as Job[];
+      const nextJobs = jobsData.jobs as JobFeedItem[];
       const nextSavedIds = savedData.savedIds as string[];
       const nextCount = savedData.count as number;
 
@@ -104,17 +133,17 @@ export default function VideoFeed({
   useEffect(() => {
     const current = jobs[index];
     if (current) {
-      apiFetch(`/api/jobs/${current.id}`).catch(() => {});
+      queueViewCount(current.id);
+      onActiveVideoChange?.();
     }
-    const els: HTMLVideoElement[] = [];
-    for (const neighbor of [jobs[index + 1], jobs[index - 1]]) {
-      if (neighbor) {
-        const el = preloadVideoUrl(neighbor.videoUrl);
-        if (el) els.push(el);
-      }
-    }
-    return () => els.forEach((el) => { el.src = ""; el.load(); });
-  }, [index, jobs]);
+  }, [index, jobs, queueViewCount, onActiveVideoChange]);
+
+  useEffect(() => {
+    return () => {
+      if (flushViewsTimerRef.current) clearTimeout(flushViewsTimerRef.current);
+      flushViewCounts();
+    };
+  }, [flushViewCounts]);
 
   const showToast = (message: string) => {
     setToast(message);
@@ -122,15 +151,13 @@ export default function VideoFeed({
   };
 
   const goNext = () => {
-    onChromeDismiss?.();
     setIndex((i) => Math.min(i + 1, jobs.length - 1));
   };
   const goPrev = () => {
-    onChromeDismiss?.();
     setIndex((i) => Math.max(i - 1, 0));
   };
 
-  const handleSave = async (job: Job) => {
+  const handleSave = async (job: JobFeedItem) => {
     onChromeActivity?.();
     const res = await apiFetch("/api/saves", {
       method: "POST",
@@ -143,13 +170,25 @@ export default function VideoFeed({
     setSavedIds(new Set(nextSavedIds));
     onSaveCountChange?.(nextCount);
     invalidateApiCache("/api/saves");
-    updateExploreFeedSaves(
-      filterKey,
-      fetchKey,
-      nextSavedIds,
-      nextCount
-    );
+    updateExploreFeedSaves(filterKey, fetchKey, nextSavedIds, nextCount);
     showToast(data.saved ? "気になるに保存しました" : "保存を解除しました");
+  };
+
+  const openDetail = async (job: JobFeedItem) => {
+    onChromeActivity?.();
+    setDetailLoading(true);
+    setDetailJob(job as Job);
+    try {
+      const res = await apiFetch(`/api/jobs/${job.id}?trackView=false`);
+      if (!res.ok) throw new Error("failed");
+      const data = await res.json();
+      setDetailJob(data.job as Job);
+    } catch {
+      setDetailJob(null);
+      showToast("求人詳細の読み込みに失敗しました");
+    } finally {
+      setDetailLoading(false);
+    }
   };
 
   const handleApplySuccess = () => {
@@ -194,7 +233,7 @@ export default function VideoFeed({
             onSwipeDown={() => {}}
             onSave={() => handleSave(prevJob)}
             onApply={() => setApplyJob(prevJob)}
-            onDetail={() => setDetailJob(prevJob)}
+            onDetail={() => void openDetail(prevJob)}
           />
         )}
         {nextJob && (
@@ -202,13 +241,14 @@ export default function VideoFeed({
             key={`bg-next-${nextJob.id}`}
             job={nextJob}
             isTop={false}
+            isNext
             isSaved={savedIds.has(nextJob.id)}
             chromeVisible={chromeVisible}
             onSwipeUp={() => {}}
             onSwipeDown={() => {}}
             onSave={() => handleSave(nextJob)}
             onApply={() => setApplyJob(nextJob)}
-            onDetail={() => setDetailJob(nextJob)}
+            onDetail={() => void openDetail(nextJob)}
           />
         )}
         <AnimatePresence mode="popLayout">
@@ -223,24 +263,21 @@ export default function VideoFeed({
               canSwipeDown={canGoPrev}
               onSwipeUp={goNext}
               onSwipeDown={goPrev}
-            onToggleChrome={onToggleChrome}
-            onChromeActivity={onChromeActivity}
-            onSave={() => handleSave(currentJob)}
-            onApply={() => {
-              onChromeActivity?.();
-              setApplyJob(currentJob);
-            }}
-            onDetail={() => {
-              onChromeActivity?.();
-              setDetailJob(currentJob);
-            }}
+              onToggleChrome={onToggleChrome}
+              onChromeActivity={onChromeActivity}
+              onSave={() => handleSave(currentJob)}
+              onApply={() => {
+                onChromeActivity?.();
+                setApplyJob(currentJob);
+              }}
+              onDetail={() => void openDetail(currentJob)}
             />
           )}
         </AnimatePresence>
       </div>
 
       <AnimatePresence>
-        {detailJob && (
+        {detailJob && !detailLoading && (
           <JobDetailModal
             key={detailJob.id}
             job={detailJob}
@@ -256,11 +293,7 @@ export default function VideoFeed({
       </AnimatePresence>
 
       {applyJob && (
-        <ApplyModal
-          job={applyJob}
-          onClose={() => setApplyJob(null)}
-          onSuccess={handleApplySuccess}
-        />
+        <ApplyModal job={applyJob} onClose={() => setApplyJob(null)} onSuccess={handleApplySuccess} />
       )}
 
       <AnimatePresence>

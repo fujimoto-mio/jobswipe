@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAllJobs, createJob, getJobsForStaff } from "@/lib/db";
+import { createJob, getJobsForStaff, getFeedJobs } from "@/lib/db";
 import { requireStaffUser } from "@/lib/auth/admin";
 import type { CreateJobInput, JobFilters } from "@/lib/types";
 
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ jobs, total: jobs.length });
   }
 
-  const jobs = await getAllJobs(filters, false);
+  const jobs = await getFeedJobs(filters);
   return NextResponse.json(
     { jobs, total: jobs.length },
     {

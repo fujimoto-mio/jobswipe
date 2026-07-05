@@ -33,7 +33,7 @@ export function resolveStaffAvatarUrl(name: string, avatarUrl?: string | null): 
 const SEEKER_AVATAR_COLOR = "161823";
 
 export function getSeekerAvatarUrl(name: string): string {
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=256&background=${SEEKER_AVATAR_COLOR}&color=fff&bold=true&format=svg`;
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=128&background=${SEEKER_AVATAR_COLOR}&color=fff&bold=true&format=svg`;
 }
 
 export function resolveSeekerAvatarUrl(name: string, avatarUrl?: string | null): string {

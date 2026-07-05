@@ -44,6 +44,24 @@ export type Job = {
   viewCount: number;
 };
 
+/** Lightweight job shape for explore swipe feed (no detail fields). */
+export type JobFeedItem = Pick<
+  Job,
+  | "id"
+  | "title"
+  | "company"
+  | "companyLogo"
+  | "location"
+  | "area"
+  | "category"
+  | "salary"
+  | "employmentType"
+  | "tags"
+  | "videoUrl"
+  | "thumbnailUrl"
+  | "postedAt"
+>;
+
 export type CreateJobInput = {
   title: string;
   company?: string;

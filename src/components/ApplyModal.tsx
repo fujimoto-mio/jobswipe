@@ -11,10 +11,10 @@ import { getProfile } from "@/lib/profile";
 import { apiFetch } from "@/lib/api-client";
 import { mapUserFacingError } from "@/lib/auth/errors";
 import { applySchema } from "@/lib/validation/schemas";
-import type { Job } from "@/lib/types";
+import type { JobFeedItem } from "@/lib/types";
 
 type ApplyModalProps = {
-  job: Job;
+  job: JobFeedItem;
   onClose: () => void;
   onSuccess: () => void;
 };

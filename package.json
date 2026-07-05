@@ -17,6 +17,8 @@
     "storage:migrate": "tsx --env-file=.env scripts/migrate-supabase-storage-to-r2.ts",
     "storage:migrate:dry-run": "tsx --env-file=.env scripts/migrate-supabase-storage-to-r2.ts --dry-run",
     "pwa:icons": "node scripts/generate-pwa-icons.mjs",
+    "assets:webp": "node scripts/optimize-images-webp.mjs",
+    "assets:optimize": "npm run assets:webp && npm run pwa:icons",
     "postinstall": "prisma generate"
   },
   "dependencies": {

@@ -15,6 +15,7 @@ import { fetchSeekerMe, syncSeekerProfileFromMe } from "@/lib/seeker-user";
 type SeekerUserContextValue = {
   profile: StoredProfile | null;
   ready: boolean;
+  loggedIn: boolean;
   refresh: () => Promise<void>;
 };
 
@@ -23,6 +24,7 @@ const SeekerUserContext = createContext<SeekerUserContextValue | null>(null);
 export function SeekerUserProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<StoredProfile | null>(() => getProfile());
   const [ready, setReady] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
 
   const refresh = useCallback(async () => {
     const data = await fetchSeekerMe();
@@ -44,8 +46,10 @@ export function SeekerUserProvider({ children }: { children: ReactNode }) {
       const cached = getProfile();
       if (cached) setProfile(cached);
 
-      const loggedIn = await getCachedClientSession();
-      if (!loggedIn) {
+      const sessionLoggedIn = await getCachedClientSession();
+      if (!cancelled) setLoggedIn(sessionLoggedIn);
+
+      if (!sessionLoggedIn) {
         if (!cancelled) setReady(true);
         return;
       }
@@ -63,7 +67,7 @@ export function SeekerUserProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <SeekerUserContext.Provider value={{ profile, ready, refresh }}>
+    <SeekerUserContext.Provider value={{ profile, ready, loggedIn, refresh }}>
       {children}
     </SeekerUserContext.Provider>
   );
