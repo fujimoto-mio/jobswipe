@@ -33,9 +33,9 @@ function getStableObjectUrl(bucket: StorageBucket, key: string): string | null {
   return buildPublicObjectUrl(baseUrl, key);
 }
 
-/** @deprecated Public bucket reads always use presigned URLs. */
+/** True when R2_PUBLIC_BUCKET_URL is set — public media uses stable CDN URLs instead of presigning. */
 export function hasPublicCdnConfigured(): boolean {
-  return false;
+  return Boolean(getR2Config()?.publicBucketUrl);
 }
 
 /**
@@ -100,6 +100,11 @@ export function parseStorageObjectRef(url: string): StorageObjectRef | null {
     const key = decodeURIComponent(parsed.pathname.replace(/^\//, ""));
     if (!bucketName || !key) return null;
     return refFromBucketName(bucketName, key, config);
+  }
+
+  if (config && hostMatchesBucketUrl(parsed.host, config.publicBucketUrl)) {
+    const key = decodeURIComponent(parsed.pathname.replace(/^\//, ""));
+    return key ? { bucket: STORAGE_BUCKETS.public, key } : null;
   }
 
   if (config && hostMatchesBucketUrl(parsed.host, config.privateBucketUrl)) {

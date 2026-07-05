@@ -106,12 +106,12 @@ export const BUCKET_SETUP = [
   {
     id: STORAGE_BUCKETS.public,
     public: false,
-    note: "Videos, thumbnails, avatars. Reads use presigned URLs.",
+    note: "Videos, thumbnails, avatars. Set R2_PUBLIC_BUCKET_URL for CDN reads; otherwise presigned URLs.",
   },
   {
     id: STORAGE_BUCKETS.private,
     public: false,
-    note: "Chat attachments and resumes. Reads use presigned URLs (or set R2_PRIVATE_BUCKET_URL later).",
+    note: "Chat attachments and resumes. Presigned URLs, or R2_PRIVATE_BUCKET_URL for stable CDN reads.",
   },
 ] as const;
 
