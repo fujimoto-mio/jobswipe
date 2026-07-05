@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
@@ -8,19 +9,22 @@ import { Heart, MapPin, Briefcase, Trash2, Send, Search, MessageCircle, Eye } fr
 import BottomNav from "@/components/BottomNav";
 import { AppHeader, AppPage, AppBadge } from "@/components/ui/AppShell";
 import EmptyState from "@/components/ui/EmptyState";
-import JobDetailModal from "@/components/JobDetailModal";
-import ApplyModal from "@/components/ApplyModal";
 import JobThumbnail from "@/components/JobThumbnail";
 import SeekerListPagination from "@/components/seeker/SeekerListPagination";
 import SeekerSearchBar from "@/components/seeker/SeekerSearchBar";
 import LoadingSpinner, { PageLoading } from "@/components/ui/LoadingSpinner";
 import { usePaginatedTable } from "@/hooks/usePaginatedTable";
+import { useSeekerBadges } from "@/components/seeker/SeekerBadgeProvider";
 import type { Application, Job } from "@/lib/types";
+
+const JobDetailModal = dynamic(() => import("@/components/JobDetailModal"), { ssr: false });
+const ApplyModal = dynamic(() => import("@/components/ApplyModal"), { ssr: false });
 
 const DEFAULT_PAGE_SIZE = 10;
 
 export default function LikedPage() {
   const router = useRouter();
+  const { saveCount: navSaveCount, chatCount, applySavesUpdate } = useSeekerBadges();
   const [applicationByJobId, setApplicationByJobId] = useState<Map<string, string>>(new Map());
   const [applicationsReady, setApplicationsReady] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
@@ -59,11 +63,15 @@ export default function LikedPage() {
   const handleRemove = async (e: React.MouseEvent, jobId: string) => {
     e.stopPropagation();
     if (saveCount <= 1) return;
-    await apiFetch("/api/saves", {
+    const res = await apiFetch("/api/saves", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ jobId }),
     });
+    const data = await res.json();
+    if (Array.isArray(data.savedIds) && typeof data.count === "number") {
+      applySavesUpdate(data.savedIds, data.count);
+    }
     await table.refetch();
   };
 
@@ -215,7 +223,7 @@ export default function LikedPage() {
         )}
       </main>
 
-      <BottomNav saveCount={saveCount} />
+      <BottomNav saveCount={navSaveCount} chatCount={chatCount} />
 
       {selectedJob && (
         <JobDetailModal

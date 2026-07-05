@@ -6,14 +6,14 @@ import "./landing.css";
 
 const notoSansJP = Noto_Sans_JP({
   subsets: ["latin"],
-  weight: ["400", "500", "700", "900"],
+  weight: ["400", "700"],
   variable: "--font-noto-sans-jp",
   display: "swap",
 });
 
 const montserrat = Montserrat({
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
+  weight: ["600", "700"],
   variable: "--font-montserrat",
   display: "swap",
 });

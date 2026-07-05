@@ -5,9 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import VideoFeed from "@/components/VideoFeed";
 import BottomNav from "@/components/BottomNav";
 import FilterScreen from "@/components/FilterScreen";
-import { apiFetch, apiFetchCached } from "@/lib/api-client";
-import { fetchSeekerUnreadTotal } from "@/lib/chat-unread";
 import { useSeekerUser } from "@/components/seeker/SeekerUserProvider";
+import { useSeekerBadges } from "@/components/seeker/SeekerBadgeProvider";
 import SeekerBrandHeader from "@/components/seeker/SeekerBrandHeader";
 import PwaInstallBanner from "@/components/pwa/PwaInstallBanner";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
@@ -29,8 +28,7 @@ function ExploreContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { ready: authReady, loggedIn: isLoggedIn } = useSeekerUser();
-  const [saveCount, setSaveCount] = useState(0);
-  const [chatCount, setChatCount] = useState(0);
+  const { saveCount, chatCount } = useSeekerBadges();
   const [draftFilters, setDraftFilters] = useState<JobFilters>(() => loadStoredExploreFilters());
   const [chromeVisible, setChromeVisible] = useState(true);
   const hideChromeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -98,18 +96,6 @@ function ExploreContent() {
     if (!showFeed) return;
     revealChrome();
   }, [showFeed, revealChrome]);
-
-  const refreshCounts = useCallback(() => {
-    void apiFetchCached<{ count?: number }>("/api/saves?summary=1", 20_000).then((d) =>
-      setSaveCount(d.count ?? 0)
-    );
-    void fetchSeekerUnreadTotal().then(setChatCount);
-  }, []);
-
-  useEffect(() => {
-    if (!authReady || !isLoggedIn) return;
-    refreshCounts();
-  }, [authReady, isLoggedIn, refreshCounts]);
 
   useEffect(() => {
     if (!authReady || isLoggedIn) return;
@@ -186,7 +172,6 @@ function ExploreContent() {
         <VideoFeed
           filters={filters}
           fetchKey={feedParamsKey}
-          onSaveCountChange={setSaveCount}
           chromeVisible={chromeVisible}
           onToggleChrome={revealChrome}
           onChromeActivity={keepChromeVisible}

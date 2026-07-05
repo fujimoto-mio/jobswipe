@@ -9,8 +9,8 @@ import BottomNav from "@/components/BottomNav";
 import { AppHeader, AppPage } from "@/components/ui/AppShell";
 import { saveProfile, isProfileComplete } from "@/lib/profile";
 import { apiFetch } from "@/lib/api-client";
-import { fetchSeekerUnreadTotal } from "@/lib/chat-unread";
 import { useSeekerUser } from "@/components/seeker/SeekerUserProvider";
+import { useSeekerBadges } from "@/components/seeker/SeekerBadgeProvider";
 import SeekerProfileFormFields from "@/components/form/SeekerProfileFormFields";
 import SeekerProfileHero from "@/components/seeker/SeekerProfileHero";
 import { SeekerProfileCareerView } from "@/components/seeker/SeekerProfileSections";
@@ -30,10 +30,9 @@ function normalizeProfile(p: UserProfile | null): UserProfile | null {
 export default function ProfilePage() {
   const router = useRouter();
   const { profile: storedProfile, ready } = useSeekerUser();
+  const { saveCount, chatCount: unreadChatCount } = useSeekerBadges();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editing, setEditing] = useState(false);
-  const [saveCount, setSaveCount] = useState(0);
-  const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
@@ -49,25 +48,6 @@ export default function ProfilePage() {
       setProfile(normalized);
     }
   }, [ready, storedProfile, editing, router]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    void Promise.all([
-      apiFetch("/api/saves?summary=1")
-        .then((r) => r.json())
-        .then((data) => {
-          if (!cancelled) setSaveCount(data.count ?? 0);
-        }),
-      fetchSeekerUnreadTotal().then((count) => {
-        if (!cancelled) setUnreadChatCount(count);
-      }),
-    ]);
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   if (!ready || !profile) {
     return (

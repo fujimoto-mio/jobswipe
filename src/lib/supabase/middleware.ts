@@ -7,7 +7,7 @@ import { API_ERRORS } from "@/lib/api-errors";
 export type { AuthRole, StaffRole } from "@/lib/auth/roles";
 export { getRoleFromUser, isStaffRole } from "@/lib/auth/roles";
 
-const SEEKER_PROTECTED = ["/liked", "/profile", "/chat", "/courses"];
+const SEEKER_PROTECTED = ["/explore", "/liked", "/profile", "/chat", "/courses", "/settings", "/jobs"];
 const AUTH_REQUIRED_APIS = ["/api/saves", "/api/applications", "/api/chat", "/api/profile"];
 
 function isAdminLoginPath(pathname: string): boolean {

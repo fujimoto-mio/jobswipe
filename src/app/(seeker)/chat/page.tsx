@@ -11,8 +11,9 @@ import BottomNav from "@/components/BottomNav";
 import { AppHeader, AppPage } from "@/components/ui/AppShell";
 import EmptyState from "@/components/ui/EmptyState";
 import LoadingSpinner, { PageLoading } from "@/components/ui/LoadingSpinner";
-import { markSeekerChatRead, prefetchChatMessages } from "@/lib/chat-unread";
+import { markSeekerChatRead, prefetchChatMessages, prefetchChatMessagesIdle } from "@/lib/chat-unread";
 import { useSeekerUser } from "@/components/seeker/SeekerUserProvider";
+import { useSeekerBadges } from "@/components/seeker/SeekerBadgeProvider";
 import type { ChatMessage, ChatThread } from "@/lib/types";
 
 function syncChatUrl(applicationId: string | null) {
@@ -28,25 +29,19 @@ function SeekerChatContent() {
   const [selectedId, setSelectedId] = useState<string | null>(initialApplicationId);
   const [messageCache, setMessageCache] = useState<Record<string, ChatMessage[]>>({});
   const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
-  const [saveCount, setSaveCount] = useState(0);
-  const [unreadTotal, setUnreadTotal] = useState(0);
   const [initialLoading, setInitialLoading] = useState(true);
   const { profile: seekerProfile } = useSeekerUser();
+  const { saveCount, chatCount, setChatCount } = useSeekerBadges();
   const seekerAvatarUrl = seekerProfile?.avatarUrl ?? null;
 
   const refreshThreads = useCallback(async () => {
-    const [chatRes, savesRes] = await Promise.all([
-      apiFetch("/api/chat"),
-      apiFetch("/api/saves?summary=1"),
-    ]);
+    const chatRes = await apiFetch("/api/chat");
     const chatData = await chatRes.json();
-    const saves = await savesRes.json();
     const list = (chatData.threads ?? []) as ChatThread[];
     setThreads(list);
-    setUnreadTotal(chatData.unreadTotal ?? 0);
-    setSaveCount(saves.count ?? 0);
+    setChatCount(chatData.unreadTotal ?? 0);
     return list;
-  }, []);
+  }, [setChatCount]);
 
   const messageCacheRef = useRef(messageCache);
   messageCacheRef.current = messageCache;
@@ -100,9 +95,26 @@ function SeekerChatContent() {
           void loadMessagesForRef.current(resolvedId);
         }
 
-        void prefetchChatMessages(list.map((t) => t.application.id)).then((cache) => {
-          if (!cancelled) setMessageCache((prev) => ({ ...prev, ...cache }));
-        });
+        const allIds = list.map((t) => t.application.id);
+        const secondaryId = allIds.find((id) => id !== resolvedId);
+        const immediateIds = resolvedId
+          ? secondaryId
+            ? [resolvedId, secondaryId]
+            : [resolvedId]
+          : allIds.slice(0, 2);
+        const deferredIds = allIds.filter((id) => !immediateIds.includes(id));
+
+        void prefetchChatMessages(allIds, { first: immediateIds, max: immediateIds.length }).then(
+          (cache) => {
+            if (!cancelled) setMessageCache((prev) => ({ ...prev, ...cache }));
+          }
+        );
+
+        if (deferredIds.length) {
+          prefetchChatMessagesIdle(deferredIds, (cache) => {
+            if (!cancelled) setMessageCache((prev) => ({ ...prev, ...cache }));
+          });
+        }
       } finally {
         if (!cancelled) setInitialLoading(false);
       }
@@ -119,9 +131,9 @@ function SeekerChatContent() {
     setThreads((prev) =>
       prev.map((t) => (t.application.id === applicationId ? { ...t, unreadCount: 0 } : t))
     );
-    setUnreadTotal(total);
+    setChatCount(total);
     invalidateApiCache("/api/chat");
-  }, []);
+  }, [setChatCount]);
 
   const selectThread = useCallback(
     (id: string) => {
@@ -248,7 +260,7 @@ function SeekerChatContent() {
         )}
       </main>
 
-      <BottomNav saveCount={saveCount} chatCount={unreadTotal} />
+      <BottomNav saveCount={saveCount} chatCount={chatCount} />
     </AppPage>
   );
 }

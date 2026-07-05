@@ -11,8 +11,12 @@ export const config = {
     "/admin/:path*",
     "/company",
     "/company/:path*",
+    "/explore",
     "/liked",
     "/profile",
     "/chat",
+    "/courses",
+    "/settings",
+    "/jobs/:path*",
   ],
 };

@@ -4,24 +4,25 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
 import SwipeCard from "./SwipeCard";
-import { apiFetch, invalidateApiCache } from "@/lib/api-client";
+import { apiFetch, apiFetchCached, invalidateApiCache } from "@/lib/api-client";
 import {
   exploreFeedCacheKey,
   getExploreFeedCache,
   setExploreFeedCache,
   updateExploreFeedSaves,
 } from "@/lib/explore-feed-cache";
-import { warmVideoUrls, clearVideoWarmPool } from "@/lib/video-warm-pool";
+import { useSeekerBadges } from "@/components/seeker/SeekerBadgeProvider";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import type { Job, JobFeedItem, JobFilters } from "@/lib/types";
 
 const ApplyModal = dynamic(() => import("./ApplyModal"), { ssr: false });
 const JobDetailModal = dynamic(() => import("./JobDetailModal"), { ssr: false });
 
+const JOBS_CACHE_TTL_MS = 30_000;
+
 type VideoFeedProps = {
   filters: JobFilters;
   fetchKey?: string;
-  onSaveCountChange?: (count: number) => void;
   chromeVisible?: boolean;
   onToggleChrome?: () => void;
   onChromeActivity?: () => void;
@@ -31,14 +32,15 @@ type VideoFeedProps = {
 export default function VideoFeed({
   filters,
   fetchKey = "",
-  onSaveCountChange,
   chromeVisible = false,
   onToggleChrome,
   onChromeActivity,
   onActiveVideoChange,
 }: VideoFeedProps) {
+  const { savedIds, saveCount, applySavesUpdate } = useSeekerBadges();
+  const badgesRef = useRef({ savedIds, saveCount });
+  badgesRef.current = { savedIds, saveCount };
   const [jobs, setJobs] = useState<JobFeedItem[]>([]);
-  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [index, setIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [applyJob, setApplyJob] = useState<JobFeedItem | null>(null);
@@ -57,7 +59,7 @@ export default function VideoFeed({
     if (filters.categories.length) params.set("categories", filters.categories.join(","));
     const qs = params.toString();
     return `/api/jobs${qs ? `?${qs}` : ""}`;
-  }, [filterKey, filters.areas, filters.categories]);
+  }, [filters.areas, filters.categories]);
 
   const flushViewCounts = useCallback(() => {
     const jobIds = [...pendingViewsRef.current];
@@ -95,49 +97,27 @@ export default function VideoFeed({
     if (cached) {
       setJobs(cached.jobs);
       if (isNewFeed) setIndex(0);
-      setSavedIds(new Set(cached.savedIds));
-      onSaveCountChange?.(cached.count);
       setLoading(false);
-      warmVideoUrls(
-        cached.jobs
-          .slice(0, 3)
-          .map((job) => job.videoUrl)
-          .filter(Boolean)
-      );
       return;
     }
 
     setLoading(true);
     try {
-      const [jobsRes, savedRes] = await Promise.all([
-        apiFetch(jobsUrl),
-        apiFetch("/api/saves?summary=1"),
-      ]);
-      const jobsData = await jobsRes.json();
-      const savedData = await savedRes.json();
-      const nextJobs = jobsData.jobs as JobFeedItem[];
-      const nextSavedIds = savedData.savedIds as string[];
-      const nextCount = savedData.count as number;
+      const jobsData = await apiFetchCached<{ jobs: JobFeedItem[] }>(jobsUrl, JOBS_CACHE_TTL_MS);
+      const nextJobs = jobsData.jobs ?? [];
+      const { savedIds: currentSavedIds, saveCount: currentCount } = badgesRef.current;
 
       setJobs(nextJobs);
       setIndex(0);
-      setSavedIds(new Set(nextSavedIds));
-      onSaveCountChange?.(nextCount);
       setExploreFeedCache(filterKey, fetchKey, {
         jobs: nextJobs,
-        savedIds: nextSavedIds,
-        count: nextCount,
+        savedIds: [...currentSavedIds],
+        count: currentCount,
       });
-      warmVideoUrls(
-        nextJobs
-          .slice(0, 3)
-          .map((job) => job.videoUrl)
-          .filter(Boolean)
-      );
     } finally {
       setLoading(false);
     }
-  }, [buildJobsUrl, fetchKey, filterKey, onSaveCountChange]);
+  }, [buildJobsUrl, fetchKey, filterKey]);
 
   useEffect(() => {
     fetchData();
@@ -150,17 +130,6 @@ export default function VideoFeed({
       onActiveVideoChange?.();
     }
   }, [index, jobs, queueViewCount, onActiveVideoChange]);
-
-  useEffect(() => {
-    const warmUrls = [jobs[index]?.videoUrl, jobs[index + 1]?.videoUrl, jobs[index + 2]?.videoUrl].filter(
-      Boolean
-    ) as string[];
-    warmVideoUrls(warmUrls);
-  }, [index, jobs]);
-
-  useEffect(() => {
-    return () => clearVideoWarmPool();
-  }, []);
 
   useEffect(() => {
     return () => {
@@ -191,8 +160,7 @@ export default function VideoFeed({
     const data = await res.json();
     const nextSavedIds = data.savedIds as string[];
     const nextCount = data.count as number;
-    setSavedIds(new Set(nextSavedIds));
-    onSaveCountChange?.(nextCount);
+    applySavesUpdate(nextSavedIds, nextCount);
     invalidateApiCache("/api/saves");
     updateExploreFeedSaves(filterKey, fetchKey, nextSavedIds, nextCount);
     showToast(data.saved ? "気になるに保存しました" : "保存を解除しました");

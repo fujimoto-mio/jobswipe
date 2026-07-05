@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Form, Formik } from "formik";
 import { AnimatePresence } from "framer-motion";
 import {
@@ -28,9 +28,9 @@ import { AppHeader, AppPage } from "@/components/ui/AppShell";
 import { PageLoading, ButtonSpinner } from "@/components/ui/LoadingSpinner";
 import { apiFetch } from "@/lib/api-client";
 import { mapUserFacingError } from "@/lib/auth/errors";
-import { fetchSeekerUnreadTotal } from "@/lib/chat-unread";
 import { saveProfile } from "@/lib/profile";
 import { useSeekerUser } from "@/components/seeker/SeekerUserProvider";
+import { useSeekerBadges } from "@/components/seeker/SeekerBadgeProvider";
 import { useSeekerTheme } from "@/components/seeker/SeekerThemeProvider";
 import { emailChangeSchema, passwordChangeSchema } from "@/lib/validation/schemas";
 
@@ -38,10 +38,9 @@ type ActiveModal = "email" | "password" | null;
 
 export default function SettingsPage() {
   const { profile, ready } = useSeekerUser();
+  const { saveCount, chatCount: unreadChatCount } = useSeekerBadges();
   const { theme, setTheme } = useSeekerTheme();
   const email = profile?.email ?? "";
-  const [saveCount, setSaveCount] = useState(0);
-  const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [activeModal, setActiveModal] = useState<ActiveModal>(null);
   const [emailMessage, setEmailMessage] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -55,25 +54,6 @@ export default function SettingsPage() {
     setPasswordError("");
     setPasswordMessage("");
   };
-
-  useEffect(() => {
-    let cancelled = false;
-
-    void Promise.all([
-      apiFetch("/api/saves?summary=1")
-        .then((r) => r.json())
-        .then((data) => {
-          if (!cancelled) setSaveCount(data.count ?? 0);
-        }),
-      fetchSeekerUnreadTotal().then((count) => {
-        if (!cancelled) setUnreadChatCount(count);
-      }),
-    ]);
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   if (!ready) {
     return (

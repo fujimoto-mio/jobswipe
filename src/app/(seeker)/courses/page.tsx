@@ -1,35 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { GraduationCap } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import { AppHeader, AppPage } from "@/components/ui/AppShell";
 import EmptyState from "@/components/ui/EmptyState";
-import { apiFetch } from "@/lib/api-client";
-import { fetchSeekerUnreadTotal } from "@/lib/chat-unread";
+import { useSeekerBadges } from "@/components/seeker/SeekerBadgeProvider";
 
 export default function CoursesPage() {
-  const [saveCount, setSaveCount] = useState(0);
-  const [chatCount, setChatCount] = useState(0);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    void Promise.all([
-      apiFetch("/api/saves?summary=1")
-        .then((r) => r.json())
-        .then((data) => {
-          if (!cancelled) setSaveCount(data.count ?? 0);
-        }),
-      fetchSeekerUnreadTotal().then((count) => {
-        if (!cancelled) setChatCount(count);
-      }),
-    ]);
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { saveCount, chatCount } = useSeekerBadges();
 
   return (
     <AppPage>
