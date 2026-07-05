@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { upsertSeekerProfile, updateSeekerProfileMedia } from "@/lib/db";
 import { getSeekerSession } from "@/lib/auth/seeker";
 import { getSupabaseUserFromRequest } from "@/lib/auth/supabase-user";
+import { API_ERRORS } from "@/lib/api-errors";
 import {
   profileEditSchema,
   profileMediaPatchSchema,
@@ -21,10 +22,10 @@ import type { UserProfile } from "@/lib/types";
 
 function profilePatchErrorResponse(err: unknown) {
   const message = err instanceof Error ? err.message : String(err);
-  if (message === "Invalid birthday") {
+  if (message === API_ERRORS.invalidBirthday) {
     return NextResponse.json({ error: "生年月日が正しくありません" }, { status: 400 });
   }
-  if (message === "Account suspended") {
+  if (message === API_ERRORS.accountSuspended) {
     return NextResponse.json({ error: "アカウントが停止されています" }, { status: 403 });
   }
   if (/invalid json|unexpected token|body/i.test(message)) {
@@ -70,7 +71,7 @@ export async function POST(request: Request) {
     );
     return NextResponse.json({ success: true, profile }, { status: 201 });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Invalid JSON body";
+    const message = err instanceof Error ? err.message : API_ERRORS.invalidJson;
     return NextResponse.json({ error: "リクエストの形式が正しくありません" }, { status: 400 });
   }
 }

@@ -14,7 +14,6 @@ import { useStaffPanel } from "@/components/staff/StaffPanelContext";
 import { apiFetch } from "@/lib/api-client";
 import { jobFormSchema } from "@/lib/validation/schemas";
 import { jobFormValuesToBody, jobToFormValues } from "@/lib/validation/job-form-utils";
-import JobThumbnailUploadField from "@/components/staff/JobThumbnailUploadField";
 import JobVideoUploadField from "@/components/staff/JobVideoUploadField";
 import { uploadFile } from "@/lib/upload-client";
 type JobStaffFormPageProps = {
@@ -30,12 +29,9 @@ export default function JobStaffFormPage({ jobId }: JobStaffFormPageProps) {
   const [loading, setLoading] = useState(true);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
-  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [companyLocked, setCompanyLocked] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [videoCleared, setVideoCleared] = useState(false);
-  const [thumbnailCleared, setThumbnailCleared] = useState(false);
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
 
   useEffect(() => {
@@ -67,7 +63,6 @@ export default function JobStaffFormPage({ jobId }: JobStaffFormPageProps) {
       .then((d) => {
         setJob(d.job);
         setVideoPreview(d.job.videoUrl || null);
-        setThumbnailPreview(d.job.thumbnailUrl);
       })
       .catch(() => router.replace(`${basePath}/jobs`))
       .finally(() => setLoading(false));
@@ -79,28 +74,6 @@ export default function JobStaffFormPage({ jobId }: JobStaffFormPageProps) {
       router.replace(`${basePath}/jobs/${jobId}/view`);
     }
   }, [job, loading, isCompany, jobId, basePath, router]);
-
-  const handleThumbnailFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setUploadError("サムネイルは画像ファイルを選択してください");
-      return;
-    }
-    setUploadError(null);
-    setThumbnailFile(file);
-    setThumbnailCleared(false);
-    if (thumbnailPreview?.startsWith("blob:")) URL.revokeObjectURL(thumbnailPreview);
-    setThumbnailPreview(URL.createObjectURL(file));
-  };
-
-  const clearThumbnail = () => {
-    if (thumbnailPreview?.startsWith("blob:")) URL.revokeObjectURL(thumbnailPreview);
-    setThumbnailFile(null);
-    setThumbnailPreview(null);
-    setThumbnailCleared(true);
-    setUploadError(null);
-  };
 
   const handleVideoFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -167,7 +140,6 @@ export default function JobStaffFormPage({ jobId }: JobStaffFormPageProps) {
 
           try {
             let videoUrl = values.videoUrl?.trim() ?? "";
-            let thumbnailUrl: string | undefined = job.thumbnailUrl;
 
             if (videoFile) {
               videoUrl = await uploadFile(videoFile, "video");
@@ -175,15 +147,9 @@ export default function JobStaffFormPage({ jobId }: JobStaffFormPageProps) {
               videoUrl = videoUrl || job.videoUrl;
             }
 
-            if (thumbnailFile) {
-              thumbnailUrl = await uploadFile(thumbnailFile, "thumbnail");
-            } else if (thumbnailCleared) {
-              thumbnailUrl = "";
-            }
-
             const res = await apiFetch(`/api/jobs/${jobId}`, {
               method: "PATCH",
-              body: JSON.stringify(jobFormValuesToBody(values, videoUrl, thumbnailUrl)),
+              body: JSON.stringify(jobFormValuesToBody(values, videoUrl)),
             });
 
             if (res.ok) {
@@ -204,16 +170,6 @@ export default function JobStaffFormPage({ jobId }: JobStaffFormPageProps) {
             <div className="staff-form-card space-y-5 rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
               <JobFormFields companyLocked={companyLocked} companies={companies} />
             </div>
-
-            <JobThumbnailUploadField
-              thumbnailPreview={thumbnailPreview}
-              thumbnailFile={thumbnailFile}
-              onThumbnailFile={handleThumbnailFile}
-              onClearThumbnail={clearThumbnail}
-              existingThumbnail={
-                !thumbnailFile && !thumbnailCleared && Boolean(job.thumbnailUrl && thumbnailPreview)
-              }
-            />
 
             <JobVideoUploadField
               videoPreview={videoPreview}

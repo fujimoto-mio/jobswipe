@@ -4,6 +4,7 @@ import { queryStaffJobs } from "@/lib/db/staff-jobs";
 import { requireAdminUser, requireStaffUser } from "@/lib/auth/admin";
 import { JOB_APPROVAL_STATUSES } from "@/lib/constants";
 import type { JobApprovalStatus } from "@/lib/types";
+import { API_ERRORS } from "@/lib/api-errors";
 
 function parsePage(value: string | null): number {
   const n = Number(value);
@@ -63,19 +64,19 @@ export async function PATCH(request: Request) {
 
     if (!id || !approvalStatus || !JOB_APPROVAL_STATUSES.includes(approvalStatus)) {
       return NextResponse.json(
-        { error: "id and approvalStatus are required" },
+        { error: API_ERRORS.idAndApprovalStatusRequired },
         { status: 400 }
       );
     }
 
     const job = await updateJobApproval(id, approvalStatus);
     if (!job) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+      return NextResponse.json({ error: API_ERRORS.jobNotFound }, { status: 404 });
     }
 
     return NextResponse.json({ success: true, job });
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ error: API_ERRORS.invalidJson }, { status: 400 });
   }
 }
 
@@ -86,16 +87,16 @@ export async function DELETE(request: Request) {
   try {
     const { id } = (await request.json()) as { id: string };
     if (!id) {
-      return NextResponse.json({ error: "id is required" }, { status: 400 });
+      return NextResponse.json({ error: API_ERRORS.idRequired }, { status: 400 });
     }
 
     const deleted = await deleteJob(id, staff.role === "company" ? staff.companyId : null);
     if (!deleted) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+      return NextResponse.json({ error: API_ERRORS.jobNotFound }, { status: 404 });
     }
 
     return NextResponse.json({ success: true });
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ error: API_ERRORS.invalidJson }, { status: 400 });
   }
 }

@@ -12,9 +12,12 @@ import {
   Send,
   Heart,
   ExternalLink,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import ApplyModal from "@/components/ApplyModal";
 import SeekerAccountMenu from "@/components/seeker/SeekerAccountMenu";
+import { useVideoPlayback } from "@/hooks/useVideoPlayback";
 import { apiFetch } from "@/lib/api-client";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
 import { formatDateJST } from "@/lib/datetime";
@@ -32,6 +35,54 @@ function LinkItem({ href, label }: { href?: string; label: string }) {
       <ExternalLink className="h-4 w-4 shrink-0" />
       {label}
     </a>
+  );
+}
+
+function JobDetailHero({ videoUrl, onBack }: { videoUrl: string; onBack: () => void }) {
+  const { videoRef, isMuted, toggleMute } = useVideoPlayback({
+    src: videoUrl,
+    isActive: Boolean(videoUrl),
+    muted: true,
+  });
+
+  return (
+    <div className="relative h-52 bg-slate-900 sm:h-60">
+      {videoUrl ? (
+        <video
+          ref={videoRef}
+          src={videoUrl}
+          className="absolute inset-0 h-full w-full object-cover"
+          loop
+          muted={isMuted}
+          playsInline
+          preload="auto"
+        />
+      ) : (
+        <div className="absolute inset-0 bg-slate-200" />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-50 via-transparent to-black/40" />
+      <button
+        type="button"
+        onClick={onBack}
+        className="absolute left-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition hover:bg-black/55"
+        aria-label="戻る"
+      >
+        <ArrowLeft className="h-5 w-5" />
+      </button>
+      {videoUrl ? (
+        <button
+          type="button"
+          onClick={toggleMute}
+          className="absolute right-16 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition hover:bg-black/55"
+          aria-label={isMuted ? "ミュート解除" : "ミュート"}
+        >
+          {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+        </button>
+      ) : null}
+      <div className="absolute right-4 top-4 z-10">
+        <SeekerAccountMenu variant="overlay" />
+      </div>
+    </div>
   );
 }
 
@@ -86,22 +137,11 @@ export default function JobDetailPage() {
   }
 
   const links = job.links ?? {};
+  const videoUrl = job.videoUrl?.trim() ?? "";
 
   return (
     <div className="seeker-job-detail-page h-full overflow-y-auto bg-slate-50 pb-24">
-      <div className="relative h-52 bg-slate-200">
-        <img src={job.thumbnailUrl} alt={job.title} className="h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-50 via-transparent to-black/40" />
-        <button
-          onClick={() => router.back()}
-          className="absolute left-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition hover:bg-black/55"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div className="absolute right-4 top-4 z-10">
-          <SeekerAccountMenu variant="overlay" />
-        </div>
-      </div>
+      <JobDetailHero videoUrl={videoUrl} onBack={() => router.back()} />
 
       <div className="page-container py-0">
         <div className="card -mt-6 relative mb-5 p-5">

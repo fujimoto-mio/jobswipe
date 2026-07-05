@@ -20,7 +20,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { apiFetch } from "@/lib/api-client";
 import Logo from "@/components/ui/Logo";
 import StaffAccountMenu from "@/components/staff/StaffAccountMenu";
 import StaffTopbarIcons from "@/components/staff/StaffTopbarIcons";
@@ -114,8 +114,7 @@ export default function StaffPanelShell({ children }: StaffPanelShellProps) {
   }, []);
 
   const handleLogout = async () => {
-    const supabase = createSupabaseBrowserClient();
-    if (supabase) await supabase.auth.signOut();
+    await apiFetch("/api/auth/login", { method: "DELETE" });
     router.push(loginPath);
     router.refresh();
   };

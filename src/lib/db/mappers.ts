@@ -2,7 +2,11 @@ import type { Job as PrismaJob, Company, Application as PrismaApplication, ChatM
 import { birthdayToInputValue } from "@/lib/birthday";
 import { asStringArray as parseNonEmptyStrings, asWorkHistory, asSkills } from "@/lib/profile-fields";
 import { getCompanyLogoUrl } from "@/lib/job-image";
-import { resolveAvatarUrl, resolveJobMedia, resolveSeekerProfileMedia } from "@/lib/storage/resolve-media";
+import {
+  resolveAvatarUrl,
+  resolveJobMedia,
+  resolveSeekerProfileMedia,
+} from "@/lib/storage/resolve-media";
 import { resolveJobLinks } from "@/lib/company-links";
 import { formatDateISOJST, serializeTimestamp } from "@/lib/datetime";
 import type {
@@ -38,7 +42,7 @@ export function mapJob(row: JobWithCompany): Job {
     requirements: asJsonStringArray(row.requirements),
     benefits: asJsonStringArray(row.benefits),
     videoUrl: row.videoUrl,
-    thumbnailUrl: row.thumbnailUrl ?? getCompanyLogoUrl(row.company.name),
+    thumbnailUrl: row.thumbnailUrl ?? "",
     postedAt: formatDateISOJST(row.postedAt),
     approvedAt: row.approvedAt ? serializeTimestamp(row.approvedAt) : null,
     links: resolveJobLinks(row.company, row.links),
@@ -60,7 +64,7 @@ export function mapJobFeed(row: JobWithCompany): JobFeedItem {
     employmentType: row.employmentType as JobFeedItem["employmentType"],
     tags: asJsonStringArray(row.tags),
     videoUrl: row.videoUrl,
-    thumbnailUrl: row.thumbnailUrl ?? getCompanyLogoUrl(row.company.name),
+    thumbnailUrl: row.thumbnailUrl ?? "",
     postedAt: formatDateISOJST(row.postedAt),
   };
 }

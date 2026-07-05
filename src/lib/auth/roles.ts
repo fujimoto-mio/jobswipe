@@ -1,6 +1,7 @@
-export type AuthRole = "admin" | "company" | "seeker";
-export type StaffRole = "admin" | "company";
+import type { AuthCredentialRole } from "@prisma/client";
 
+export type AuthRole = AuthCredentialRole;
+export type StaffRole = "admin" | "company";
 export function getRoleFromUser(user: {
   app_metadata?: Record<string, unknown>;
   user_metadata?: Record<string, unknown>;

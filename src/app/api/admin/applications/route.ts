@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireStaffUser } from "@/lib/auth/admin";
+import { API_ERRORS } from "@/lib/api-errors";
 import {
   getApplicationsForJob,
   queryStaffApplicationJobs,
@@ -33,11 +34,11 @@ export async function GET(request: Request) {
   try {
     if (id) {
       const app = await getApplicationWithSeeker(id);
-      if (!app) return NextResponse.json({ error: "Not found" }, { status: 404 });
+      if (!app) return NextResponse.json({ error: API_ERRORS.notFound }, { status: 404 });
       if (staff.role === "company") {
         const allowed = await staffCanAccessApplication(id, staff);
         if (!allowed) {
-          return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+          return NextResponse.json({ error: API_ERRORS.forbidden }, { status: 403 });
         }
       }
       return NextResponse.json({ application: app });
@@ -100,7 +101,7 @@ export async function PATCH(request: Request) {
     };
 
     if (!id || !status) {
-      return NextResponse.json({ error: "id and status are required" }, { status: 400 });
+      return NextResponse.json({ error: API_ERRORS.idAndStatusRequired }, { status: 400 });
     }
 
     const application = await updateApplicationStatus(
@@ -109,11 +110,11 @@ export async function PATCH(request: Request) {
       staff.role === "company" ? staff.companyId : null
     );
     if (!application) {
-      return NextResponse.json({ error: "Application not found" }, { status: 404 });
+      return NextResponse.json({ error: API_ERRORS.applicationNotFound }, { status: 404 });
     }
 
     return NextResponse.json({ success: true, application });
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ error: API_ERRORS.invalidJson }, { status: 400 });
   }
 }

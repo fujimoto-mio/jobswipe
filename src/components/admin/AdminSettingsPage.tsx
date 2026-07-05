@@ -20,7 +20,6 @@ import { useStaffPanel } from "@/components/staff/StaffPanelContext";
 import { apiFetch } from "@/lib/api-client";
 import { mapUserFacingError } from "@/lib/auth/errors";
 import { SUPPORT_EMAIL } from "@/lib/constants";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { uploadFile } from "@/lib/upload-client";
 import { passwordChangeSchema, staffProfileSchema } from "@/lib/validation/schemas";
 
@@ -207,7 +206,9 @@ export default function AdminSettingsPage() {
                     clearAvatarSelection();
                     setSaveMessage("アカウント情報を保存しました");
                   } else {
-                    setSaveError(typeof data.error === "string" ? data.error : "保存に失敗しました");
+                    setSaveError(
+                      typeof data.error === "string" ? mapUserFacingError(data.error) : "保存に失敗しました"
+                    );
                   }
                 } catch (error) {
                   const message = error instanceof Error ? error.message : "アップロードに失敗しました";
@@ -371,16 +372,17 @@ export default function AdminSettingsPage() {
               onSubmit={async (values, { setSubmitting, resetForm }) => {
                 setPasswordError("");
                 setPasswordMessage("");
-                const supabase = createSupabaseBrowserClient();
-                if (!supabase) {
-                  setPasswordError("認証サービスが設定されていません");
-                  setSubmitting(false);
-                  return;
-                }
 
-                const { error } = await supabase.auth.updateUser({ password: values.password });
-                if (error) {
-                  setPasswordError(mapUserFacingError(error.message));
+                const res = await apiFetch("/api/auth/password", {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ password: values.password }),
+                });
+                if (!res.ok) {
+                  const data = await res.json().catch(() => ({}));
+                  setPasswordError(
+                    typeof data.error === "string" ? mapUserFacingError(data.error) : "更新に失敗しました"
+                  );
                   setSubmitting(false);
                   return;
                 }

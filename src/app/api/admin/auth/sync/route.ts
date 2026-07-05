@@ -2,16 +2,17 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSupabaseUserFromRequest } from "@/lib/auth/supabase-user";
 import { getRoleFromUser, isStaffRole } from "@/lib/auth/roles";
+import { API_ERRORS } from "@/lib/api-errors";
 
 export async function POST(request: Request) {
   const user = await getSupabaseUserFromRequest(request);
   if (!user?.email) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: API_ERRORS.unauthorized }, { status: 401 });
   }
 
   const role = getRoleFromUser(user);
   if (!isStaffRole(role)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ error: API_ERRORS.forbidden }, { status: 403 });
   }
 
   await prisma.account.upsert({

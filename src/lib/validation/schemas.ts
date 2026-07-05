@@ -45,6 +45,7 @@ export const loginSchema = Yup.object({
 });
 
 export const passwordChangeSchema = Yup.object({
+  currentPassword: Yup.string().required("現在のパスワードを入力してください"),
   password,
   confirmPassword: Yup.string()
     .oneOf([Yup.ref("password")], "パスワードが一致しません")

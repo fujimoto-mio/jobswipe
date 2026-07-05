@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { incrementJobViews } from "@/lib/db";
+import { API_ERRORS } from "@/lib/api-errors";
 
 export async function POST(request: Request) {
   try {
@@ -15,6 +16,6 @@ export async function POST(request: Request) {
     await incrementJobViews(jobIds.slice(0, 20));
     return NextResponse.json({ success: true });
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ error: API_ERRORS.invalidJson }, { status: 400 });
   }
 }

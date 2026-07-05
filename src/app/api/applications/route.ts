@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireSeekerSession, getSeekerSession } from "@/lib/auth/seeker";
 import { requireStaffUser, getStaffUser } from "@/lib/auth/admin";
+import { API_ERRORS } from "@/lib/api-errors";
 import {
   createApplication,
   getApplicationsForSeeker,
@@ -21,11 +22,11 @@ export async function GET(request: Request) {
     if (staff) {
       if (id) {
         const app = await getApplicationWithSeeker(id);
-        if (!app) return NextResponse.json({ error: "Not found" }, { status: 404 });
+        if (!app) return NextResponse.json({ error: API_ERRORS.notFound }, { status: 404 });
         if (staff.role === "company") {
           const allowed = await staffCanAccessApplication(id, staff);
           if (!allowed) {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+            return NextResponse.json({ error: API_ERRORS.forbidden }, { status: 403 });
           }
         }
         return NextResponse.json({ application: app });
@@ -38,7 +39,7 @@ export async function GET(request: Request) {
 
     const session = await getSeekerSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: API_ERRORS.unauthorized }, { status: 401 });
     }
 
     const applications = await getApplicationsForSeeker(session.seekerId);
@@ -69,7 +70,7 @@ export async function POST(request: Request) {
     } = body;
 
     if (!jobId) {
-      return NextResponse.json({ error: "jobId is required" }, { status: 400 });
+      return NextResponse.json({ error: API_ERRORS.jobIdRequired }, { status: 400 });
     }
 
     const validated = await applySchema.validate(
@@ -103,7 +104,7 @@ export async function POST(request: Request) {
     if (error instanceof Error && error.message === "JOB_NOT_AVAILABLE") {
       return NextResponse.json({ error: "この求人は現在応募できません" }, { status: 404 });
     }
-    const message = error instanceof Error ? error.message : "Invalid request";
+    const message = error instanceof Error ? error.message : API_ERRORS.invalidRequest;
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }
@@ -119,7 +120,7 @@ export async function PATCH(request: Request) {
     };
 
     if (!id || !status) {
-      return NextResponse.json({ error: "id and status are required" }, { status: 400 });
+      return NextResponse.json({ error: API_ERRORS.idAndStatusRequired }, { status: 400 });
     }
 
     const application = await updateApplicationStatus(
@@ -128,11 +129,11 @@ export async function PATCH(request: Request) {
       staff.role === "company" ? staff.companyId : null
     );
     if (!application) {
-      return NextResponse.json({ error: "Application not found" }, { status: 404 });
+      return NextResponse.json({ error: API_ERRORS.applicationNotFound }, { status: 404 });
     }
 
     return NextResponse.json({ success: true, application });
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ error: API_ERRORS.invalidJson }, { status: 400 });
   }
 }

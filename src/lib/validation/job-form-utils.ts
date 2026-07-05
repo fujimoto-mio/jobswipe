@@ -45,7 +45,7 @@ export function jobToFormValues(job: Job): JobFormValues {
   };
 }
 
-export function jobFormValuesToBody(values: JobFormValues, videoUrl?: string, thumbnailUrl?: string) {
+export function jobFormValuesToBody(values: JobFormValues, videoUrl?: string) {
   return {
     title: values.title,
     ...(values.companyId && values.companyId !== NEW_COMPANY_VALUE
@@ -66,7 +66,6 @@ export function jobFormValuesToBody(values: JobFormValues, videoUrl?: string, th
       .map((t) => t.trim())
       .filter(Boolean),
     videoUrl: videoUrl?.trim() || undefined,
-    thumbnailUrl,
     tags: (values.tags ?? "")
       .split(",")
       .map((t) => t.trim())

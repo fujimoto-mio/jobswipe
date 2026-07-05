@@ -16,8 +16,8 @@ import {
 } from "@/components/form/LegalAgreementField";
 import { saveProfile } from "@/lib/profile";
 import { apiFetch } from "@/lib/api-client";
-import { mapAuthError } from "@/lib/auth/errors";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { clearClientSessionCache } from "@/lib/auth/client-session";
+import { getApiErrorMessage } from "@/lib/auth/errors";
 import {
   companyRegisterFormSchema,
   seekerAccountSchema,
@@ -134,11 +134,6 @@ export default function RegisterPageContent() {
             setSubmitting(true);
             try {
               const { acceptLegal: _acceptLegal, ...registerValues } = values;
-              const supabase = createSupabaseBrowserClient();
-              if (!supabase) {
-                setError("認証サービスが設定されていません。管理者にお問い合わせください。");
-                return;
-              }
 
               const res = await apiFetch("/api/auth/register/company", {
                 method: "POST",
@@ -152,20 +147,11 @@ export default function RegisterPageContent() {
 
               if (!res.ok) {
                 const data = await res.json();
-                setError(data.error ?? "企業アカウントの登録に失敗しました");
+                setError(getApiErrorMessage(data, "企業アカウントの登録に失敗しました"));
                 return;
               }
 
-              const { error: signInError } = await supabase.auth.signInWithPassword({
-                email: registerValues.email.trim(),
-                password: registerValues.password,
-              });
-
-              if (signInError) {
-                setError(mapAuthError(signInError.message));
-                return;
-              }
-
+              clearClientSessionCache();
               router.replace("/company");
               router.refresh();
             } finally {
@@ -315,11 +301,6 @@ export default function RegisterPageContent() {
             setSubmitting(true);
             try {
               const { acceptLegal: _acceptLegal, ...profileValues } = values;
-              const supabase = createSupabaseBrowserClient();
-              if (!supabase) {
-                setError("認証サービスが設定されていません。管理者にお問い合わせください。");
-                return;
-              }
 
               const res = await apiFetch("/api/auth/register/seeker", {
                 method: "POST",
@@ -332,23 +313,14 @@ export default function RegisterPageContent() {
 
               if (!res.ok) {
                 const data = await res.json();
-                setError(data.error ?? "登録に失敗しました");
+                setError(getApiErrorMessage(data, "登録に失敗しました"));
                 if (res.status === 409) setStep("seeker-1");
                 return;
               }
 
               const data = await res.json();
 
-              const { error: signInError } = await supabase.auth.signInWithPassword({
-                email: account.email.trim(),
-                password: account.password,
-              });
-
-              if (signInError) {
-                setError(mapAuthError(signInError.message));
-                return;
-              }
-
+              clearClientSessionCache();
               saveProfile(data.profile);
               router.replace(next);
               router.refresh();

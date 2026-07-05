@@ -52,8 +52,8 @@ export function seekerBannerStyle(bannerUrl?: string | null): { backgroundImage:
   };
 }
 
-export function getJobThumbnail(job: Pick<Job, "thumbnailUrl" | "companyLogo" | "company">): string {
-  return job.thumbnailUrl || job.companyLogo || getCompanyLogoUrl(job.company);
+export function getJobThumbnail(job: Pick<Job, "companyLogo" | "company">): string {
+  return job.companyLogo || getCompanyLogoUrl(job.company);
 }
 
 export function getJobThumbnailFallback(job: Pick<Job, "companyLogo" | "company">): string {

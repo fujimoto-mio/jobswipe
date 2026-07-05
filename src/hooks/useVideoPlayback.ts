@@ -70,7 +70,6 @@ export function useVideoPlayback({ src, isActive, preload = false, muted = true 
     setIsMuted(video.muted);
   }, []);
 
-  // Active/inactive lifecycle
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -81,7 +80,8 @@ export function useVideoPlayback({ src, isActive, preload = false, muted = true 
         video.preload = "auto";
         video.load();
         setState("loading");
-      } else if (video.readyState >= 2) {
+      } else if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+        setHasFrame(true);
         setState("playing");
       } else {
         video.preload = "auto";
@@ -101,7 +101,6 @@ export function useVideoPlayback({ src, isActive, preload = false, muted = true 
     }
   }, [isActive, shouldWarm, src, play]);
 
-  // Wire up media events
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -119,14 +118,14 @@ export function useVideoPlayback({ src, isActive, preload = false, muted = true 
     };
     const onCanPlay = () => {
       setHasFrame(true);
-      if (isActive && video.paused) play();
+      if (isActive && video.paused) void play();
     };
     const onLoadedData = () => setHasFrame(true);
     const onError = () => setState("error");
     const onStalled = () => {
+      if (!isActive) return;
       setState("buffering");
-      // Retry once after stall
-      if (retryCount.current < 2 && isActive) {
+      if (retryCount.current < 2) {
         retryCount.current += 1;
         setTimeout(() => video.load(), 800);
       }
@@ -155,7 +154,6 @@ export function useVideoPlayback({ src, isActive, preload = false, muted = true 
     setHasFrame(false);
   }, [src]);
 
-  // Prime adjacent slides: muted play/pause forces buffering on mobile Safari.
   useEffect(() => {
     if (isActive || !preload) return;
     const video = videoRef.current;
@@ -172,7 +170,7 @@ export function useVideoPlayback({ src, isActive, preload = false, muted = true 
     const prime = async () => {
       if (cancelled) return;
       markReady();
-      if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) return;
+      if (video.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) return;
       try {
         video.muted = true;
         await video.play();
@@ -187,18 +185,18 @@ export function useVideoPlayback({ src, isActive, preload = false, muted = true 
       }
     };
 
-    if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-      void prime();
-      return () => {
-        cancelled = true;
-      };
-    }
+    const onReady = () => void prime();
 
-    video.addEventListener("canplay", () => void prime(), { once: true });
-    video.addEventListener("loadeddata", markReady);
+    if (video.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) {
+      void prime();
+    } else {
+      video.addEventListener("canplaythrough", onReady, { once: true });
+      video.addEventListener("loadeddata", markReady);
+    }
 
     return () => {
       cancelled = true;
+      video.removeEventListener("canplaythrough", onReady);
       video.removeEventListener("loadeddata", markReady);
     };
   }, [isActive, preload, src]);

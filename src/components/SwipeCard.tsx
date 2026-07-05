@@ -1,13 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { flushSync } from "react-dom";
 import { motion, useMotionValue, useTransform, animate, type PanInfo } from "framer-motion";
 import VideoFeedItem from "./VideoFeedItem";
 import type { JobFeedItem } from "@/lib/types";
 
 const SWIPE_THRESHOLD = 72;
-const SWIPE_DURATION = 0.26;
+const SNAP_DURATION = 0.12;
 
 type SwipeCardProps = {
   prevJob: JobFeedItem | null;
@@ -32,7 +32,6 @@ type StackSlideProps = {
   scale?: ReturnType<typeof useTransform<number, number>>;
   isActive: boolean;
   preloadVideo?: boolean;
-  isNext?: boolean;
   swipeEnabled?: boolean;
   chromeVisible: boolean;
   isSaved: boolean;
@@ -49,7 +48,6 @@ function StackSlide({
   scale,
   isActive,
   preloadVideo = false,
-  isNext = false,
   swipeEnabled = false,
   chromeVisible,
   isSaved,
@@ -71,7 +69,6 @@ function StackSlide({
         job={job}
         isActive={isActive}
         preloadVideo={preloadVideo}
-        isNext={isNext}
         swipeEnabled={swipeEnabled}
         chromeVisible={chromeVisible}
         isSaved={isSaved}
@@ -103,16 +100,6 @@ export default function SwipeCard({
   const containerRef = useRef<HTMLDivElement>(null);
   const dragY = useMotionValue(0);
   const heightRef = useRef(0);
-  const prevPreloadKey = prevJob ? `${currentJob.id}:${prevJob.id}` : null;
-  const [primedPrevKey, setPrimedPrevKey] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!prevPreloadKey) return;
-    const timer = window.setTimeout(() => setPrimedPrevKey(prevPreloadKey), 400);
-    return () => window.clearTimeout(timer);
-  }, [prevPreloadKey]);
-
-  const preloadPrev = prevPreloadKey !== null && primedPrevKey === prevPreloadKey;
 
   const currentScale = useTransform(dragY, (v) => {
     const h = heightRef.current || 1;
@@ -143,19 +130,12 @@ export default function SwipeCard({
     animate(dragY, 0, { type: "spring", stiffness: 420, damping: 36, mass: 0.85 });
   };
 
-  const completeSwipe = (direction: "up" | "down") => {
-    const h = heightRef.current || containerRef.current?.offsetHeight || window.innerHeight;
-    const target = direction === "up" ? -h : h;
-    animate(dragY, target, {
-      duration: SWIPE_DURATION,
-      ease: [0.32, 0.72, 0, 1],
-    }).then(() => {
-      flushSync(() => {
-        if (direction === "up") onSwipeUp();
-        else onSwipeDown();
-      });
-      dragY.set(0);
+  const commitSwipe = (direction: "up" | "down") => {
+    flushSync(() => {
+      if (direction === "up") onSwipeUp();
+      else onSwipeDown();
     });
+    animate(dragY, 0, { duration: SNAP_DURATION, ease: [0.32, 0.72, 0, 1] });
   };
 
   const handleDragEnd = (_: unknown, info: PanInfo) => {
@@ -167,13 +147,13 @@ export default function SwipeCard({
         snapBack();
         return;
       }
-      completeSwipe("up");
+      commitSwipe("up");
     } else if (offset.y > 0 && passedThreshold) {
       if (!canSwipeDown) {
         snapBack();
         return;
       }
-      completeSwipe("down");
+      commitSwipe("down");
     } else {
       snapBack();
     }
@@ -199,7 +179,7 @@ export default function SwipeCard({
             job={prevJob}
             placement="prev"
             isActive={false}
-            preloadVideo={preloadPrev}
+            preloadVideo
             chromeVisible={false}
             isSaved={isSaved(prevJob.id)}
             zIndex={1}
@@ -231,7 +211,6 @@ export default function SwipeCard({
             job={nextJob}
             placement="next"
             isActive={false}
-            isNext
             preloadVideo
             chromeVisible={false}
             isSaved={isSaved(nextJob.id)}

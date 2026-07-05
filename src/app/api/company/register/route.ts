@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCompanyLogoUrl } from "@/lib/job-image";
 import { getRoleFromUser } from "@/lib/auth/roles";
 import { getSupabaseUserFromRequest } from "@/lib/auth/supabase-user";
+import { API_ERRORS } from "@/lib/api-errors";
 
 type CompanyRegisterBody = {
   companyName: string;
@@ -15,7 +16,7 @@ export async function POST(request: Request) {
   const user = await getSupabaseUserFromRequest(request);
 
   if (!user?.email) {
-    return NextResponse.json({ error: "Unauthorized — sign up first" }, { status: 401 });
+    return NextResponse.json({ error: API_ERRORS.signupFirst }, { status: 401 });
   }
 
   const role = getRoleFromUser(user);
@@ -70,6 +71,6 @@ export async function POST(request: Request) {
       company: { id: company.id, name: company.name },
     });
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ error: API_ERRORS.invalidJson }, { status: 400 });
   }
 }

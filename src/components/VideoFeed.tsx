@@ -11,6 +11,7 @@ import {
   setExploreFeedCache,
   updateExploreFeedSaves,
 } from "@/lib/explore-feed-cache";
+import { warmVideoUrls, clearVideoWarmPool } from "@/lib/video-warm-pool";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import type { Job, JobFeedItem, JobFilters } from "@/lib/types";
 
@@ -97,6 +98,12 @@ export default function VideoFeed({
       setSavedIds(new Set(cached.savedIds));
       onSaveCountChange?.(cached.count);
       setLoading(false);
+      warmVideoUrls(
+        cached.jobs
+          .slice(0, 3)
+          .map((job) => job.videoUrl)
+          .filter(Boolean)
+      );
       return;
     }
 
@@ -121,6 +128,12 @@ export default function VideoFeed({
         savedIds: nextSavedIds,
         count: nextCount,
       });
+      warmVideoUrls(
+        nextJobs
+          .slice(0, 3)
+          .map((job) => job.videoUrl)
+          .filter(Boolean)
+      );
     } finally {
       setLoading(false);
     }
@@ -139,23 +152,15 @@ export default function VideoFeed({
   }, [index, jobs, queueViewCount, onActiveVideoChange]);
 
   useEffect(() => {
-    const urls = [jobs[index + 1]?.videoUrl, jobs[index - 1]?.videoUrl].filter(Boolean) as string[];
-    const links: HTMLLinkElement[] = [];
-
-    for (const url of urls) {
-      if (document.querySelector(`link[data-feed-video-preload="${CSS.escape(url)}"]`)) continue;
-      const link = document.createElement("link");
-      link.rel = "prefetch";
-      link.href = url;
-      link.setAttribute("data-feed-video-preload", url);
-      document.head.appendChild(link);
-      links.push(link);
-    }
-
-    return () => {
-      for (const link of links) link.remove();
-    };
+    const warmUrls = [jobs[index]?.videoUrl, jobs[index + 1]?.videoUrl, jobs[index + 2]?.videoUrl].filter(
+      Boolean
+    ) as string[];
+    warmVideoUrls(warmUrls);
   }, [index, jobs]);
+
+  useEffect(() => {
+    return () => clearVideoWarmPool();
+  }, []);
 
   useEffect(() => {
     return () => {

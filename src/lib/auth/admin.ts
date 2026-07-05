@@ -2,8 +2,9 @@ import { cache } from "react";
 import { NextResponse } from "next/server";
 import { CompanyStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getRoleFromUser, isStaffRole, type StaffRole } from "@/lib/auth/roles";
-import { getSupabaseUser } from "@/lib/auth/supabase-user";
+import { API_ERRORS } from "@/lib/api-errors";
+import { getAuthSession } from "@/lib/auth/session";
+import { isStaffRole, type StaffRole } from "@/lib/auth/roles";
 
 export type StaffUser = {
   id: string;
@@ -14,35 +15,32 @@ export type StaffUser = {
 };
 
 export const getStaffUser = cache(async (): Promise<StaffUser | null> => {
-  const user = await getSupabaseUser();
-  if (!user?.email) return null;
-
-  const role = getRoleFromUser(user);
-  if (!isStaffRole(role)) return null;
+  const session = await getAuthSession();
+  if (!session || !isStaffRole(session.role)) return null;
 
   const account = await prisma.account.findUnique({
-    where: { id: user.id },
+    where: { id: session.userId },
     include: { company: { select: { status: true } } },
   });
-  const companyId = account?.companyId ?? null;
+  if (!account || account.role !== session.role) return null;
 
-  if (role === "company" && account?.company?.status === CompanyStatus.Suspended) {
+  if (account.role === "company" && account.company?.status === CompanyStatus.Suspended) {
     return null;
   }
 
   return {
-    id: user.id,
-    email: user.email,
-    name: account?.name ?? (user.user_metadata?.name as string | undefined) ?? null,
-    role,
-    companyId,
+    id: account.id,
+    email: account.email,
+    name: account.name,
+    role: account.role as StaffRole,
+    companyId: account.companyId,
   };
 });
 
 export async function requireStaffUser(): Promise<StaffUser | NextResponse> {
   const staff = await getStaffUser();
   if (!staff) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: API_ERRORS.unauthorized }, { status: 401 });
   }
   return staff;
 }
@@ -50,7 +48,7 @@ export async function requireStaffUser(): Promise<StaffUser | NextResponse> {
 export async function requireAdminUser(): Promise<StaffUser | NextResponse> {
   const staff = await getStaffUser();
   if (!staff || staff.role !== "admin") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ error: API_ERRORS.forbidden }, { status: 403 });
   }
   return staff;
 }

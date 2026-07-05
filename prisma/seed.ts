@@ -1,73 +1,66 @@
-import { PrismaClient } from "@prisma/client";
-import { createClient } from "@supabase/supabase-js";
+import { randomUUID } from "crypto";
+import { AuthCredentialRole, PrismaClient } from "@prisma/client";
 import { applyTimeZoneEnv } from "../src/lib/timezone-env";
 import { getCompanyLogoUrl } from "../src/lib/job-image";
+import { hashPassword } from "../src/lib/auth/password";
 
 applyTimeZoneEnv();
 
 const prisma = new PrismaClient();
 
+async function upsertCredential(
+  email: string,
+  password: string,
+  role: AuthCredentialRole,
+  preferredId?: string
+) {
+  const normalized = email.trim().toLowerCase();
+  const existing = await prisma.authCredential.findUnique({ where: { email: normalized } });
+
+  if (existing && preferredId && existing.id !== preferredId) {
+    await prisma.authCredential.delete({ where: { id: existing.id } });
+  }
+
+  const userId = preferredId ?? existing?.id ?? randomUUID();
+  const row = await prisma.authCredential.upsert({
+    where: { email: normalized },
+    create: {
+      id: userId,
+      email: normalized,
+      passwordHash: await hashPassword(password),
+      role,
+    },
+    update: {
+      passwordHash: await hashPassword(password),
+      role,
+    },
+  });
+  return row.id;
+}
+
 async function seedAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const email = process.env.ADMIN_SEED_EMAIL ?? "admin@jobswipe.app";
   const password = process.env.ADMIN_SEED_PASSWORD ?? "JobSwipe2026!";
   const name = process.env.ADMIN_SEED_NAME ?? "システム管理者";
+  const normalized = email.trim().toLowerCase();
 
-  if (!url || !serviceKey) {
-    console.log("Skip admin seed: SUPABASE_SERVICE_ROLE_KEY not set");
-    return;
-  }
+  const existingAccount = await prisma.account.findUnique({ where: { email: normalized } });
+  const userId = await upsertCredential(email, password, AuthCredentialRole.admin, existingAccount?.id);
 
-  const supabase = createClient(url, serviceKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
+  await prisma.account.upsert({
+    where: { id: userId },
+    create: { id: userId, email, name, role: "admin" },
+    update: { email, name, role: "admin" },
   });
-
-  const { data: list } = await supabase.auth.admin.listUsers();
-  const existing = list?.users?.find((u) => u.email === email);
-
-  let userId = existing?.id;
-
-  if (!existing) {
-    const { data, error } = await supabase.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      app_metadata: { role: "admin" },
-      user_metadata: { name },
-    });
-    if (error) throw error;
-    userId = data.user?.id;
-    console.log(`Created admin auth user: ${email}`);
-  } else {
-    await supabase.auth.admin.updateUserById(existing.id, {
-      app_metadata: { role: "admin" },
-    });
-    console.log(`Admin auth user already exists: ${email}`);
-  }
-
-  if (userId) {
-    await prisma.account.upsert({
-      where: { id: userId },
-      create: { id: userId, email, name, role: "admin" },
-      update: { email, name, role: "admin" },
-    });
-    console.log(`Synced accounts table for admin: ${email}`);
-  }
+  console.log(`Synced admin credential + account: ${email}`);
 }
 
 async function seedCompany() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const email = process.env.COMPANY_SEED_EMAIL ?? "company@jobswipe.app";
   const password = process.env.COMPANY_SEED_PASSWORD ?? "JobSwipe2026!";
   const name = process.env.COMPANY_SEED_NAME ?? "採用担当者";
   const companyName = process.env.COMPANY_SEED_COMPANY_NAME ?? "テックスタート株式会社";
-
-  if (!url || !serviceKey) {
-    console.log("Skip company seed: SUPABASE_SERVICE_ROLE_KEY not set");
-    return;
-  }
+  const normalized = email.trim().toLowerCase();
 
   const company = await prisma.company.upsert({
     where: { name: companyName },
@@ -75,51 +68,24 @@ async function seedCompany() {
     update: {},
   });
 
-  const supabase = createClient(url, serviceKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  const existingAccount = await prisma.account.findUnique({ where: { email: normalized } });
+  const userId = await upsertCredential(email, password, AuthCredentialRole.company, existingAccount?.id);
 
-  const { data: list } = await supabase.auth.admin.listUsers();
-  const existing = list?.users?.find((u) => u.email === email);
-
-  let userId = existing?.id;
-
-  if (!existing) {
-    const { data, error } = await supabase.auth.admin.createUser({
+  await prisma.account.upsert({
+    where: { id: userId },
+    create: {
+      id: userId,
       email,
-      password,
-      email_confirm: true,
-      app_metadata: { role: "company" },
-      user_metadata: { name },
-    });
-    if (error) throw error;
-    userId = data.user?.id;
-    console.log(`Created company auth user: ${email}`);
-  } else {
-    await supabase.auth.admin.updateUserById(existing.id, {
-      app_metadata: { role: "company" },
-    });
-    console.log(`Company auth user already exists: ${email}`);
-  }
-
-  if (userId) {
-    await prisma.account.upsert({
-      where: { id: userId },
-      create: {
-        id: userId,
-        email,
-        name,
-        role: "company",
-        companyId: company.id,
-      },
-      update: { email, name, role: "company", companyId: company.id },
-    });
-    console.log(`Synced accounts table for company: ${email} → ${company.name}`);
-  }
+      name,
+      role: "company",
+      companyId: company.id,
+    },
+    update: { email, name, role: "company", companyId: company.id },
+  });
+  console.log(`Synced company credential + account: ${email} → ${company.name}`);
 }
 
 async function main() {
-  console.log("Seeding JobSwipe (auth accounts only — jobs come from admin API)...");
   await seedAdmin();
   await seedCompany();
 }
@@ -129,4 +95,6 @@ main()
     console.error(e);
     process.exit(1);
   })
-  .finally(() => prisma.$disconnect());
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

@@ -9,9 +9,8 @@ import SeekerAuthShell from "@/components/auth/SeekerAuthShell";
 import { FormPassword, FormTextInput } from "@/components/form/FormFields";
 import { apiFetch, invalidateApiCache } from "@/lib/api-client";
 import { clearClientSessionCache } from "@/lib/auth/client-session";
-import { mapAuthError } from "@/lib/auth/errors";
-import { invalidateSeekerMeCache, syncSeekerProfileFromMe } from "@/lib/seeker-user";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { getApiErrorMessage } from "@/lib/auth/errors";
+import { invalidateSeekerMeCache, fetchSeekerMe, syncSeekerProfileFromMe } from "@/lib/seeker-user";
 import { loginSchema } from "@/lib/validation/schemas";
 
 export default function LoginPageContent() {
@@ -64,26 +63,24 @@ export default function LoginPageContent() {
         onSubmit={async (values, { setSubmitting }) => {
           setError("");
           try {
-            const supabase = createSupabaseBrowserClient();
-            if (!supabase) {
-              setError("認証サービスが設定されていません。管理者にお問い合わせください。");
+            const loginRes = await apiFetch("/api/auth/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ...values, role: "seeker" }),
+            });
+            const loginData = await loginRes.json();
+            if (!loginRes.ok) {
+              setError(getApiErrorMessage(loginData, "ログインに失敗しました"));
               return;
             }
 
-            const { error: authError } = await supabase.auth.signInWithPassword(values);
-            if (authError) {
-              setError(mapAuthError(authError.message));
-              return;
-            }
+            clearClientSessionCache();
+            invalidateApiCache();
+            invalidateSeekerMeCache();
 
-            const res = await apiFetch("/api/me");
-            const data = await res.json();
-
-            if (data.profile) {
-              clearClientSessionCache();
-              invalidateApiCache();
-              invalidateSeekerMeCache();
-              syncSeekerProfileFromMe(data);
+            const meData = await fetchSeekerMe({ force: true });
+            if (meData?.profile) {
+              syncSeekerProfileFromMe(meData);
               router.replace(next);
               router.refresh();
               return;

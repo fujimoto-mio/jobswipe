@@ -33,6 +33,27 @@ function getStableObjectUrl(bucket: StorageBucket, key: string): string | null {
   return buildPublicObjectUrl(baseUrl, key);
 }
 
+/** @deprecated Public bucket reads always use presigned URLs. */
+export function hasPublicCdnConfigured(): boolean {
+  return false;
+}
+
+/**
+ * Resolve a stored ref to a browser-ready URL synchronously (CDN only).
+ * Returns null when the value needs async presigning.
+ */
+export function resolvePublicReadUrlSync(url: string | null | undefined): string | null {
+  const trimmed = url?.trim();
+  if (!trimmed) return null;
+
+  const ref = parseStorageObjectRef(trimmed);
+  if (!ref) return trimmed;
+
+  if (ref.bucket !== STORAGE_BUCKETS.public) return null;
+
+  return getStableObjectUrl(ref.bucket, ref.key);
+}
+
 /** Resolve a stored ref to a browser-ready URL (stable CDN URL or presigned). */
 export async function resolveObjectReadUrl(bucket: StorageBucket, key: string): Promise<string | null> {
   const stable = getStableObjectUrl(bucket, key);
@@ -79,11 +100,6 @@ export function parseStorageObjectRef(url: string): StorageObjectRef | null {
     const key = decodeURIComponent(parsed.pathname.replace(/^\//, ""));
     if (!bucketName || !key) return null;
     return refFromBucketName(bucketName, key, config);
-  }
-
-  if (config && hostMatchesBucketUrl(parsed.host, config.publicBucketUrl)) {
-    const key = decodeURIComponent(parsed.pathname.replace(/^\//, ""));
-    return key ? { bucket: STORAGE_BUCKETS.public, key } : null;
   }
 
   if (config && hostMatchesBucketUrl(parsed.host, config.privateBucketUrl)) {

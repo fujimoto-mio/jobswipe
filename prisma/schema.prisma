@@ -25,6 +25,12 @@ enum JobApprovalStatus {
   Cancelled
 }
 
+enum AuthCredentialRole {
+  seeker
+  company
+  admin
+}
+
 model Company {
   id          String   @id @default(uuid())
   name        String   @unique
@@ -75,7 +81,7 @@ model Job {
   @@map("jobs")
 }
 
-/// Authenticated staff accounts (admin / company) — linked to Supabase auth.users
+/// Authenticated staff accounts (admin / company) — linked to auth_credentials.id
 model Account {
   id        String   @id
   email     String   @unique
@@ -127,6 +133,18 @@ model SeekerProfile {
   applications Application[]
 
   @@map("seeker_profiles")
+}
+
+model AuthCredential {
+  id           String             @id @default(uuid())
+  email        String             @unique
+  passwordHash String             @map("password_hash")
+  role         AuthCredentialRole
+  createdAt    DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([role])
+  @@map("auth_credentials")
 }
 
 model SavedJob {

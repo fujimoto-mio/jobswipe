@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireSeekerSession } from "@/lib/auth/seeker";
+import { API_ERRORS } from "@/lib/api-errors";
 import {
   toggleSave,
   getSavedJobs,
@@ -75,7 +76,7 @@ export async function POST(request: Request) {
   try {
     const { jobId } = (await request.json()) as { jobId: string };
     if (!jobId) {
-      return NextResponse.json({ error: "jobId is required" }, { status: 400 });
+      return NextResponse.json({ error: API_ERRORS.jobIdRequired }, { status: 400 });
     }
 
     const saved = await toggleSave(session.seekerId, jobId);
@@ -87,7 +88,7 @@ export async function POST(request: Request) {
     if (error instanceof Error && error.message === "JOB_NOT_AVAILABLE") {
       return NextResponse.json({ error: "この求人は保存できません" }, { status: 404 });
     }
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ error: API_ERRORS.invalidJson }, { status: 400 });
   }
 }
 
@@ -98,7 +99,7 @@ export async function DELETE(request: Request) {
   try {
     const { jobId } = (await request.json()) as { jobId: string };
     if (!jobId) {
-      return NextResponse.json({ error: "jobId is required" }, { status: 400 });
+      return NextResponse.json({ error: API_ERRORS.jobIdRequired }, { status: 400 });
     }
 
     await removeSave(session.seekerId, jobId);
@@ -107,6 +108,6 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ success: true, savedIds, count });
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ error: API_ERRORS.invalidJson }, { status: 400 });
   }
 }

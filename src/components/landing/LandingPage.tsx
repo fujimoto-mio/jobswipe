@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import LandingHeader, { scrollToSection, SECTION_IDS } from "@/components/landing/LandingHeader";
 import LandingContactForm from "@/components/landing/LandingContactForm";
 import LandingFooter from "@/components/landing/LandingFooter";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { apiFetch } from "@/lib/api-client";
 
 const STATS = [
   { label: "応募完了まで", value: "最短", suffix: "1分" },
@@ -96,15 +96,16 @@ export default function LandingPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const supabase = createSupabaseBrowserClient();
-    if (!supabase) return;
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) return;
-      const role = data.session.user.app_metadata?.role ?? data.session.user.user_metadata?.role;
-      if (role === "admin") router.replace("/admin");
-      else if (role === "company") router.replace("/company");
-      else router.replace("/explore?started=1");
-    });
+    void apiFetch("/api/auth/session")
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.loggedIn) return;
+        if (data.role === "admin") router.replace("/admin");
+        else if (data.role === "company") router.replace("/company");
+        else router.replace("/explore?started=1");
+      })
+      .catch(() => {});
   }, [router]);
 
   useEffect(() => {

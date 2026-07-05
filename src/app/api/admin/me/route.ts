@@ -3,6 +3,7 @@ import { requireStaffUser } from "@/lib/auth/admin";
 import { companyLinkFormValues, companyLinksFromForm } from "@/lib/company-links";
 import { prisma } from "@/lib/prisma";
 import { getCompanyLogoUrl, isGeneratedCompanyLogo } from "@/lib/job-image";
+import { API_ERRORS } from "@/lib/api-errors";
 
 import { resolveStaffMediaFields } from "@/lib/storage/resolve-media";
 
@@ -55,7 +56,7 @@ export async function GET() {
   });
 
   if (!account) {
-    return NextResponse.json({ error: "Account not found" }, { status: 404 });
+    return NextResponse.json({ error: API_ERRORS.accountNotFound }, { status: 404 });
   }
 
   return NextResponse.json(await staffProfileResponse(account));
@@ -177,7 +178,7 @@ export async function PATCH(request: Request) {
       });
 
       if (!account) {
-        return NextResponse.json({ error: "Account not found" }, { status: 404 });
+        return NextResponse.json({ error: API_ERRORS.accountNotFound }, { status: 404 });
       }
 
       return NextResponse.json({ success: true, ...(await staffProfileResponse(account)) });
@@ -195,7 +196,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ success: true, ...(await staffProfileResponse(account)) });
   } catch (error) {
     console.error("[PATCH /api/admin/me]", error);
-    const message = error instanceof Error ? error.message : "Invalid JSON body";
+    const message = error instanceof Error ? error.message : API_ERRORS.invalidJson;
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

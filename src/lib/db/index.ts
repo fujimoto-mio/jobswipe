@@ -1,6 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { JobApprovalStatus as PrismaJobApprovalStatus, Prisma, SeekerStatus } from "@prisma/client";
-import { mapApplication, mapChatMessageResolved, mapJobFeedResolved, mapJobResolved, mapSeekerProfileResolved } from "@/lib/db/mappers";
+import { API_ERRORS } from "@/lib/api-errors";
+import {
+  mapApplication,
+  mapChatMessageResolved,
+  mapJobFeedResolved,
+  mapJobResolved,
+  mapSeekerProfileResolved,
+} from "@/lib/db/mappers";
 import { fetchSavedApplyMessages, resolveApplicationMessage } from "@/lib/db/saved-job-message";
 import { now } from "@/lib/datetime";
 import { parseBirthday } from "@/lib/birthday";
@@ -255,7 +262,7 @@ export async function toggleSave(seekerId: string, jobId: string): Promise<boole
     select: { approvalStatus: true },
   });
   if (!job || job.approvalStatus !== PrismaJobApprovalStatus.Active) {
-    throw new Error("JOB_NOT_AVAILABLE");
+    throw new Error(API_ERRORS.jobNotAvailable);
   }
 
   await prisma.savedJob.create({ data: { seekerId, jobId } });
@@ -326,7 +333,7 @@ export async function upsertSeekerProfile(
   const { id, supabaseUserId } = options ?? {};
   const birthday = parseBirthday(profile.birthday);
   if (!birthday) {
-    throw new Error("Invalid birthday");
+    throw new Error(API_ERRORS.invalidBirthday);
   }
 
   const data = {
@@ -357,7 +364,7 @@ export async function upsertSeekerProfile(
   if (supabaseUserId) {
     const byAuth = await prisma.seekerProfile.findUnique({ where: { supabaseUserId } });
     if (byAuth?.status === SeekerStatus.Suspended) {
-      throw new Error("Account suspended");
+      throw new Error(API_ERRORS.accountSuspended);
     }
     if (byAuth) {
       const row = await prisma.seekerProfile.update({
@@ -372,7 +379,7 @@ export async function upsertSeekerProfile(
     try {
       const existing = await prisma.seekerProfile.findUnique({ where: { id } });
       if (existing?.status === SeekerStatus.Suspended) {
-        throw new Error("Account suspended");
+        throw new Error(API_ERRORS.accountSuspended);
       }
       const row = await prisma.seekerProfile.update({
         where: { id },
@@ -393,12 +400,12 @@ export async function upsertSeekerProfile(
   }
 
   if (!supabaseUserId) {
-    throw new Error("supabaseUserId is required to create a seeker profile");
+    throw new Error(API_ERRORS.authUserIdRequired);
   }
 
   const byEmail = await prisma.seekerProfile.findUnique({ where: { email: profile.email } });
   if (byEmail?.status === SeekerStatus.Suspended) {
-    throw new Error("Account suspended");
+    throw new Error(API_ERRORS.accountSuspended);
   }
 
   const row = await prisma.seekerProfile.upsert({
@@ -424,13 +431,13 @@ export async function updateSeekerProfileMedia(
     where: { id: seekerId },
     select: { id: true, status: true },
   });
-  if (!existing) throw new Error("Seeker profile not found");
-  if (existing.status === SeekerStatus.Suspended) throw new Error("Account suspended");
+  if (!existing) throw new Error(API_ERRORS.seekerProfileNotFound);
+  if (existing.status === SeekerStatus.Suspended) throw new Error(API_ERRORS.accountSuspended);
 
   const data: Prisma.SeekerProfileUpdateInput = {};
   if (patch.avatarUrl !== undefined) data.avatarUrl = patch.avatarUrl.trim() || null;
   if (patch.bannerUrl !== undefined) data.bannerUrl = patch.bannerUrl.trim() || null;
-  if (Object.keys(data).length === 0) throw new Error("No fields to update");
+  if (Object.keys(data).length === 0) throw new Error(API_ERRORS.noFieldsToUpdate);
 
   try {
     const row = await prisma.seekerProfile.update({ where: { id: seekerId }, data });
@@ -455,7 +462,7 @@ export async function updateSeekerProfileMedia(
     }
 
     const row = await prisma.seekerProfile.findUnique({ where: { id: seekerId } });
-    if (!row) throw new Error("Seeker profile not found");
+    if (!row) throw new Error(API_ERRORS.seekerProfileNotFound);
     return mapSeekerProfileResolved(row);
   }
 }
@@ -475,7 +482,7 @@ export async function createApplication(
     select: { approvalStatus: true },
   });
   if (!job || job.approvalStatus !== PrismaJobApprovalStatus.Active) {
-    throw new Error("JOB_NOT_AVAILABLE");
+    throw new Error(API_ERRORS.jobNotAvailable);
   }
 
   const applicantBirthdayRaw = input.applicantBirthday ?? profile?.birthday;

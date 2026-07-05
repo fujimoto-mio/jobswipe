@@ -12,7 +12,6 @@ type VideoFeedItemProps = {
   job: JobFeedItem;
   isActive: boolean;
   preloadVideo?: boolean;
-  isNext?: boolean;
   swipeEnabled?: boolean;
   chromeVisible?: boolean;
   isSaved: boolean;
@@ -62,7 +61,6 @@ export default function VideoFeedItem({
   job,
   isActive,
   preloadVideo = false,
-  isNext = false,
   swipeEnabled = false,
   chromeVisible = true,
   isSaved,
@@ -81,7 +79,7 @@ export default function VideoFeedItem({
   const vignetteOffClass = chromeVisible ? "" : "seeker-video-feed-vignette--off";
 
   return (
-    <section className="seeker-video-feed-item relative h-full w-full shrink-0 overflow-hidden">
+    <section className="seeker-video-feed-item relative h-full w-full shrink-0 overflow-hidden bg-black">
       <div className="absolute inset-0">
         <video
           ref={videoRef}
@@ -93,7 +91,7 @@ export default function VideoFeedItem({
           muted={isMuted}
           playsInline
           draggable={false}
-          preload={isActive || preloadVideo || isNext ? "auto" : "metadata"}
+          preload={shouldAttachSrc ? "auto" : "metadata"}
           onDragStart={(e) => e.preventDefault()}
         />
       </div>

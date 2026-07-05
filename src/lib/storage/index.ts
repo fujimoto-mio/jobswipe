@@ -14,8 +14,10 @@ export {
 export {
   buildStorageRef,
   buildPublicObjectUrl,
+  hasPublicCdnConfigured,
   parseStorageObjectRef,
   resolveObjectReadUrl,
+  resolvePublicReadUrlSync,
   isPrivateStorageRef,
   isStorageRef,
   type StorageObjectRef,

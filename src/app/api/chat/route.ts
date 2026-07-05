@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { API_ERRORS } from "@/lib/api-errors";
 import {
   addChatMessage,
   getChatMessages,
@@ -22,19 +23,19 @@ export async function GET(request: Request) {
     if (staff) {
       const allowed = await staffCanAccessApplication(applicationId, staff);
       if (!allowed) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        return NextResponse.json({ error: API_ERRORS.forbidden }, { status: 403 });
       }
       return NextResponse.json({ messages: await getChatMessages(applicationId) });
     }
 
     const session = await getSeekerSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: API_ERRORS.unauthorized }, { status: 401 });
     }
 
     const allowed = await seekerCanAccessApplication(applicationId, session.seekerId);
     if (!allowed) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ error: API_ERRORS.forbidden }, { status: 403 });
     }
 
     return NextResponse.json({ messages: await getChatMessages(applicationId) });
@@ -51,7 +52,7 @@ export async function GET(request: Request) {
 
   const staff = await getStaffUser();
   if (!staff) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: API_ERRORS.unauthorized }, { status: 401 });
   }
 
   const threads = await getChatThreadsForStaff(staff.role === "company" ? staff.companyId : null);
@@ -65,12 +66,12 @@ export async function PATCH(request: Request) {
   try {
     const { applicationId } = (await request.json()) as { applicationId?: string };
     if (!applicationId) {
-      return NextResponse.json({ error: "applicationId is required" }, { status: 400 });
+      return NextResponse.json({ error: API_ERRORS.applicationIdRequired }, { status: 400 });
     }
 
     const allowed = await seekerCanAccessApplication(applicationId, session.seekerId);
     if (!allowed) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ error: API_ERRORS.forbidden }, { status: 403 });
     }
 
     await markSeekerChatRead(applicationId, session.seekerId);
@@ -78,7 +79,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ success: true, unreadTotal });
   } catch (error) {
     console.error("[PATCH /api/chat]", error);
-    const message = error instanceof Error ? error.message : "Invalid JSON body";
+    const message = error instanceof Error ? error.message : API_ERRORS.invalidJson;
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }
@@ -93,7 +94,7 @@ export async function POST(request: Request) {
 
     if (!applicationId || !content?.trim()) {
       return NextResponse.json(
-        { error: "applicationId and content are required" },
+        { error: API_ERRORS.applicationIdAndContentRequired },
         { status: 400 }
       );
     }
@@ -105,7 +106,7 @@ export async function POST(request: Request) {
       if (staff instanceof NextResponse) return staff;
       const allowed = await staffCanAccessApplication(applicationId, staff);
       if (!allowed) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        return NextResponse.json({ error: API_ERRORS.forbidden }, { status: 403 });
       }
 
       const account = await prisma.account.findUnique({
@@ -121,7 +122,7 @@ export async function POST(request: Request) {
       if (session instanceof NextResponse) return session;
       const allowed = await seekerCanAccessApplication(applicationId, session.seekerId);
       if (!allowed) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        return NextResponse.json({ error: API_ERRORS.forbidden }, { status: 403 });
       }
     }
 
@@ -135,7 +136,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, message }, { status: 201 });
   } catch (error) {
     console.error("[POST /api/chat]", error);
-    const message = error instanceof Error ? error.message : "Invalid JSON body";
+    const message = error instanceof Error ? error.message : API_ERRORS.invalidJson;
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

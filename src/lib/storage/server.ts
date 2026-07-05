@@ -1,5 +1,6 @@
 import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
+import { API_ERRORS } from "@/lib/api-errors";
 import {
   MULTIPART_UPLOAD_THRESHOLD_BYTES,
   STORAGE_BUCKETS,
@@ -78,7 +79,7 @@ export async function uploadToStorage(
     throw new Error(
       missing.length
         ? `Cloudflare R2 is not configured (missing: ${missing.join(", ")})`
-        : "Cloudflare R2 is not configured"
+        : API_ERRORS.r2NotConfigured
     );
   }
 
@@ -116,7 +117,7 @@ export async function deleteFromStorage(bucket: StorageBucket, path: string): Pr
     throw new Error(
       missing.length
         ? `Cloudflare R2 is not configured (missing: ${missing.join(", ")})`
-        : "Cloudflare R2 is not configured"
+        : API_ERRORS.r2NotConfigured
     );
   }
 

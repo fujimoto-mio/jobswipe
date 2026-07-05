@@ -77,5 +77,5 @@ console.log(`\nSeeding folders in ${PRIVATE_BUCKET}:`);
 await seedFolders(PRIVATE_BUCKET, PRIVATE_FOLDERS);
 
 console.log("\nR2 storage ready.");
-console.log("Uploads store r2:// refs; API reads use presigned URLs (no public bucket URL required).");
-console.log("Optional later: set R2_PUBLIC_BUCKET_URL / R2_PRIVATE_BUCKET_URL for stable CDN URLs.");
+console.log("Uploads store r2:// refs; API reads use presigned URLs.");
+console.log("Optional later: set R2_PRIVATE_BUCKET_URL for stable CDN URLs on private bucket reads.");

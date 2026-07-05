@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdminUser } from "@/lib/auth/admin";
 import { getAdminSeekerDetail, queryAdminSeekers } from "@/lib/db/admin-seekers";
+import { API_ERRORS } from "@/lib/api-errors";
 
 function parsePage(value: string | null): number {
   const n = Number(value);
@@ -22,7 +23,7 @@ export async function GET(request: Request) {
 
   if (id) {
     const seeker = await getAdminSeekerDetail(id);
-    if (!seeker) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!seeker) return NextResponse.json({ error: API_ERRORS.notFound }, { status: 404 });
     return NextResponse.json(seeker);
   }
 

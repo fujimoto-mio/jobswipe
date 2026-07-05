@@ -1,6 +1,7 @@
 import { parseStorageObjectRef, resolveObjectReadUrl } from "@/lib/storage/urls";
 import type { Job, UserProfile } from "@/lib/types";
 
+export { hasPublicCdnConfigured } from "@/lib/storage/urls";
 export async function resolveStorageReadUrl(url: string | null | undefined): Promise<string | null> {
   const trimmed = url?.trim();
   if (!trimmed) return null;
@@ -16,19 +17,18 @@ async function resolveOptionalUrl(url: string | null | undefined): Promise<strin
   return resolved ?? url?.trim() ?? null;
 }
 
-export async function resolveJobMedia<T extends Pick<Job, "videoUrl" | "thumbnailUrl" | "companyLogo">>(
+/** Feed media is resolved via presigned URLs in mapJobFeedResolved. */
+export async function resolveJobMedia<T extends Pick<Job, "videoUrl" | "companyLogo">>(
   job: T
 ): Promise<T> {
-  const [videoUrl, thumbnailUrl, companyLogo] = await Promise.all([
+  const [videoUrl, companyLogo] = await Promise.all([
     resolveOptionalUrl(job.videoUrl),
-    resolveOptionalUrl(job.thumbnailUrl),
     resolveOptionalUrl(job.companyLogo),
   ]);
 
   return {
     ...job,
     videoUrl: videoUrl ?? job.videoUrl,
-    thumbnailUrl: thumbnailUrl ?? job.thumbnailUrl,
     companyLogo: companyLogo ?? job.companyLogo,
   };
 }

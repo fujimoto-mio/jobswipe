@@ -6,7 +6,7 @@ import type { Job } from "@/lib/types";
 import { getJobThumbnail, getJobThumbnailFallback } from "@/lib/job-image";
 
 type JobThumbnailProps = {
-  job: Pick<Job, "id" | "thumbnailUrl" | "companyLogo" | "company" | "title">;
+  job: Pick<Job, "id" | "companyLogo" | "company" | "title">;
   className?: string;
   showLogoBadge?: boolean;
 };

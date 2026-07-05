@@ -32,7 +32,6 @@ import { fetchSeekerUnreadTotal } from "@/lib/chat-unread";
 import { saveProfile } from "@/lib/profile";
 import { useSeekerUser } from "@/components/seeker/SeekerUserProvider";
 import { useSeekerTheme } from "@/components/seeker/SeekerThemeProvider";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { emailChangeSchema, passwordChangeSchema } from "@/lib/validation/schemas";
 
 type ActiveModal = "email" | "password" | null;
@@ -214,21 +213,12 @@ export default function SettingsPage() {
               onSubmit={async (values, { setSubmitting }) => {
                 setEmailError("");
                 setEmailMessage("");
-                const supabase = createSupabaseBrowserClient();
-                if (!supabase) {
-                  setEmailError("認証サービスが設定されていません");
-                  setSubmitting(false);
-                  return;
-                }
 
-                const { error } = await supabase.auth.updateUser({ email: values.email.trim() });
-                if (error) {
-                  setEmailError(mapUserFacingError(error.message));
-                  setSubmitting(false);
-                  return;
-                }
-
-                const res = await apiFetch("/api/profile/email", { method: "PATCH" });
+                const res = await apiFetch("/api/auth/email", {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ email: values.email.trim() }),
+                });
                 if (res.ok) {
                   const data = await res.json();
                   if (data.profile) saveProfile(data.profile);
@@ -272,16 +262,17 @@ export default function SettingsPage() {
               onSubmit={async (values, { setSubmitting, resetForm }) => {
                 setPasswordError("");
                 setPasswordMessage("");
-                const supabase = createSupabaseBrowserClient();
-                if (!supabase) {
-                  setPasswordError("認証サービスが設定されていません");
-                  setSubmitting(false);
-                  return;
-                }
 
-                const { error } = await supabase.auth.updateUser({ password: values.password });
-                if (error) {
-                  setPasswordError(mapUserFacingError(error.message));
+                const res = await apiFetch("/api/auth/password", {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ password: values.password }),
+                });
+                if (!res.ok) {
+                  const data = await res.json().catch(() => ({}));
+                  setPasswordError(
+                    typeof data.error === "string" ? mapUserFacingError(data.error) : "更新に失敗しました"
+                  );
                   setSubmitting(false);
                   return;
                 }

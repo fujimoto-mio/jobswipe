@@ -2,25 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { CHAT_BROADCAST_EVENT, chatChannelName } from "@/lib/chat/constants";
-import { serializeTimestamp } from "@/lib/datetime";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { ChatMessage } from "@/lib/types";
-
-function rowToChatMessage(row: {
-  id: string;
-  application_id: string;
-  sender: string;
-  content: string;
-  created_at: string;
-}): ChatMessage {
-  return {
-    id: row.id,
-    applicationId: row.application_id,
-    sender: row.sender as ChatMessage["sender"],
-    content: row.content,
-    createdAt: serializeTimestamp(row.created_at),
-  };
-}
 
 function payloadToChatMessage(payload: unknown): ChatMessage | null {
   if (!payload || typeof payload !== "object") return null;
@@ -58,10 +41,6 @@ export function useChatRealtime(
       }
     }
 
-    const deliver = (message: ChatMessage | null) => {
-      if (message) onMessageRef.current(message);
-    };
-
     const channel = supabase
       .channel(channelName, {
         config: {
@@ -69,20 +48,9 @@ export function useChatRealtime(
         },
       })
       .on("broadcast", { event: CHAT_BROADCAST_EVENT }, ({ payload }) => {
-        deliver(payloadToChatMessage(payload));
+        const message = payloadToChatMessage(payload);
+        if (message) onMessageRef.current(message);
       })
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "chat_messages",
-          filter: `application_id=eq.${applicationId}`,
-        },
-        (payload) => {
-          deliver(rowToChatMessage(payload.new as Parameters<typeof rowToChatMessage>[0]));
-        }
-      )
       .subscribe((status) => {
         if (process.env.NODE_ENV === "development" && status === "CHANNEL_ERROR") {
           console.warn("[useChatRealtime] channel error", channelName);

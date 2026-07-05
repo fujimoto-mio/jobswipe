@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { API_ERRORS } from "@/lib/api-errors";
 import { getCompanyLogoUrl } from "@/lib/job-image";
 
 export type CompanyOption = {
@@ -34,7 +35,7 @@ export async function resolveCompanyIdForJob(input: {
   if (input.staffCompanyId) {
     const company = await prisma.company.findUnique({ where: { id: input.staffCompanyId } });
     if (!company) {
-      throw new Error("Linked company not found for account");
+      throw new Error(API_ERRORS.linkedCompanyNotFound);
     }
     return company.id;
   }
@@ -42,14 +43,14 @@ export async function resolveCompanyIdForJob(input: {
   if (input.companyId) {
     const company = await prisma.company.findUnique({ where: { id: input.companyId } });
     if (!company) {
-      throw new Error("Company not found");
+      throw new Error(API_ERRORS.companyNotFound);
     }
     return company.id;
   }
 
   const name = input.companyName?.trim();
   if (!name) {
-    throw new Error("Company is required");
+    throw new Error(API_ERRORS.companyRequired);
   }
 
   const company = await prisma.company.upsert({

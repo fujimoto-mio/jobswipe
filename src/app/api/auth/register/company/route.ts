@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { CompanyStatus } from "@prisma/client";
 import { createConfirmedAuthUser } from "@/lib/auth/admin-signup";
+import { buildSessionForUserId } from "@/lib/auth/login";
+import { setAuthSessionCookie } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { getCompanyLogoUrl } from "@/lib/job-image";
+import { API_ERRORS } from "@/lib/api-errors";
 
 type CompanyRegisterBody = {
   email: string;
@@ -22,7 +25,7 @@ export async function POST(request: Request) {
 
     if (!email || !password || !companyName || !contactName) {
       return NextResponse.json(
-        { error: "email, password, companyName, and contactName are required" },
+        { error: API_ERRORS.companyRegisterFieldsRequired },
         { status: 400 }
       );
     }
@@ -69,11 +72,14 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json({
+    const session = await buildSessionForUserId(auth.userId);
+    const response = NextResponse.json({
       success: true,
       company: { id: company.id, name: company.name },
     });
+    if (session) await setAuthSessionCookie(response, session);
+    return response;
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ error: API_ERRORS.invalidJson }, { status: 400 });
   }
 }

@@ -27,7 +27,7 @@ export function SeekerUserProvider({ children }: { children: ReactNode }) {
   const [loggedIn, setLoggedIn] = useState(false);
 
   const refresh = useCallback(async () => {
-    const data = await fetchSeekerMe();
+    const data = await fetchSeekerMe({ force: true });
     if (data) {
       setProfile(syncSeekerProfileFromMe(data));
     }
@@ -50,6 +50,11 @@ export function SeekerUserProvider({ children }: { children: ReactNode }) {
       if (!cancelled) setLoggedIn(sessionLoggedIn);
 
       if (!sessionLoggedIn) {
+        if (!cancelled) setReady(true);
+        return;
+      }
+
+      if (cached?.id) {
         if (!cancelled) setReady(true);
         return;
       }

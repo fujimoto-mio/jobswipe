@@ -3,6 +3,7 @@ import { getJobById, incrementJobView, updateJob } from "@/lib/db";
 import { getStaffUser, requireStaffUser } from "@/lib/auth/admin";
 import { prisma } from "@/lib/prisma";
 import type { UpdateJobInput } from "@/lib/types";
+import { API_ERRORS } from "@/lib/api-errors";
 
 async function staffCanAccessJob(
   staff: { role: string; companyId: string | null },
@@ -28,12 +29,12 @@ export async function GET(
   const job = await getJobById(id);
 
   if (!job) {
-    return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    return NextResponse.json({ error: API_ERRORS.jobNotFound }, { status: 404 });
   }
 
   if (!staff) {
     if (job.approvalStatus !== "Active") {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+      return NextResponse.json({ error: API_ERRORS.jobNotFound }, { status: 404 });
     }
     if (trackView) {
       await incrementJobView(id);
@@ -41,7 +42,7 @@ export async function GET(
   } else if (staff.role === "company") {
     const allowed = await staffCanAccessJob(staff, id);
     if (!allowed) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+      return NextResponse.json({ error: API_ERRORS.jobNotFound }, { status: 404 });
     }
   }
 
@@ -63,7 +64,7 @@ export async function PATCH(
     if (staff.role === "company") {
       const allowed = await staffCanAccessJob(staff, id);
       if (!allowed) {
-        return NextResponse.json({ error: "Job not found" }, { status: 404 });
+        return NextResponse.json({ error: API_ERRORS.jobNotFound }, { status: 404 });
       }
 
       const existing = await getJobById(id);
@@ -73,18 +74,18 @@ export async function PATCH(
     }
 
     if (staff.role === "company" && body.approvalStatus && body.approvalStatus !== "Pending") {
-      return NextResponse.json({ error: "Only admins can change approval status" }, { status: 403 });
+      return NextResponse.json({ error: API_ERRORS.adminOnlyApproval }, { status: 403 });
     }
 
     const job = await updateJob(id, body, {
       staffCompanyId: staff.role === "company" ? staff.companyId : null,
     });
     if (!job) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+      return NextResponse.json({ error: API_ERRORS.jobNotFound }, { status: 404 });
     }
 
     return NextResponse.json({ success: true, job });
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ error: API_ERRORS.invalidJson }, { status: 400 });
   }
 }

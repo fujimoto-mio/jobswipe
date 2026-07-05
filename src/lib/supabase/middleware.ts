@@ -1,13 +1,13 @@
-import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { getRoleFromUser, isStaffRole } from "@/lib/auth/roles";
+import { getAuthSession } from "@/lib/auth/session";
+import { isStaffRole } from "@/lib/auth/roles";
 import { mapStaffPanelPath } from "@/lib/staff/paths";
+import { API_ERRORS } from "@/lib/api-errors";
 
 export type { AuthRole, StaffRole } from "@/lib/auth/roles";
 export { getRoleFromUser, isStaffRole } from "@/lib/auth/roles";
 
 const SEEKER_PROTECTED = ["/liked", "/profile", "/chat", "/courses"];
-/** Auth required; route handlers enforce seeker vs staff permissions. */
 const AUTH_REQUIRED_APIS = ["/api/saves", "/api/applications", "/api/chat", "/api/profile"];
 
 function isAdminLoginPath(pathname: string): boolean {
@@ -35,62 +35,30 @@ function staffHomeForRole(role: "admin" | "company"): string {
 }
 
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
-
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const pathname = request.nextUrl.pathname;
+  const session = await getAuthSession(request);
+  const role = session?.role ?? null;
+  const isStaff = isStaffRole(role);
+  const isLoggedIn = Boolean(session);
 
   const isAdminLogin = isAdminLoginPath(pathname);
   const isCompanyLogin = isCompanyLoginPath(pathname);
   const isAdminPanel = isAdminPanelPath(pathname) && !isAdminLogin;
   const isCompanyPanel = isCompanyPanelPath(pathname) && !isCompanyLogin;
-  const isStaffPanel = isAdminPanel || isCompanyPanel;
   const isAdminApi = pathname.startsWith("/api/admin");
-
-  if (!url || !key) {
-    if (isStaffPanel) {
-      return NextResponse.redirect(new URL("/company/login?error=supabase", request.url));
-    }
-    return supabaseResponse;
-  }
-
-  const supabase = createServerClient(url, key, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        supabaseResponse = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) => {
-          supabaseResponse.cookies.set(name, value, options);
-        });
-      },
-    },
-  });
-
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  const user = session?.user ?? null;
-
-  const role = user ? getRoleFromUser(user) : null;
-  const isStaff = isStaffRole(role);
 
   if (isAdminApi) {
     if (!isStaff) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: API_ERRORS.unauthorized }, { status: 401 });
     }
-    return supabaseResponse;
+    return NextResponse.next({ request });
   }
 
   if (isAdminPanel) {
     if (!isStaff) {
       const loginUrl = new URL("/admin/login", request.url);
       loginUrl.searchParams.set("next", pathname);
-      if (user && !isStaff) {
+      if (isLoggedIn && !isStaff) {
         loginUrl.searchParams.set("error", "staff_only");
       }
       return NextResponse.redirect(loginUrl);
@@ -98,14 +66,14 @@ export async function updateSession(request: NextRequest) {
     if (role === "company") {
       return NextResponse.redirect(new URL(mapStaffPanelPath(pathname, "/company"), request.url));
     }
-    return supabaseResponse;
+    return NextResponse.next({ request });
   }
 
   if (isCompanyPanel) {
     if (!isStaff) {
       const loginUrl = new URL("/company/login", request.url);
       loginUrl.searchParams.set("next", pathname);
-      if (user && !isStaff) {
+      if (isLoggedIn && !isStaff) {
         loginUrl.searchParams.set("error", "staff_only");
       }
       return NextResponse.redirect(loginUrl);
@@ -113,7 +81,7 @@ export async function updateSession(request: NextRequest) {
     if (role === "admin") {
       return NextResponse.redirect(new URL(mapStaffPanelPath(pathname, "/admin"), request.url));
     }
-    return supabaseResponse;
+    return NextResponse.next({ request });
   }
 
   if (isStaffLoginPath(pathname)) {
@@ -136,19 +104,19 @@ export async function updateSession(request: NextRequest) {
 
       return NextResponse.redirect(new URL(dest, request.url));
     }
-    return supabaseResponse;
+    return NextResponse.next({ request });
   }
 
-  if (AUTH_REQUIRED_APIS.some((p) => pathname.startsWith(p)) && !user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (AUTH_REQUIRED_APIS.some((p) => pathname.startsWith(p)) && !isLoggedIn) {
+    return NextResponse.json({ error: API_ERRORS.unauthorized }, { status: 401 });
   }
 
-  if (SEEKER_PROTECTED.some((p) => pathname === p || pathname.startsWith(`${p}/`)) && !user) {
+  if (SEEKER_PROTECTED.some((p) => pathname === p || pathname.startsWith(`${p}/`)) && !isLoggedIn) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("reason", "required");
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  return supabaseResponse;
+  return NextResponse.next({ request });
 }

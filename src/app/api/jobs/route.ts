@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createJob, getJobsForStaff, getFeedJobs } from "@/lib/db";
 import { requireStaffUser } from "@/lib/auth/admin";
 import type { CreateJobInput, JobFilters } from "@/lib/types";
+import { API_ERRORS } from "@/lib/api-errors";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -61,7 +62,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "企業アカウントが会社に紐づいていません" }, { status: 403 });
       }
     } else if (!body.companyId && !body.company?.trim()) {
-      return NextResponse.json({ error: "companyId or company is required" }, { status: 400 });
+      return NextResponse.json({ error: API_ERRORS.companyIdOrCompanyRequired }, { status: 400 });
     }
 
     const job = await createJob(body, {
@@ -69,7 +70,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ success: true, job }, { status: 201 });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Invalid JSON body";
+    const message = err instanceof Error ? err.message : API_ERRORS.invalidJson;
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }
