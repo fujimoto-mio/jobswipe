@@ -10,6 +10,8 @@ export type R2Config = {
   secretAccessKey: string;
   publicBucket: string;
   privateBucket: string;
+  /** Stable CDN URL for public bucket reads (job videos, logos, avatars). */
+  publicBucketUrl: string | null;
   /** Optional — stable CDN URL when public access is enabled on the private bucket. */
   privateBucketUrl: string | null;
 };
@@ -25,6 +27,7 @@ export function getR2Config(): R2Config | null {
   const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY?.trim();
   const publicBucket = process.env.R2_BUCKET_PUBLIC?.trim() || STORAGE_BUCKETS.public;
   const privateBucket = process.env.R2_BUCKET_PRIVATE?.trim() || STORAGE_BUCKETS.private;
+  const publicBucketUrl = process.env.R2_PUBLIC_BUCKET_URL?.trim().replace(/\/$/, "") || null;
   const privateBucketUrl = process.env.R2_PRIVATE_BUCKET_URL?.trim().replace(/\/$/, "") || null;
 
   if (!accountId || !accessKeyId || !secretAccessKey) {
@@ -37,12 +40,13 @@ export function getR2Config(): R2Config | null {
     secretAccessKey,
     publicBucket,
     privateBucket,
+    publicBucketUrl,
     privateBucketUrl,
   };
 }
 
 export function getBucketBaseUrl(bucket: StorageBucket, config: R2Config): string | null {
-  if (bucket !== STORAGE_BUCKETS.private) return null;
+  if (bucket === STORAGE_BUCKETS.public) return config.publicBucketUrl;
   return config.privateBucketUrl;
 }
 

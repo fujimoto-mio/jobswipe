@@ -1,4 +1,4 @@
-import { parseStorageObjectRef, resolveObjectReadUrl } from "@/lib/storage/urls";
+import { parseStorageObjectRef, resolveObjectReadUrl, resolvePublicReadUrlSync } from "@/lib/storage/urls";
 import type { Job, UserProfile } from "@/lib/types";
 
 export { hasPublicCdnConfigured } from "@/lib/storage/urls";
@@ -13,11 +13,17 @@ export async function resolveStorageReadUrl(url: string | null | undefined): Pro
 }
 
 async function resolveOptionalUrl(url: string | null | undefined): Promise<string | null> {
+  const trimmed = url?.trim();
+  if (!trimmed) return null;
+
+  const stablePublic = resolvePublicReadUrlSync(trimmed);
+  if (stablePublic) return stablePublic;
+
   const resolved = await resolveStorageReadUrl(url);
-  return resolved ?? url?.trim() ?? null;
+  return resolved ?? trimmed;
 }
 
-/** Feed media is resolved via presigned URLs in mapJobFeedResolved. */
+/** Feed media uses stable CDN URLs when R2_PUBLIC_BUCKET_URL is set; otherwise presigned URLs. */
 export async function resolveJobMedia<T extends Pick<Job, "videoUrl" | "companyLogo">>(
   job: T
 ): Promise<T> {
