@@ -24,6 +24,8 @@ import { apiFetch } from "@/lib/api-client";
 import Logo from "@/components/ui/Logo";
 import StaffAccountMenu from "@/components/staff/StaffAccountMenu";
 import StaffTopbarIcons from "@/components/staff/StaffTopbarIcons";
+import { StaffThemeToggle } from "@/components/staff/StaffThemeToggle";
+import { useStaffTheme } from "@/components/staff/StaffThemeProvider";
 import { useStaffPanel } from "@/components/staff/StaffPanelContext";
 
 const SIDEBAR_COLLAPSED_KEY = "jobswipe-staff-sidebar-collapsed";
@@ -88,6 +90,7 @@ function StaffSidebarFooter({ onLogout }: { onLogout: () => void }) {
 
 export default function StaffPanelShell({ children }: StaffPanelShellProps) {
   const { basePath, role, loginPath } = useStaffPanel();
+  const { theme } = useStaffTheme();
   const pathname = usePathname();
   const router = useRouter();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -176,7 +179,7 @@ export default function StaffPanelShell({ children }: StaffPanelShellProps) {
 
   return (
     <div
-      className={`lp-root staff-panel-shell staff-ui flex ${
+      className={`lp-root staff-panel-shell staff-ui staff-theme-${theme} flex ${
         sidebarCollapsed ? "staff-panel-shell--sidebar-collapsed" : ""
       } ${isFullWidthPage ? "h-dvh max-h-dvh min-h-0 overflow-hidden" : "h-full min-h-screen overflow-y-auto"}`}
     >
@@ -238,7 +241,7 @@ export default function StaffPanelShell({ children }: StaffPanelShellProps) {
       </AnimatePresence>
 
       <div className={`flex min-h-0 min-w-0 flex-1 flex-col ${isFullWidthPage ? "overflow-hidden" : ""}`}>
-        <header className="staff-desktop-header page-header hidden shrink-0 md:block">
+        <header className="staff-desktop-header hidden shrink-0 md:block">
           <div className="staff-header-bar staff-ui justify-between gap-4 px-6">
             <div className="flex min-w-0 items-center gap-3">
               <button
@@ -254,6 +257,7 @@ export default function StaffPanelShell({ children }: StaffPanelShellProps) {
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <StaffTopbarIcons />
+              <StaffThemeToggle />
               <StaffAccountMenu
                 accountHref={accountMenuHref}
                 accountLabel={accountMenuLabel}
@@ -277,6 +281,7 @@ export default function StaffPanelShell({ children }: StaffPanelShellProps) {
             <p className="lp-staff-page-title min-w-0 flex-1 truncate">{pageTitle}</p>
             <div className="flex shrink-0 items-center gap-1">
               <StaffTopbarIcons />
+              <StaffThemeToggle />
               <StaffAccountMenu
                 accountHref={accountMenuHref}
                 accountLabel={accountMenuLabel}

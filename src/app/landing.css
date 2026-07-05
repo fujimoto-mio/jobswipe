@@ -1270,12 +1270,20 @@ html:has(.lp-root) {
 }
 
 /* Staff panel (company / admin) */
+.lp-root.staff-panel-shell {
+  color: var(--staff-text);
+}
+
 .lp-staff-page-title {
   font-family: var(--font-montserrat), "Montserrat", sans-serif;
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.04em;
   color: var(--lp-blue);
+}
+
+.staff-ui.staff-theme-dark .lp-staff-page-title {
+  color: #7dd3db;
 }
 
 .lp-staff-sidebar-label {

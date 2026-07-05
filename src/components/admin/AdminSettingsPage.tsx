@@ -52,8 +52,7 @@ function SettingsLinkItem({
   description?: string;
   external?: boolean;
 }) {
-  const className =
-    "company-dashboard-action-row transition hover:bg-slate-50/80";
+  const className = "company-dashboard-action-row transition";
 
   const content = (
     <>
@@ -61,7 +60,7 @@ function SettingsLinkItem({
         <p className="company-dashboard-action-title">{label}</p>
         {description && <p className="company-dashboard-action-desc">{description}</p>}
       </div>
-      {external && <ExternalLink className="h-4 w-4 shrink-0 text-slate-400" />}
+      {external && <ExternalLink className="h-4 w-4 shrink-0 text-[var(--staff-text-faint)]" />}
     </>
   );
 
@@ -141,11 +140,11 @@ export default function AdminSettingsPage() {
   if (loading || !account) {
     return (
       <div className="company-dashboard-page">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">設定</h1>
-          <p className="mt-1 text-sm text-slate-500">管理者アカウントとプラットフォーム設定</p>
+        <div className="staff-page-header mb-8">
+          <h1>設定</h1>
+          <p>管理者アカウントとプラットフォーム設定</p>
         </div>
-        <PageLoading message="設定を読み込み中..." minHeight="min-h-[320px]" />
+        <PageLoading message="設定を読み込み中..." minHeight="min-h-[320px]" staff />
       </div>
     );
   }
@@ -153,10 +152,10 @@ export default function AdminSettingsPage() {
   const displayName = account.name?.trim() || account.email.split("@")[0];
 
   return (
-    <div className="company-dashboard-page staff-ui">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">設定</h1>
-        <p className="mt-1 text-sm text-slate-500">管理者アカウントとプラットフォーム設定</p>
+    <div className="company-dashboard-page">
+      <div className="staff-page-header mb-8">
+        <h1>設定</h1>
+        <p>管理者アカウントとプラットフォーム設定</p>
       </div>
 
       <div className="company-dashboard-sections">
@@ -166,13 +165,7 @@ export default function AdminSettingsPage() {
           </div>
           <div className="company-profile-section-body">
             {(saveError || saveMessage) && (
-              <p
-                className={`mb-4 rounded-xl border px-3.5 py-2.5 text-sm ${
-                  saveError
-                    ? "border-red-100 bg-red-50 text-red-600"
-                    : "border-emerald-100 bg-emerald-50 text-emerald-700"
-                }`}
-              >
+              <p className={`staff-alert ${saveError ? "staff-alert--error" : "staff-alert--success"}`}>
                 {saveError || saveMessage}
               </p>
             )}
@@ -225,14 +218,14 @@ export default function AdminSettingsPage() {
                       <img
                         src={avatarPreview}
                         alt=""
-                        className="h-20 w-20 shrink-0 rounded-full border-4 border-white object-cover shadow-md"
+                        className="h-20 w-20 shrink-0 rounded-full border-4 border-[var(--staff-card-bg)] object-cover shadow-md"
                       />
                     ) : (
                       <StaffAvatar
                         name={displayName}
                         avatarUrl={account.avatarUrl}
                         size="xl"
-                        className="!h-20 !w-20 shrink-0 rounded-full border-4 border-white shadow-md"
+                        className="!h-20 !w-20 shrink-0 rounded-full border-4 border-[var(--staff-card-bg)] shadow-md"
                       />
                     )}
                     <div className="flex flex-wrap justify-center gap-2 sm:justify-start">
@@ -248,7 +241,7 @@ export default function AdminSettingsPage() {
                         <button
                           type="button"
                           onClick={clearAvatarSelection}
-                          className="btn-ghost inline-flex items-center gap-1 px-2 py-1.5 text-xs text-slate-600"
+                          className="btn-ghost inline-flex items-center gap-1 px-2 py-1.5 text-xs"
                         >
                           <X className="h-3.5 w-3.5" />
                         </button>
@@ -263,18 +256,20 @@ export default function AdminSettingsPage() {
                     />
                   </div>
                   {avatarUploadError && (
-                    <p className="text-center text-xs text-red-600 sm:text-left">{avatarUploadError}</p>
+                    <p className="text-center text-xs text-red-400 sm:text-left">{avatarUploadError}</p>
                   )}
 
                   <div className="max-w-lg space-y-4">
                     <FormTextInput name="name" label="担当者名" placeholder="管理 太郎" autoComplete="name" />
                     <label className="block">
-                      <span className="mb-1.5 block text-sm font-medium text-slate-700">メールアドレス</span>
+                      <span className="mb-1.5 block text-sm font-medium text-[var(--staff-text-secondary)]">
+                        メールアドレス
+                      </span>
                       <input
                         type="email"
                         value={account.email}
                         readOnly
-                        className="input-field bg-slate-50 text-sm text-slate-500"
+                        className="input-field text-sm"
                       />
                     </label>
                   </div>
@@ -302,7 +297,7 @@ export default function AdminSettingsPage() {
                     setPasswordMessage("");
                     setPasswordOpen(true);
                   }}
-                  className="company-dashboard-action-row w-full text-left transition hover:bg-slate-50/80"
+                  className="company-dashboard-action-row w-full text-left transition"
                 >
                   <div className="company-dashboard-action-icon">
                     <KeyRound className="h-4 w-4" />
@@ -329,7 +324,7 @@ export default function AdminSettingsPage() {
             <p className="company-profile-text mt-4">
               求人の審査、企業・求職者の管理、プラットフォームKPIの確認など、システム運用機能にアクセスできます。
             </p>
-            <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
+            <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[var(--staff-primary-light)] px-3 py-1 text-xs font-semibold text-[var(--staff-primary-hover)]">
               <Shield className="h-3.5 w-3.5" />
               {ROLE_LABEL}
             </span>
@@ -401,8 +396,8 @@ export default function AdminSettingsPage() {
                     label="新しいパスワード（確認）"
                     autoComplete="new-password"
                   />
-                  {passwordError && <p className="text-sm text-red-600">{passwordError}</p>}
-                  {passwordMessage && <p className="text-sm text-emerald-600">{passwordMessage}</p>}
+                  {passwordError && <p className="text-sm text-red-400">{passwordError}</p>}
+                  {passwordMessage && <p className="text-sm text-emerald-400">{passwordMessage}</p>}
                   <button
                     type="submit"
                     disabled={isSubmitting}

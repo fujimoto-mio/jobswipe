@@ -17,7 +17,7 @@ export default function PaginatedTableToolbar({
   filter,
 }: PaginatedTableToolbarProps) {
   return (
-    <div className="staff-ui table-toolbar">
+    <div className="table-toolbar">
       <div className="table-toolbar-search">
         <Search className="table-toolbar-search-icon" aria-hidden />
         <input

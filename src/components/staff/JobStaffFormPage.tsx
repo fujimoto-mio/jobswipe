@@ -102,27 +102,24 @@ export default function JobStaffFormPage({ jobId }: JobStaffFormPageProps) {
   };
 
   if (loading || !job) {
-    return <PageLoading message="求人情報を読み込み中..." minHeight="min-h-[320px]" />;
+    return <PageLoading message="求人情報を読み込み中..." minHeight="min-h-[320px]" staff />;
   }
 
   if (isCompany && job.approvalStatus === "Active") {
-    return <PageLoading message="表示ページへ移動中..." minHeight="min-h-[320px]" />;
+    return <PageLoading message="表示ページへ移動中..." minHeight="min-h-[320px]" staff />;
   }
 
   return (
     <>
-      <Link
-        href={`${basePath}/jobs`}
-        className="mb-6 inline-flex items-center gap-2 text-sm text-[#64748B] hover:text-[#1E293B]"
-      >
+      <Link href={`${basePath}/jobs`} className="staff-back-link mb-6 inline-flex items-center gap-2 text-sm">
         <ArrowLeft className="h-4 w-4" />
         求人一覧に戻る
       </Link>
 
       <div className="mb-8 flex flex-wrap items-center gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-[#1E293B]">求人編集</h1>
-          <p className="mt-1 text-sm text-[#64748B]">{job.title}</p>
+        <div className="staff-page-header">
+          <h1>求人編集</h1>
+          <p>{job.title}</p>
         </div>
         <span className={`badge ${JOB_APPROVAL_BADGE_CLASS[job.approvalStatus]}`}>
           {JOB_APPROVAL_LABELS[job.approvalStatus]}
@@ -167,7 +164,7 @@ export default function JobStaffFormPage({ jobId }: JobStaffFormPageProps) {
       >
         {({ isSubmitting, setFieldValue }) => (
           <Form className="staff-ui space-y-5">
-            <div className="staff-form-card space-y-5 rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+            <div className="staff-form-card space-y-5">
               <JobFormFields companyLocked={companyLocked} companies={companies} />
             </div>
 

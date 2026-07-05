@@ -2,6 +2,7 @@
 
 import { APP_LOGO_FULL } from "@/lib/brand";
 import { useSeekerThemeOptional } from "@/components/seeker/SeekerThemeProvider";
+import { useStaffThemeOptional } from "@/components/staff/StaffThemeProvider";
 
 type LoadingSpinnerProps = {
   size?: "sm" | "md" | "lg";
@@ -26,9 +27,15 @@ const seekerSizeClass = {
   lg: "loading-spinner-seeker--lg",
 } as const;
 
+function useStaffLoaderEnabled(staff: boolean) {
+  const staffTheme = useStaffThemeOptional();
+  return staff || staffTheme !== null;
+}
+
 function useSeekerLoaderEnabled(staff: boolean, seeker?: boolean) {
   const seekerTheme = useSeekerThemeOptional();
-  return !staff && (seeker ?? seekerTheme !== null);
+  const staffLoader = useStaffLoaderEnabled(staff);
+  return !staffLoader && (seeker ?? seekerTheme !== null);
 }
 
 export default function LoadingSpinner({
@@ -40,14 +47,17 @@ export default function LoadingSpinner({
   staff = false,
 }: LoadingSpinnerProps) {
   const seekerTheme = useSeekerThemeOptional();
+  const staffTheme = useStaffThemeOptional();
+  const staffLoader = useStaffLoaderEnabled(staff);
   const useSeekerLoader = useSeekerLoaderEnabled(staff, seeker);
-  const messageDark = dark || seekerTheme?.theme === "dark";
+  const staffDark = staffLoader && staffTheme?.theme === "dark";
+  const messageDark = dark || seekerTheme?.theme === "dark" || staffDark;
 
   return (
     <div
       className={`loading-spinner flex flex-col items-center justify-center gap-2 ${
-        staff ? "loading-spinner--staff" : ""
-      } ${useSeekerLoader ? "loading-spinner--seeker" : ""} ${
+        staffLoader ? "loading-spinner--staff" : ""
+      } ${staffDark ? "loading-spinner--staff-dark" : ""} ${useSeekerLoader ? "loading-spinner--seeker" : ""} ${
         useSeekerLoader && seekerTheme?.theme === "dark" ? "loading-spinner--seeker-dark" : ""
       } ${className}`}
     >
@@ -55,8 +65,11 @@ export default function LoadingSpinner({
         className={`loading-spinner-default rounded-full border-solid ${sizeClass[size]} ${
           messageDark
             ? "border-white/20 border-t-white"
-            : "border-[var(--border)] border-t-[var(--accent)]"
+            : staffLoader
+              ? ""
+              : "border-[var(--border)] border-t-[var(--accent)]"
         }`}
+        style={{ animation: "loading-spin 0.9s linear infinite" }}
         role="status"
         aria-label="読み込み中"
       />
@@ -109,8 +122,8 @@ export function PageLoading({
 }
 
 /** Inline spinner for primary submit buttons */
-export function ButtonSpinner({ seeker }: { seeker?: boolean } = {}) {
-  const useSeekerLoader = useSeekerLoaderEnabled(false, seeker);
+export function ButtonSpinner({ seeker, staff = false }: { seeker?: boolean; staff?: boolean } = {}) {
+  const useSeekerLoader = useSeekerLoaderEnabled(staff, seeker);
 
   if (useSeekerLoader) {
     return (
@@ -127,6 +140,7 @@ export function ButtonSpinner({ seeker }: { seeker?: boolean } = {}) {
   return (
     <span
       className="button-spinner-default inline-block h-4 w-4 shrink-0 rounded-full border-2 border-white/35 border-t-white"
+      style={{ animation: "loading-spin 0.9s linear infinite" }}
       aria-hidden="true"
     />
   );

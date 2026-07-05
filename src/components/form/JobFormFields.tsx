@@ -33,12 +33,7 @@ function CompanyFields({ companyLocked, companies, readOnly }: JobFormFieldsProp
 
   if (companyLocked) {
     return (
-      <FormTextInput
-        name="company"
-        label="会社名 *"
-        readOnly
-        className="bg-[#F8FAFC] text-[#64748B]"
-      />
+      <FormTextInput name="company" label="会社名 *" readOnly />
     );
   }
 
@@ -56,7 +51,7 @@ function CompanyFields({ companyLocked, companies, readOnly }: JobFormFieldsProp
             onChange={(e) => companyIdHelpers.setValue(e.target.value)}
             onBlur={() => companyIdHelpers.setTouched(true)}
             disabled={readOnly}
-            className={`input-field w-full ${companyIdMeta.touched && companyIdMeta.error ? "ring-1 ring-red-300" : ""} ${readOnly ? "bg-[#F8FAFC] text-[#64748B]" : ""}`}
+            className={`input-field w-full ${companyIdMeta.touched && companyIdMeta.error ? "ring-1 ring-red-300" : ""}`}
           >
             <option value="">企業を選択</option>
             {companies.map((c) => (
@@ -137,7 +132,7 @@ function FormJobSalaryField({ readOnly }: { readOnly?: boolean }) {
         <input
           readOnly
           value={formatJobSalary(values.salaryMin ?? "", values.salaryMax ?? "")}
-          className="input-field bg-[#F8FAFC] text-[#64748B]"
+          className="input-field"
         />
       </label>
     );

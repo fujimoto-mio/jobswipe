@@ -132,7 +132,7 @@ export default function AdminJobStatisticsChart() {
         </div>
 
         {loading ? (
-          <PageLoading message="グラフを読み込み中..." minHeight="min-h-[280px]" />
+          <PageLoading message="グラフを読み込み中..." minHeight="min-h-[280px]" staff />
         ) : chartData.length === 0 ? (
           <div className="flex min-h-[280px] items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-sm text-slate-500">
             この期間の求人データはありません

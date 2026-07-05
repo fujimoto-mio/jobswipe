@@ -14,6 +14,7 @@ import {
 import CompanyLogo from "@/components/chat/CompanyLogo";
 import StaffAvatar from "@/components/chat/StaffAvatar";
 import CompanyProfilePageSkeleton from "@/components/staff/CompanyProfilePageSkeleton";
+import { StaffThemeToggleRow } from "@/components/staff/StaffThemeToggle";
 import { FormTextInput, FormTextarea } from "@/components/form/FormFields";
 import { useStaffPanel } from "@/components/staff/StaffPanelContext";
 import { apiFetch } from "@/lib/api-client";
@@ -189,9 +190,9 @@ export default function CompanyProfilePage() {
   if (loading || !profile) {
     return (
       <div className="company-profile-page">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">プロフィール</h1>
-          <p className="mt-1 text-sm text-slate-500">求職者に表示される企業紹介ページ</p>
+        <div className="staff-page-header mb-8">
+          <h1>プロフィール</h1>
+          <p>求職者に表示される企業紹介ページ</p>
         </div>
         <CompanyProfilePageSkeleton />
       </div>
@@ -311,18 +312,12 @@ export default function CompanyProfilePage() {
 
   return (
     <div className="company-profile-page">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">プロフィール</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          {editing ? "求職者向けページの編集" : "求職者に表示される企業紹介ページのプレビュー"}
-        </p>
+      <div className="staff-page-header mb-8">
+        <h1>プロフィール</h1>
+        <p>{editing ? "求職者向けページの編集" : "求職者に表示される企業紹介ページのプレビュー"}</p>
       </div>
 
-      {saveError && (
-        <p className="mb-4 rounded-xl border border-red-100 bg-red-50 px-3.5 py-2.5 text-sm text-red-600">
-          {saveError}
-        </p>
-      )}
+      {saveError && <p className="staff-alert staff-alert--error mb-4">{saveError}</p>}
 
       {editing ? (
         <Formik
@@ -516,10 +511,10 @@ export default function CompanyProfilePage() {
                     </div>
                   </div>
                   {logoUploadError && (
-                    <p className="px-5 pb-4 text-sm text-red-600">{logoUploadError}</p>
+                    <p className="staff-alert staff-alert--error px-5 pb-4">{logoUploadError}</p>
                   )}
                   {bannerUploadError && (
-                    <p className="px-5 pb-4 text-sm text-red-600">{bannerUploadError}</p>
+                    <p className="staff-alert staff-alert--error px-5 pb-4">{bannerUploadError}</p>
                   )}
                 </section>
 
@@ -580,7 +575,7 @@ export default function CompanyProfilePage() {
                             {editWebsiteHref ? (
                               <span className="break-all text-blue-600">{values.website}</span>
                             ) : (
-                              <span className="text-slate-400">未設定</span>
+                              <span className="company-profile-text--muted">未設定</span>
                             )}
                           </div>
                         </div>
@@ -599,7 +594,7 @@ export default function CompanyProfilePage() {
                           autoComplete="street-address"
                         />
                         <CompanyAddressMap address={values.address} companyName={editCompanyName} />
-                        <div className="grid gap-4 border-t border-slate-200 pt-4 md:grid-cols-2">
+                        <div className="grid gap-4 border-t border-[var(--staff-border)] pt-4 md:grid-cols-2">
                           <FormTextInput
                             name="careersPage"
                             label="採用ページ URL"
@@ -622,13 +617,15 @@ export default function CompanyProfilePage() {
                       </p>
                       <div className="space-y-4">
                         <div>
-                          <span className="mb-2 block text-sm font-medium text-slate-700">担当者アバター</span>
+                          <span className="mb-2 block text-sm font-medium text-[var(--staff-text-secondary)]">
+                            担当者アバター
+                          </span>
                           <div className="company-profile-staff-row">
                             {avatarPreview ? (
                               <img
                                 src={avatarPreview}
                                 alt=""
-                                className="h-12 w-12 shrink-0 rounded-full border border-slate-200 object-cover"
+                                className="h-12 w-12 shrink-0 rounded-full border border-[var(--staff-border)] object-cover"
                               />
                             ) : (
                               <StaffAvatar
@@ -650,7 +647,7 @@ export default function CompanyProfilePage() {
                                 <button
                                   type="button"
                                   onClick={clearAvatarSelection}
-                                  className="btn-ghost inline-flex items-center gap-1 px-2 py-1.5 text-xs text-slate-600"
+                                  className="btn-ghost inline-flex items-center gap-1 px-2 py-1.5 text-xs text-[var(--staff-text-secondary)]"
                                 >
                                   <X className="h-3.5 w-3.5" />
                                 </button>
@@ -665,17 +662,19 @@ export default function CompanyProfilePage() {
                             onChange={handleAvatarFile}
                           />
                           {avatarUploadError && (
-                            <p className="mt-2 text-xs text-red-600">{avatarUploadError}</p>
+                            <p className="mt-2 text-xs text-red-400">{avatarUploadError}</p>
                           )}
                         </div>
                         <FormTextInput name="name" label="担当者名" placeholder="採用 太郎" autoComplete="name" />
                         <label className="block">
-                          <span className="mb-1.5 block text-sm font-medium text-slate-700">メールアドレス</span>
+                          <span className="mb-1.5 block text-sm font-medium text-[var(--staff-text-secondary)]">
+                            メールアドレス
+                          </span>
                           <input
                             type="email"
                             value={profile.email}
                             readOnly
-                            className="input-field bg-slate-50 text-sm text-slate-500"
+                            className="input-field text-sm"
                           />
                         </label>
                       </div>
@@ -732,11 +731,11 @@ export default function CompanyProfilePage() {
                     <ExternalLink className="h-3.5 w-3.5" />
                   </a>
                 ) : (
-                  <p className="text-sm text-slate-400">コーポレートサイト未設定</p>
+                  <p className="company-profile-hero-muted">コーポレートサイト未設定</p>
                 )}
               </div>
               <div className="company-profile-hero-actions">
-                <button type="button" onClick={startEditing} className="btn-ghost shrink-0 text-blue-600">
+                <button type="button" onClick={startEditing} className="btn-ghost company-profile-action-link shrink-0">
                   <Pencil className="h-4 w-4" />
                   編集
                 </button>
@@ -808,13 +807,13 @@ export default function CompanyProfilePage() {
                           href={websiteHref}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 font-medium text-blue-600 hover:underline"
+                          className="company-profile-hero-link inline-flex items-center gap-1 font-medium hover:underline"
                         >
                           {profile.companyWebsite}
                           <ExternalLink className="h-3.5 w-3.5" />
                         </a>
                       ) : (
-                        <span className="text-slate-400">未設定</span>
+                        <span className="company-profile-text--muted">未設定</span>
                       )}
                     </div>
                   </div>
@@ -824,7 +823,7 @@ export default function CompanyProfilePage() {
                       {profile.companyPostalCode ? (
                         formatPostalCodeDisplay(profile.companyPostalCode)
                       ) : (
-                        <span className="text-slate-400">未設定</span>
+                        <span className="company-profile-text--muted">未設定</span>
                       )}
                     </div>
                   </div>
@@ -837,7 +836,7 @@ export default function CompanyProfilePage() {
                           <CompanyAddressMap address={profile.companyAddress} companyName={companyName} />
                         </>
                       ) : (
-                        <span className="text-slate-400">未設定</span>
+                        <span className="company-profile-text--muted">未設定</span>
                       )}
                     </div>
                   </div>
@@ -852,7 +851,7 @@ export default function CompanyProfilePage() {
                             href={href}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-start gap-1.5 break-all font-medium text-blue-600 hover:underline"
+                            className="company-profile-hero-link inline-flex items-start gap-1.5 break-all font-medium hover:underline"
                           >
                             <span>{href}</span>
                             <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0" />
@@ -878,10 +877,14 @@ export default function CompanyProfilePage() {
                 </div>
                 <dl className="mt-3 space-y-2 text-xs">
                   <div>
-                    <dt className="text-slate-500">メール</dt>
-                    <dd className="mt-0.5 break-all font-medium text-slate-800">{profile.email}</dd>
+                    <dt className="company-profile-meta-label">メール</dt>
+                    <dd className="company-profile-meta-value">{profile.email}</dd>
                   </div>
                 </dl>
+              </div>
+              <div className="company-profile-side-card">
+                <h3 className="company-profile-side-card-title">表示</h3>
+                <StaffThemeToggleRow description="企業パネルの表示を暗い配色に切り替えます" />
               </div>
             </aside>
           </div>

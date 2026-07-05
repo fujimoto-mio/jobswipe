@@ -73,13 +73,15 @@ export default function NewJobPage() {
 
   return (
     <>
-      <Link href={`${basePath}/jobs`} className="mb-6 inline-flex items-center gap-2 text-sm text-[#64748B] hover:text-[#1E293B]">
+      <Link href={`${basePath}/jobs`} className="staff-back-link mb-6 inline-flex items-center gap-2 text-sm">
         <ArrowLeft className="h-4 w-4" />
         求人一覧に戻る
       </Link>
 
-      <h1 className="mb-2 text-2xl font-bold text-[#1E293B]">求人登録</h1>
-      <p className="mb-8 text-sm text-[#64748B]">動画付き求人を新規登録（管理者審査後に公開）</p>
+      <div className="staff-page-header mb-8">
+        <h1>求人登録</h1>
+        <p>動画付き求人を新規登録（管理者審査後に公開）</p>
+      </div>
 
       <Formik
         initialValues={{
@@ -121,7 +123,7 @@ export default function NewJobPage() {
       >
         {({ isSubmitting, setFieldValue }) => (
           <Form className="staff-ui space-y-5">
-            <div className="staff-form-card space-y-5 rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+            <div className="staff-form-card space-y-5">
               <JobFormFields companyLocked={companyLocked} companies={companies} />
             </div>
 

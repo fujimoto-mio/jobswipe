@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
+import { useStaffTheme } from "@/components/staff/StaffThemeProvider";
 import type { StaffRole } from "@/lib/auth/roles";
 import { mapStaffPanelPath } from "@/lib/staff/paths";
 import { apiFetch } from "@/lib/api-client";
@@ -16,6 +17,7 @@ type StaffAuthGuardProps = {
 export default function StaffAuthGuard({ children, expectedRole, loginPath }: StaffAuthGuardProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const { theme } = useStaffTheme();
   const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
@@ -51,8 +53,8 @@ export default function StaffAuthGuard({ children, expectedRole, loginPath }: St
 
   if (!authorized) {
     return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-slate-100">
-        <PageLoading message="認証を確認中..." />
+      <div className={`staff-auth-loading-screen staff-ui staff-theme-${theme}`}>
+        <PageLoading message="認証を確認中..." staff />
       </div>
     );
   }

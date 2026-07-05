@@ -261,24 +261,29 @@ function CompanyChatContent() {
 
   if (!loading && jobGroups.length === 0) {
     return (
-      <EmptyState
-        icon={MessageCircle}
-        title="承認済みの求人がありません"
-        description="求人が承認されると、応募者とのチャットがここに表示されます"
-        action={
-          <Link href="/company/jobs" className="btn-primary flex items-center gap-2 px-6">
-            求人管理へ
-          </Link>
-        }
-      />
+      <div className="company-chat-page flex min-h-0 w-full flex-1 flex-col">
+        <div className="company-chat-panel staff-ui flex min-h-0 flex-1 overflow-hidden">
+          <EmptyState
+            staff
+            icon={MessageCircle}
+            title="承認済みの求人がありません"
+            description="求人が承認されると、応募者とのチャットがここに表示されます"
+            action={
+              <Link href="/company/jobs" className="btn-primary flex items-center gap-2 px-6">
+                求人管理へ
+              </Link>
+            }
+          />
+        </div>
+      </div>
     );
   }
 
   return (
     <div className="company-chat-page flex min-h-0 w-full flex-1 flex-col">
-      <div className="mb-6 shrink-0 md:mb-8">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">チャット</h1>
-        <p className="mt-1 text-sm text-slate-500">求人を選び、応募者とメッセージのやり取り</p>
+      <div className="mb-6 shrink-0 md:mb-8 staff-page-header">
+        <h1>チャット</h1>
+        <p>求人を選び、応募者とメッセージのやり取り</p>
       </div>
 
       <div
@@ -335,7 +340,7 @@ function CompanyChatContent() {
                       >
                         {group.job.title}
                       </p>
-                      <p className="chat-list-item-meta text-xs text-slate-500">
+                      <p className="chat-list-item-meta text-xs">
                         {group.job.category} · {group.job.area || group.job.location}
                       </p>
                     </div>
@@ -512,9 +517,9 @@ export default function CompanyChatPage() {
     <Suspense
       fallback={
         <div className="company-chat-page flex min-h-0 w-full flex-1 flex-col">
-          <div className="mb-6 shrink-0 md:mb-8">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">チャット</h1>
-            <p className="mt-1 text-sm text-slate-500">求人を選び、応募者とメッセージのやり取り</p>
+          <div className="mb-6 shrink-0 md:mb-8 staff-page-header">
+            <h1>チャット</h1>
+            <p>求人を選び、応募者とメッセージのやり取り</p>
           </div>
           <div className="company-chat-panel staff-ui flex min-h-0 flex-1 overflow-hidden">
             <PageLoading message="チャットを読み込み中..." minHeight="min-h-[480px]" staff />

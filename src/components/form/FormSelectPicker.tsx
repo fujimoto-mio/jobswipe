@@ -4,6 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, ChevronDown } from "lucide-react";
+import { useStaffThemeOptional } from "@/components/staff/StaffThemeProvider";
 
 type FormSelectPickerProps = {
   id?: string;
@@ -54,6 +55,8 @@ export default function FormSelectPicker({
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const mobile = useMobileSheet();
+  const staffTheme = useStaffThemeOptional();
+  const staff = staffTheme !== null;
 
   const close = useCallback(() => {
     setOpen(false);
@@ -115,6 +118,7 @@ export default function FormSelectPicker({
           selected={!value}
           onSelect={() => select("")}
           muted
+          staff={staff}
         />
       )}
       {options.map((option) => (
@@ -123,6 +127,7 @@ export default function FormSelectPicker({
           label={option}
           selected={value === option}
           onSelect={() => select(option)}
+          staff={staff}
         />
       ))}
     </>
@@ -131,7 +136,7 @@ export default function FormSelectPicker({
   return (
     <div
       ref={rootRef}
-      className={`select-wrap select-picker relative ${compact ? "select-picker-compact" : ""}`}
+      className={`select-wrap select-picker relative ${compact ? "select-picker-compact" : ""} ${staff ? "select-picker--staff" : ""}`}
     >
       <button
         type="button"
@@ -155,7 +160,7 @@ export default function FormSelectPicker({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={{ duration: 0.15 }}
-            className="select-picker-menu absolute left-0 right-0 top-[calc(100%+0.375rem)] z-50"
+            className={`select-picker-menu absolute left-0 right-0 top-[calc(100%+0.375rem)] z-50 ${staff ? "select-picker-menu--staff" : ""}`}
             role="listbox"
             aria-labelledby={fieldId}
           >
@@ -180,7 +185,7 @@ export default function FormSelectPicker({
                   animate={{ y: 0 }}
                   exit={{ y: "100%" }}
                   transition={{ type: "spring", damping: 32, stiffness: 340 }}
-                  className="select-picker-sheet-panel w-full"
+                  className={`select-picker-sheet-panel w-full ${staff ? "select-picker-sheet-panel--staff" : ""}`}
                   role="listbox"
                   aria-labelledby={fieldId}
                   onClick={(e) => e.stopPropagation()}
@@ -203,11 +208,13 @@ function OptionRow({
   selected,
   onSelect,
   muted,
+  staff = false,
 }: {
   label: string;
   selected: boolean;
   onSelect: () => void;
   muted?: boolean;
+  staff?: boolean;
 }) {
   return (
     <button
@@ -218,7 +225,12 @@ function OptionRow({
       className={`select-picker-option ${selected ? "select-picker-option-selected" : ""} ${muted ? "select-picker-option-muted" : ""}`}
     >
       <span>{label}</span>
-      {selected && <Check className="h-4 w-4 shrink-0 text-slate-700" strokeWidth={2.5} />}
+      {selected && (
+        <Check
+          className={`h-4 w-4 shrink-0 ${staff ? "text-[var(--staff-primary)]" : "text-slate-700"}`}
+          strokeWidth={2.5}
+        />
+      )}
     </button>
   );
 }

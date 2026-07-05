@@ -41,13 +41,13 @@ export default function StaffAccountMenu({
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-[100] mt-1.5 w-44 overflow-hidden rounded-2xl bg-white py-1 shadow-lg shadow-slate-200/60 ring-1 ring-slate-100">
+        <div className="staff-account-menu-panel absolute right-0 top-full z-[100] mt-1.5 w-44 overflow-hidden rounded-2xl py-1">
           <Link
             href={accountHref}
             onClick={() => setOpen(false)}
-            className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            className="staff-account-menu-item flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm font-semibold transition"
           >
-            <AccountIcon className="h-4 w-4 text-slate-500" />
+            <AccountIcon className="h-4 w-4" />
             {accountLabel}
           </Link>
           <button
@@ -56,7 +56,7 @@ export default function StaffAccountMenu({
               setOpen(false);
               void onLogout();
             }}
-            className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+            className="staff-account-menu-item staff-account-menu-item--danger flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm font-semibold transition"
           >
             <LogOut className="h-4 w-4" />
             ログアウト

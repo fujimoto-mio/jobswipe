@@ -51,12 +51,9 @@ function SummaryGrid({ items }: { items: SummaryItem[] }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {items.map(({ label, value }) => (
-        <div
-          key={label}
-          className="rounded-2xl border border-slate-200 bg-white px-4 py-5 text-center"
-        >
-          <p className="text-2xl font-bold tabular-nums text-slate-900">{value.toLocaleString()}</p>
-          <p className="mt-1 text-sm text-slate-500">{label}</p>
+        <div key={label} className="company-dashboard-metric text-center">
+          <p className="company-dashboard-metric-value">{value.toLocaleString()}</p>
+          <p className="company-dashboard-metric-label">{label}</p>
         </div>
       ))}
     </div>
@@ -85,14 +82,14 @@ function NavRow({
         <p className="company-dashboard-action-title">{title}</p>
         {loading ? (
           <div
-            className="company-dashboard-action-desc mt-0.5 h-3.5 w-28 max-w-full animate-pulse rounded bg-slate-200"
+            className="company-dashboard-action-desc dashboard-skeleton-line dashboard-skeleton-line--desc mt-0.5 w-28 max-w-full"
             aria-hidden
           />
         ) : (
           <p className="company-dashboard-action-desc">{detail}</p>
         )}
       </div>
-      <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
+      <ChevronRight className="h-4 w-4 shrink-0 text-[var(--staff-text-faint)]" />
     </Link>
   );
 }
@@ -126,9 +123,9 @@ export default function AdminDashboard() {
 
   return (
     <div className="company-dashboard-page">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">ダッシュボード</h1>
-        <p className="mt-1 text-sm text-slate-500">プラットフォームの概要</p>
+      <div className="staff-page-header mb-8">
+        <h1>ダッシュボード</h1>
+        <p>プラットフォームの概要</p>
       </div>
 
       <div className="company-dashboard-sections">

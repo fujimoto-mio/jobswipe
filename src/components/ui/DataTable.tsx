@@ -154,27 +154,52 @@ export default function DataTable<T>({
     ? "data-table-page-size text-xs"
     : "rounded-lg border border-[var(--border)] bg-white px-2 py-1.5 text-xs text-[var(--foreground)]";
 
-  const selectedRowClass = staffStyle ? "bg-blue-50" : "bg-[var(--accent-light)]";
+  const selectedRowClass = staffStyle ? "bg-[var(--staff-primary-light)]" : "bg-[var(--accent-light)]";
+
+  const headRowClass = staffStyle
+    ? "border-b border-[var(--staff-border)] bg-[var(--staff-surface-muted)]"
+    : "border-b border-[var(--border)] bg-[var(--surface)]";
+
+  const headCellClass = staffStyle
+    ? "px-3 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--staff-text-muted)] sm:px-4 sm:py-3.5"
+    : "px-3 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--muted)] sm:px-4 sm:py-3.5";
+
+  const bodyCellClass = staffStyle
+    ? "px-3 py-4 align-middle text-[var(--staff-text-secondary)] sm:px-4 sm:py-5"
+    : "px-3 py-4 align-middle text-[var(--body)] sm:px-4 sm:py-5";
+
+  const rowBorderClass = staffStyle ? "border-[var(--staff-border)]" : "border-[var(--border)]";
+
+  const rowBgClass = staffStyle ? "bg-[var(--staff-card-bg)]" : "bg-white";
+
+  const rowHoverClass = staffStyle
+    ? "hover:bg-[var(--staff-surface-subtle)]"
+    : "hover:bg-[var(--surface)]";
 
   return (
-    <div className={`data-table-card ${staffStyle ? "staff-ui" : ""} ${className}`}>
-      {toolbar && (
-        <div className="border-b border-[var(--border)] bg-white">{toolbar}</div>
-      )}
+    <div className={`data-table-card ${className}`}>
+      {toolbar &&
+        (staffStyle ? (
+          toolbar
+        ) : (
+          <div className="border-b border-[var(--border)] bg-white">{toolbar}</div>
+        ))}
       <div className="data-table-scroll">
         <table className="border-collapse text-left text-sm">
           <thead>
-            <tr className="border-b border-[var(--border)] bg-[var(--surface)]">
+            <tr className={headRowClass}>
               {columns.map((col) => (
                 <th
                   key={col.id}
-                  className={`px-3 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--muted)] sm:px-4 sm:py-3.5 ${col.headerClassName ?? ""}`}
+                  className={`${headCellClass} ${col.headerClassName ?? ""}`}
                 >
                   {col.sortable && onSortChange ? (
                     <button
                       type="button"
                       onClick={() => handleSort(col.id)}
-                      className="inline-flex items-center gap-1 transition hover:text-[var(--foreground)]"
+                      className={`inline-flex items-center gap-1 transition ${
+                        staffStyle ? "hover:text-[var(--staff-text)]" : "hover:text-[var(--foreground)]"
+                      }`}
                     >
                       {col.header}
                       {sort?.column === col.id ? (
@@ -215,14 +240,14 @@ export default function DataTable<T>({
                   <tr
                     key={rowId}
                     onClick={onRowClick ? () => onRowClick(row) : undefined}
-                    className={`border-b border-[var(--border)] transition last:border-b-0 ${
-                      onRowClick ? "cursor-pointer hover:bg-[var(--surface)]" : ""
-                    } ${selected ? selectedRowClass : "bg-white"}`}
+                    className={`border-b ${rowBorderClass} transition last:border-b-0 ${
+                      onRowClick ? `cursor-pointer ${rowHoverClass}` : ""
+                    } ${selected ? selectedRowClass : rowBgClass}`}
                   >
                     {columns.map((col) => (
                       <td
                         key={col.id}
-                        className={`px-3 py-4 align-middle text-[var(--body)] sm:px-4 sm:py-5 ${col.className ?? ""}`}
+                        className={`${bodyCellClass} ${col.className ?? ""}`}
                       >
                         {col.cell(row)}
                       </td>
