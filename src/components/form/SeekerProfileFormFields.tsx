@@ -129,6 +129,11 @@ export default function SeekerProfileFormFields({
             type="email"
             readOnly={emailReadOnly}
             className={emailReadOnly ? "bg-slate-100 text-slate-500" : undefined}
+            hint={
+              emailReadOnly
+                ? "※メールアドレスの変更はアカウント設定から行ってください。"
+                : undefined
+            }
           />
         )}
       </div>

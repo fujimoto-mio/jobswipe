@@ -249,7 +249,14 @@ export default function LikedPage() {
         <ApplyModal
           job={applyJob}
           onClose={() => setApplyJob(null)}
-          onSuccess={() => {
+          onSuccess={(application) => {
+            if (application?.jobId && application.id) {
+              setApplicationByJobId((prev) => {
+                const next = new Map(prev);
+                next.set(application.jobId, application.id);
+                return next;
+              });
+            }
             setApplyJob(null);
             void table.refetch();
           }}

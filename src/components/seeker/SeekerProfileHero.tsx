@@ -17,6 +17,7 @@ type SeekerProfileHeroProps = {
   bio?: string;
   children?: ReactNode;
   editable?: boolean;
+  nameAction?: ReactNode;
 };
 
 export default function SeekerProfileHero({
@@ -26,6 +27,7 @@ export default function SeekerProfileHero({
   bio,
   children,
   editable = true,
+  nameAction,
 }: SeekerProfileHeroProps) {
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -114,17 +116,14 @@ export default function SeekerProfileHero({
 
   return (
     <>
-      <div className="profile-hero-card">
-        <div className="profile-hero-banner-wrap relative min-h-[17rem] overflow-hidden">
+      <div className="profile-hero">
+        <div className="profile-hero-banner-wrap">
           <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            className="profile-hero-banner"
             style={{ backgroundImage: `url("${bannerImageUrl}")` }}
             aria-hidden
           />
-          <div
-            className="absolute inset-0 bg-gradient-to-b from-black/30 via-[#fe2c55]/10 to-white"
-            aria-hidden
-          />
+          <div className="profile-hero-banner-overlay" aria-hidden />
 
           {editable && (
             <>
@@ -163,43 +162,44 @@ export default function SeekerProfileHero({
               />
             </>
           )}
+        </div>
 
-          <div className="profile-hero-body relative z-10 !items-center !pb-5 !pt-10">
-            <div className="profile-hero-avatar-wrap">
-              <SeekerAvatar name={name} avatarUrl={displayAvatarUrl} size="hero" />
-              {editable && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => avatarInputRef.current?.click()}
-                    disabled={uploading === "avatar"}
-                    className="profile-hero-avatar-edit"
-                    aria-label="プロフィール写真を変更"
-                  >
-                    <Camera className="h-4 w-4" />
-                  </button>
-                  <input
-                    ref={avatarInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
-                    className="hidden"
-                    onChange={(event) => {
-                      const file = event.target.files?.[0] ?? null;
-                      void handleAvatarFile(file);
-                      event.target.value = "";
-                    }}
-                  />
-                </>
-              )}
-            </div>
-
-            <h2 className="profile-hero-name !text-white drop-shadow-md">{name}</h2>
-            {bio ? (
-              <p className="profile-hero-bio !max-w-none !text-white/85 drop-shadow">{bio}</p>
-            ) : null}
-
-            {children ? <div className="profile-hero-actions">{children}</div> : null}
+        <div className="profile-hero-panel">
+          <div className="profile-hero-avatar-wrap">
+            <SeekerAvatar name={name} avatarUrl={displayAvatarUrl} size="hero" />
+            {editable && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => avatarInputRef.current?.click()}
+                  disabled={uploading === "avatar"}
+                  className="profile-hero-avatar-edit"
+                  aria-label="プロフィール写真を変更"
+                >
+                  <Camera className="h-4 w-4" />
+                </button>
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0] ?? null;
+                    void handleAvatarFile(file);
+                    event.target.value = "";
+                  }}
+                />
+              </>
+            )}
           </div>
+
+          <div className="profile-hero-name-row">
+            <h2 className="profile-hero-name">{name}</h2>
+            {nameAction ? <div className="profile-hero-name-action">{nameAction}</div> : null}
+          </div>
+          {bio ? <p className="profile-hero-bio">{bio}</p> : null}
+
+          {children ? <div className="profile-hero-actions">{children}</div> : null}
         </div>
       </div>
 

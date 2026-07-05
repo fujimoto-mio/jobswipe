@@ -14,7 +14,6 @@ import {
 import CompanyLogo from "@/components/chat/CompanyLogo";
 import StaffAvatar from "@/components/chat/StaffAvatar";
 import CompanyProfilePageSkeleton from "@/components/staff/CompanyProfilePageSkeleton";
-import { StaffThemeToggleRow } from "@/components/staff/StaffThemeToggle";
 import { FormTextInput, FormTextarea } from "@/components/form/FormFields";
 import { useStaffPanel } from "@/components/staff/StaffPanelContext";
 import { apiFetch } from "@/lib/api-client";
@@ -881,10 +880,6 @@ export default function CompanyProfilePage() {
                     <dd className="company-profile-meta-value">{profile.email}</dd>
                   </div>
                 </dl>
-              </div>
-              <div className="company-profile-side-card">
-                <h3 className="company-profile-side-card-title">表示</h3>
-                <StaffThemeToggleRow description="企業パネルの表示を暗い配色に切り替えます" />
               </div>
             </aside>
           </div>

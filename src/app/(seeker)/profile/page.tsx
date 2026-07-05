@@ -80,17 +80,6 @@ export default function ProfilePage() {
       <AppHeader
         title="プロフィール"
         onBack={() => router.push("/explore")}
-        action={
-          editing ? (
-            <button
-              type="button"
-              onClick={() => setEditing(false)}
-              className="btn-ghost px-2 text-xs font-semibold text-[rgba(22,24,35,0.55)]"
-            >
-              キャンセル
-            </button>
-          ) : undefined
-        }
       />
 
       <main className="profile-page min-h-0 flex-1 overflow-y-auto pb-[4.5rem]">
@@ -100,14 +89,29 @@ export default function ProfilePage() {
           name={profile.name}
           bio={profileBio || undefined}
           editable={!editing}
+          nameAction={
+            !editing ? (
+              <button
+                type="button"
+                onClick={() => setEditing(true)}
+                className="profile-edit-btn"
+              >
+                <Pencil className="h-3.5 w-3.5" aria-hidden />
+                編集
+              </button>
+            ) : undefined
+          }
         >
           {!editing && (
             <>
-              <div className="profile-completion">
-                <div className="profile-completion-header">
-                  <span>プロフィール完成度</span>
-                  <span className="profile-completion-value">{profileCompletion}%</span>
+              <div className="profile-stats">
+                <div className="profile-stat-item">
+                  <span className="profile-stat-value">{profileCompletion}%</span>
+                  <span className="profile-stat-label">完成度</span>
                 </div>
+              </div>
+
+              <div className="profile-completion">
                 <div className="profile-completion-track">
                   <div
                     className="profile-completion-fill"
@@ -115,15 +119,6 @@ export default function ProfilePage() {
                   />
                 </div>
               </div>
-
-              <button
-                type="button"
-                onClick={() => setEditing(true)}
-                className="profile-edit-btn btn-secondary"
-              >
-                <Pencil className="h-3.5 w-3.5" />
-                プロフィールを編集
-              </button>
             </>
           )}
         </SeekerProfileHero>
@@ -131,13 +126,13 @@ export default function ProfilePage() {
         {!editing && <SeekerProfileCareerView profile={profile} />}
 
         {/* Profile info / edit */}
-        <section className="profile-section">
-          <div className="profile-section-header">
-            <p className="profile-section-title">登録情報</p>
+        <section className="profile-panel">
+          <div className="profile-panel-header">
+            <p className="profile-panel-title">登録情報</p>
           </div>
 
           {editing ? (
-            <div className="profile-section-content">
+            <div className="profile-panel-body">
               <Formik
                 initialValues={profileFormValues}
                 validationSchema={profileEditSchema}
@@ -175,9 +170,6 @@ export default function ProfilePage() {
                     {saveError ? (
                       <p className="seeker-auth-alert seeker-auth-alert--error">{saveError}</p>
                     ) : null}
-                    <p className="seeker-auth-note profile-form-note">
-                      メールアドレスの変更はアカウント設定から行ってください。
-                    </p>
                     <div className="profile-form-actions">
                       <button
                         type="button"
@@ -205,7 +197,7 @@ export default function ProfilePage() {
               </Formik>
             </div>
           ) : (
-            <div className="profile-section-content profile-section-content--flush">
+            <div className="profile-panel-body profile-panel-body--flush">
               <div className="profile-info-list">
               {registrationFields.map(({ label, value, wide }) => (
                   <div key={label} className="profile-info-row">
