@@ -52,10 +52,16 @@ export async function GET(
     staff && staff.role !== "admin" && job.approvalStatus === "Active" && pendingSubmission
       ? submissionToPreviewJob(job, pendingSubmission)
       : job;
+  const reviewJob =
+    staff?.role === "admin" && pendingSubmission
+      ? submissionToPreviewJob(job, pendingSubmission)
+      : staff?.role === "admin" && job.approvalStatus === "Pending"
+        ? job
+        : null;
 
   return NextResponse.json({
     job,
-    ...(staff ? { pendingSubmission, editJob } : {}),
+    ...(staff ? { pendingSubmission, editJob, reviewJob } : {}),
   });
 }
 
