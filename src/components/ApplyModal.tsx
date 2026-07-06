@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Form, Formik } from "formik";
 import { X, Send, CheckCircle } from "lucide-react";
 import Link from "next/link";
@@ -11,6 +11,7 @@ import { getProfile } from "@/lib/profile";
 import { apiFetch } from "@/lib/api-client";
 import { mapUserFacingError } from "@/lib/auth/errors";
 import { applySchema } from "@/lib/validation/schemas";
+import SeekerBottomSheet from "@/components/seeker/SeekerBottomSheet";
 import type { Application, JobFeedItem } from "@/lib/types";
 
 type ApplyModalProps = {
@@ -35,21 +36,10 @@ export default function ApplyModal({ job, onClose, onSuccess }: ApplyModalProps)
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 backdrop-blur-sm sm:items-center sm:p-4"
-      onClick={onClose}
+    <SeekerBottomSheet
+      onClose={onClose}
+      panelClassName="apply-modal-panel modal-sheet relative flex max-h-[92vh] w-full flex-col"
     >
-      <motion.div
-        initial={{ y: "100%" }}
-        animate={{ y: 0 }}
-        exit={{ y: "100%" }}
-        transition={{ type: "spring", damping: 30, stiffness: 300 }}
-        className="apply-modal-panel modal-sheet relative max-h-[92vh] w-full overflow-y-auto rounded-t-3xl sm:max-w-lg sm:rounded-3xl"
-        onClick={(e) => e.stopPropagation()}
-      >
         <div className="sticky top-0 z-30 h-0 overflow-visible">
           <button
             type="button"
@@ -61,7 +51,7 @@ export default function ApplyModal({ job, onClose, onSuccess }: ApplyModalProps)
           </button>
         </div>
 
-        <div className="apply-modal-content px-6 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] pt-3">
+        <div className="apply-modal-content min-h-0 flex-1 overflow-y-auto px-6 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] pt-3">
           <div className="mb-3 flex justify-center sm:hidden">
             <div className="apply-modal-handle h-1 w-10 rounded-full bg-slate-200" />
           </div>
@@ -163,7 +153,6 @@ export default function ApplyModal({ job, onClose, onSuccess }: ApplyModalProps)
             )}
           </AnimatePresence>
         </div>
-      </motion.div>
-    </motion.div>
+    </SeekerBottomSheet>
   );
 }

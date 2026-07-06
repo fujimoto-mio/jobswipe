@@ -1161,6 +1161,43 @@ body {
   bottom: var(--seeker-video-swipe-hint-bottom);
 }
 
+/* TikTok-style native scroll-snap feed */
+.seeker-video-feed-scroller {
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+  touch-action: pan-y;
+}
+
+.seeker-video-feed-scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.seeker-video-feed-slide {
+  height: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.seeker-bottom-sheet-panel {
+  --seeker-sheet-radius: 1.5rem;
+  border-radius: 0;
+  border-top-left-radius: var(--seeker-sheet-radius);
+  border-top-right-radius: var(--seeker-sheet-radius);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.seeker-bottom-sheet-panel.modal-sheet {
+  max-width: none;
+  overflow: hidden;
+}
+
 .seeker-explore-feed--chrome-hidden .seeker-explore-feed-header,
 .seeker-explore-feed--chrome-hidden .seeker-bottom-nav,
 .seeker-explore-feed--chrome-hidden .seeker-video-feed-chrome,

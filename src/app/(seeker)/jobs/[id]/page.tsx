@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { AnimatePresence } from "framer-motion";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -234,13 +235,16 @@ export default function JobDetailPage() {
         </div>
       </div>
 
-      {applyOpen && (
-        <ApplyModal
-          job={job}
-          onClose={() => setApplyOpen(false)}
-          onSuccess={() => setApplyOpen(false)}
-        />
-      )}
+      <AnimatePresence>
+        {applyOpen && (
+          <ApplyModal
+            key={job.id}
+            job={job}
+            onClose={() => setApplyOpen(false)}
+            onSuccess={() => setApplyOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
