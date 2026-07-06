@@ -1,9 +1,14 @@
 import { prisma } from "@/lib/prisma";
-import { JobApprovalStatus as PrismaJobApprovalStatus } from "@prisma/client";
+import { JobApprovalStatus as PrismaJobApprovalStatus, JobSubmissionStatus as PrismaJobSubmissionStatus } from "@prisma/client";
 import { mapJobResolved } from "@/lib/db/mappers";
-import type { Job, JobApprovalStatus } from "@/lib/types";
+import { mapSubmissionRow } from "@/lib/db/job-submissions";
+import type { Job, JobApprovalStatus, JobSubmissionContent } from "@/lib/types";
 
 const jobInclude = { company: true } as const;
+
+export type StaffJobListItem = Job & {
+  pendingSubmission?: JobSubmissionContent | null;
+};
 
 export type StaffJobsQuery = {
   companyId?: string | null;
@@ -16,7 +21,7 @@ export type StaffJobsQuery = {
 };
 
 export type PaginatedJobsResult = {
-  items: Job[];
+  items: StaffJobListItem[];
   total: number;
   page: number;
   pageSize: number;
@@ -87,8 +92,27 @@ export async function queryStaffJobs(query: StaffJobsQuery): Promise<PaginatedJo
     }),
   ]);
 
+  const jobIds = rows.map((row) => row.id);
+  const pendingSubmissions =
+    jobIds.length > 0
+      ? await prisma.jobSubmission.findMany({
+          where: {
+            jobId: { in: jobIds },
+            status: PrismaJobSubmissionStatus.Pending,
+          },
+        })
+      : [];
+  const submissionByJobId = new Map(
+    pendingSubmissions.map((submission) => [submission.jobId, mapSubmissionRow(submission)])
+  );
+
   return {
-    items: await Promise.all(rows.map(mapJobResolved)),
+    items: await Promise.all(
+      rows.map(async (row) => ({
+        ...(await mapJobResolved(row)),
+        pendingSubmission: submissionByJobId.get(row.id) ?? null,
+      }))
+    ),
     total,
     page,
     pageSize,

@@ -104,7 +104,7 @@ export default function JobStaffViewPage({ jobId }: JobStaffViewPageProps) {
     return <PageLoading message="求人詳細を読み込み中..." minHeight="min-h-[320px]" />;
   }
 
-  const canEdit = role !== "admin" && job.approvalStatus !== "Active";
+  const canEdit = role !== "admin";
 
   return (
     <div className="company-profile-page staff-ui">
@@ -216,7 +216,7 @@ export default function JobStaffViewPage({ jobId }: JobStaffViewPageProps) {
             className="staff-ui btn-primary flex w-full items-center justify-center gap-2 py-3"
           >
             <Pencil className="h-4 w-4" />
-            求人を編集
+            {job.approvalStatus === "Active" ? "変更を申請" : "求人を編集"}
           </Link>
         )}
       </div>

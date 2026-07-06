@@ -26,6 +26,11 @@ import { JOB_APPROVAL_BADGE_CLASS, JOB_APPROVAL_LABELS, JOB_APPROVAL_STATUSES } 
 import { useStaffPanel } from "@/components/staff/StaffPanelContext";
 import { apiFetch } from "@/lib/api-client";
 import type { Job, JobApprovalStatus } from "@/lib/types";
+import type { JobSubmissionContent } from "@/lib/types";
+
+type StaffJobRow = Job & {
+  pendingSubmission?: JobSubmissionContent | null;
+};
 
 const APPROVAL_FILTER_OPTIONS: { value: "" | JobApprovalStatus; label: string }[] = [
   { value: "", label: "すべて" },
@@ -71,8 +76,10 @@ export default function AdminJobsPage() {
   const tableRef = useRef<PaginatedDataTableHandle>(null);
   const [approvalFilter, setApprovalFilter] = useState<"" | JobApprovalStatus>("");
   const [pendingApproval, setPendingApproval] = useState<{
-    job: Job;
+    job: StaffJobRow;
     action: Extract<JobApprovalStatus, "Active" | "Cancelled">;
+    kind: "job" | "revision";
+    targetId: string;
   } | null>(null);
   const [pendingDeleteJob, setPendingDeleteJob] = useState<Job | null>(null);
 
@@ -80,11 +87,22 @@ export default function AdminJobsPage() {
     await tableRef.current?.refetch();
   }, []);
 
-  const updateApproval = async (id: string, approvalStatus: JobApprovalStatus) => {
-    const res = await apiFetch("/api/admin/jobs", {
-      method: "PATCH",
-      body: JSON.stringify({ id, approvalStatus }),
-    });
+  const updateApproval = async (
+    kind: "job" | "revision",
+    targetId: string,
+    action: Extract<JobApprovalStatus, "Active" | "Cancelled">
+  ) => {
+    const res = await apiFetch(
+      kind === "job" ? "/api/admin/jobs" : "/api/admin/job-submissions",
+      {
+        method: "PATCH",
+        body: JSON.stringify(
+          kind === "job"
+            ? { id: targetId, approvalStatus: action }
+            : { kind: "revision", id: targetId, action: action === "Active" ? "approve" : "reject" }
+        ),
+      }
+    );
     if (!res.ok) {
       throw new Error("approval update failed");
     }
@@ -105,7 +123,7 @@ export default function AdminJobsPage() {
     await deleteJob(pendingDeleteJob.id);
   };
 
-  const columns: ColumnDef<Job>[] = [
+  const columns: ColumnDef<StaffJobRow>[] = [
     {
       id: "job",
       header: "求人",
@@ -155,9 +173,14 @@ export default function AdminJobsPage() {
       className: "data-table-col-status",
       headerClassName: "data-table-col-status",
       cell: (job) => (
-        <span className={`badge ${JOB_APPROVAL_BADGE_CLASS[job.approvalStatus]}`}>
-          {JOB_APPROVAL_LABELS[job.approvalStatus]}
-        </span>
+        <div className="flex flex-col gap-1">
+          <span className={`badge w-fit ${JOB_APPROVAL_BADGE_CLASS[job.approvalStatus]}`}>
+            {JOB_APPROVAL_LABELS[job.approvalStatus]}
+          </span>
+          {job.pendingSubmission && (
+            <span className="badge badge-amber w-fit">変更申請中</span>
+          )}
+        </div>
       ),
     },
     {
@@ -191,13 +214,58 @@ export default function AdminJobsPage() {
       className: "data-table-col-actions text-right",
       cell: (job) => {
         if (isAdmin) {
+          const canReviewJob = job.approvalStatus === "Pending";
+          const canReviewRevision = Boolean(job.pendingSubmission);
+
           return (
             <TableRowActions>
               <TableViewLink href={`${basePath}/jobs/${job.id}/view`} />
-              {job.approvalStatus === "Pending" && (
+              {canReviewJob && (
                 <>
-                  <TableApproveButton onClick={() => setPendingApproval({ job, action: "Active" })} />
-                  <TableRejectButton onClick={() => setPendingApproval({ job, action: "Cancelled" })} />
+                  <TableApproveButton
+                    onClick={() =>
+                      setPendingApproval({
+                        job,
+                        action: "Active",
+                        kind: "job",
+                        targetId: job.id,
+                      })
+                    }
+                  />
+                  <TableRejectButton
+                    onClick={() =>
+                      setPendingApproval({
+                        job,
+                        action: "Cancelled",
+                        kind: "job",
+                        targetId: job.id,
+                      })
+                    }
+                  />
+                </>
+              )}
+              {canReviewRevision && job.pendingSubmission && (
+                <>
+                  <TableApproveButton
+                    onClick={() =>
+                      setPendingApproval({
+                        job,
+                        action: "Active",
+                        kind: "revision",
+                        targetId: job.pendingSubmission!.id,
+                      })
+                    }
+                  />
+                  <TableRejectButton
+                    onClick={() =>
+                      setPendingApproval({
+                        job,
+                        action: "Cancelled",
+                        kind: "revision",
+                        targetId: job.pendingSubmission!.id,
+                      })
+                    }
+                  />
                 </>
               )}
             </TableRowActions>
@@ -207,11 +275,9 @@ export default function AdminJobsPage() {
         return (
           <TableRowActions>
             <TableViewLink href={`${basePath}/jobs/${job.id}/view`} />
-            {job.approvalStatus !== "Active" && (
-              <>
-                <TableEditLink href={`${basePath}/jobs/${job.id}/edit`} />
-                <TableDeleteButton onClick={() => setPendingDeleteJob(job)} />
-              </>
+            <TableEditLink href={`${basePath}/jobs/${job.id}/edit`} />
+            {(job.approvalStatus === "Draft" || job.approvalStatus === "Cancelled") && (
+              <TableDeleteButton onClick={() => setPendingDeleteJob(job)} />
             )}
           </TableRowActions>
         );
@@ -228,7 +294,7 @@ export default function AdminJobsPage() {
           </h1>
           <p className="mt-1 text-sm text-slate-500">
             {isAdmin
-              ? "求人内容の確認と承認・却下"
+              ? "投稿申請の確認と承認・差し戻し"
               : "検索・フィルター・並び替えで求人を管理"}
           </p>
         </div>
@@ -258,7 +324,7 @@ export default function AdminJobsPage() {
           ...(approvalFilter ? { approvalStatus: approvalFilter } : {}),
         })}
         parseResponse={(data) => {
-          const payload = data as { items?: Job[]; total?: number };
+          const payload = data as { items?: StaffJobRow[]; total?: number };
           return {
             items: Array.isArray(payload.items) ? payload.items : [],
             total: typeof payload.total === "number" ? payload.total : 0,
@@ -290,9 +356,14 @@ export default function AdminJobsPage() {
             key={`${pendingApproval.job.id}-${pendingApproval.action}`}
             job={pendingApproval.job}
             action={pendingApproval.action}
+            kind={pendingApproval.kind}
             onClose={() => setPendingApproval(null)}
             onConfirm={() =>
-              updateApproval(pendingApproval.job.id, pendingApproval.action)
+              updateApproval(
+                pendingApproval.kind,
+                pendingApproval.targetId,
+                pendingApproval.action
+              )
             }
           />
         )}

@@ -8,46 +8,58 @@ import type { Job, JobApprovalStatus } from "@/lib/types";
 type JobApprovalConfirmModalProps = {
   job: Job;
   action: Extract<JobApprovalStatus, "Active" | "Cancelled">;
+  kind?: "job" | "revision";
   onClose: () => void;
   onConfirm: () => Promise<void>;
 };
 
 const COPY = {
   Active: {
-    title: "求人を承認しますか？",
-    description: "承認すると求職者向けに公開されます。",
-    confirmLabel: "承認する",
-    icon: Check,
-    iconTone: "success" as const,
-    variant: "success" as const,
+    job: {
+      title: "投稿申請を承認しますか？",
+      description: "承認すると求職者向けに公開されます。",
+      confirmLabel: "承認する",
+    },
+    revision: {
+      title: "変更申請を承認しますか？",
+      description: "承認すると変更内容が求職者向けに反映されます。",
+      confirmLabel: "変更を承認する",
+    },
   },
   Cancelled: {
-    title: "求人を却下しますか？",
-    description: "却下すると求職者向けには公開されません。",
-    confirmLabel: "却下する",
-    icon: X,
-    iconTone: "danger" as const,
-    variant: "danger" as const,
+    job: {
+      title: "投稿申請を差し戻しますか？",
+      description: "差し戻すと企業側で内容を修正できます。",
+      confirmLabel: "差し戻す",
+    },
+    revision: {
+      title: "変更申請を差し戻しますか？",
+      description: "差し戻しても現在公開中の内容は変わりません。",
+      confirmLabel: "変更を差し戻す",
+    },
   },
 } as const;
 
 export default function JobApprovalConfirmModal({
   job,
   action,
+  kind = "job",
   onClose,
   onConfirm,
 }: JobApprovalConfirmModalProps) {
-  const copy = COPY[action];
-  const Icon = copy.icon;
+  const copy = COPY[action][kind];
+  const Icon = action === "Active" ? Check : X;
+  const variant = action === "Active" ? "success" : "danger";
+  const iconTone = action === "Active" ? "success" : "danger";
 
   return (
     <ConfirmModal
       title={copy.title}
       description={copy.description}
       confirmLabel={copy.confirmLabel}
-      variant={copy.variant}
+      variant={variant}
       icon={Icon}
-      iconTone={copy.iconTone}
+      iconTone={iconTone}
       onClose={onClose}
       onConfirm={onConfirm}
     >

@@ -7,9 +7,10 @@ export type EmploymentType =
   | "インターン"
   | "アルバイト";
 
-import type { JobApprovalStatus } from "@/lib/constants";
+import type { JobApprovalStatus, JobSubmissionStatus } from "@/lib/constants";
 
 export type { JobApprovalStatus };
+export type { JobSubmissionStatus } from "@/lib/constants";
 
 export type JobLinks = {
   website?: string;
@@ -78,10 +79,33 @@ export type CreateJobInput = {
   requirements?: string[];
   benefits?: string[];
   links?: JobLinks;
+  submit?: boolean;
+};
+
+export type JobSubmissionContent = {
+  id: string;
+  jobId: string;
+  status: JobSubmissionStatus;
+  submittedAt: string;
+  reviewedAt?: string | null;
+  title: string;
+  location: string;
+  area: string;
+  category: string;
+  salary: string;
+  employmentType: string;
+  tags: string[];
+  description: string;
+  requirements: string[];
+  benefits: string[];
+  videoUrl: string;
+  thumbnailUrl: string;
+  links?: JobLinks;
 };
 
 export type UpdateJobInput = Partial<CreateJobInput> & {
   approvalStatus?: JobApprovalStatus;
+  submit?: boolean;
 };
 
 export type ApplicationStatus =

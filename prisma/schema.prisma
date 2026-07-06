@@ -20,9 +20,16 @@ enum SeekerStatus {
 }
 
 enum JobApprovalStatus {
+  Draft
   Pending
   Active
   Cancelled
+}
+
+enum JobSubmissionStatus {
+  Pending
+  Approved
+  Rejected
 }
 
 enum AuthCredentialRole {
@@ -66,7 +73,7 @@ model Job {
   videoUrl       String   @map("video_url")
   thumbnailUrl   String?  @map("thumbnail_url")
   links          Json     @default("{}")
-  approvalStatus JobApprovalStatus @default(Pending) @map("approval_status")
+  approvalStatus JobApprovalStatus @default(Draft) @map("approval_status")
   approvedAt     DateTime? @map("approved_at") @db.Timestamptz(3)
   viewCount      Int      @default(0) @map("view_count")
   postedAt       DateTime @default(now()) @map("posted_at") @db.Timestamptz(3)
@@ -75,10 +82,39 @@ model Job {
 
   savedJobs    SavedJob[]
   applications Application[]
+  submissions  JobSubmission[]
 
   @@index([companyId])
   @@index([approvalStatus, postedAt(sort: Desc)])
   @@map("jobs")
+}
+
+model JobSubmission {
+  id             String              @id @default(uuid())
+  jobId          String              @map("job_id")
+  job            Job                 @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  title          String
+  location       String
+  area           String
+  category       String
+  salaryDisplay  String              @map("salary_display")
+  employmentType String              @map("employment_type")
+  description    String
+  requirements   Json                @default("[]")
+  benefits       Json                @default("[]")
+  tags           Json                @default("[]")
+  videoUrl       String              @map("video_url")
+  thumbnailUrl   String?             @map("thumbnail_url")
+  links          Json                @default("{}")
+  status         JobSubmissionStatus @default(Pending)
+  submittedAt    DateTime            @default(now()) @map("submitted_at") @db.Timestamptz(3)
+  reviewedAt     DateTime?           @map("reviewed_at") @db.Timestamptz(3)
+  createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([status, submittedAt(sort: Desc)])
+  @@index([jobId, status])
+  @@map("job_submissions")
 }
 
 /// Authenticated staff accounts (admin / company) — linked to auth_credentials.id

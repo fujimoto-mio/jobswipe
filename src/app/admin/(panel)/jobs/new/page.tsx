@@ -71,6 +71,39 @@ export default function NewJobPage() {
     setUploadError(null);
   };
 
+  const saveJob = async (
+    values: typeof emptyJobFormValues,
+    setSubmitting: (value: boolean) => void,
+    submit: boolean
+  ) => {
+    setUploadError(null);
+    setSubmitting(true);
+
+    try {
+      let videoUrl = values.videoUrl?.trim() ?? "";
+
+      if (videoFile) {
+        videoUrl = await uploadFile(videoFile, "video");
+      }
+
+      const res = await apiFetch("/api/jobs", {
+        method: "POST",
+        body: JSON.stringify({ ...jobFormValuesToBody(values, videoUrl), submit }),
+      });
+
+      if (res.ok) {
+        router.push(`${basePath}/jobs`);
+      } else {
+        const data = await res.json();
+        setUploadError(data.error ?? "登録に失敗しました");
+      }
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "登録に失敗しました");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <>
       <Link href={`${basePath}/jobs`} className="staff-back-link mb-6 inline-flex items-center gap-2 text-sm">
@@ -80,7 +113,7 @@ export default function NewJobPage() {
 
       <div className="staff-page-header mb-8">
         <h1>求人登録</h1>
-        <p>動画付き求人を新規登録（管理者審査後に公開）</p>
+        <p>下書き保存後、投稿申請すると管理者の承認後に公開されます</p>
       </div>
 
       <Formik
@@ -92,36 +125,9 @@ export default function NewJobPage() {
         validationSchema={jobFormSchema}
         validationContext={{ companyLocked, hasCompanies: companies.length > 0 }}
         enableReinitialize
-        onSubmit={async (values, { setSubmitting }) => {
-          setUploadError(null);
-          setSubmitting(true);
-
-          try {
-            let videoUrl = values.videoUrl?.trim() ?? "";
-
-            if (videoFile) {
-              videoUrl = await uploadFile(videoFile, "video");
-            }
-
-            const res = await apiFetch("/api/jobs", {
-              method: "POST",
-              body: JSON.stringify(jobFormValuesToBody(values, videoUrl)),
-            });
-
-            if (res.ok) {
-              router.push(`${basePath}/jobs`);
-            } else {
-              const data = await res.json();
-              setUploadError(data.error ?? "登録に失敗しました");
-            }
-          } catch (err) {
-            setUploadError(err instanceof Error ? err.message : "登録に失敗しました");
-          } finally {
-            setSubmitting(false);
-          }
-        }}
+        onSubmit={() => {}}
       >
-        {({ isSubmitting, setFieldValue }) => (
+        {({ isSubmitting, values, setSubmitting, setFieldValue }) => (
           <Form className="staff-ui space-y-5">
             <div className="staff-form-card space-y-5">
               <JobFormFields companyLocked={companyLocked} companies={companies} />
@@ -135,9 +141,24 @@ export default function NewJobPage() {
               onClearVideo={() => clearVideo(setFieldValue)}
             />
 
-            <button type="submit" disabled={isSubmitting} className="btn-primary w-full py-3">
-              {isSubmitting ? "登録中..." : "求人を申請（審査待ち）"}
-            </button>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => void saveJob(values, setSubmitting, false)}
+                className="staff-ui btn-secondary w-full py-3"
+              >
+                {isSubmitting ? "保存中..." : "下書き保存"}
+              </button>
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => void saveJob(values, setSubmitting, true)}
+                className="btn-primary w-full py-3"
+              >
+                {isSubmitting ? "申請中..." : "投稿申請"}
+              </button>
+            </div>
           </Form>
         )}
       </Formik>
