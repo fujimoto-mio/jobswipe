@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import Link from "next/link";
 import {
   X,
@@ -18,6 +17,7 @@ import {
 } from "lucide-react";
 import { formatDateJST } from "@/lib/datetime";
 import { useVideoPlayback } from "@/hooks/useVideoPlayback";
+import SeekerBottomSheet from "@/components/seeker/SeekerBottomSheet";
 import type { Job } from "@/lib/types";
 
 type JobDetailModalProps = {
@@ -62,21 +62,10 @@ export default function JobDetailModal({
   });
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center"
-      onClick={onClose}
+    <SeekerBottomSheet
+      onClose={onClose}
+      panelClassName="job-detail-modal-panel relative flex max-h-[85vh] w-full max-w-3xl flex-col bg-white"
     >
-      <motion.div
-        initial={{ y: "100%" }}
-        animate={{ y: 0 }}
-        exit={{ y: "100%" }}
-        transition={{ type: "spring", damping: 30, stiffness: 300 }}
-        className="job-detail-modal-panel relative max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-t-3xl bg-white sm:rounded-3xl"
-        onClick={(e) => e.stopPropagation()}
-      >
         <div className="sticky top-0 z-30 h-0 overflow-visible">
           <button
             type="button"
@@ -88,7 +77,7 @@ export default function JobDetailModal({
           </button>
         </div>
 
-        <div className="relative aspect-video overflow-hidden rounded-t-3xl sm:rounded-t-3xl">
+        <div className="relative aspect-video shrink-0 overflow-hidden">
           <video
             ref={videoRef}
             className="h-full w-full object-cover"
@@ -112,7 +101,7 @@ export default function JobDetailModal({
           </button>
         </div>
 
-        <div className="job-detail-modal-content p-6">
+        <div className="job-detail-modal-content min-h-0 flex-1 overflow-y-auto p-6">
           <div className="mb-4 flex items-center gap-3">
             <img src={job.companyLogo} alt={job.company} className="h-12 w-12 rounded-xl object-cover" />
             <div>
@@ -220,7 +209,6 @@ export default function JobDetailModal({
             詳細ページで見る
           </Link>
         </div>
-      </motion.div>
-    </motion.div>
+    </SeekerBottomSheet>
   );
 }

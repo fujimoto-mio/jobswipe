@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import { AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
@@ -225,43 +226,47 @@ export default function LikedPage() {
 
       <BottomNav saveCount={navSaveCount} chatCount={chatCount} />
 
-      {selectedJob && (
-        <JobDetailModal
-          job={selectedJob}
-          isSaved={true}
-          applied={applicationByJobId.has(selectedJob.id)}
-          onClose={() => setSelectedJob(null)}
-          onSave={() => {}}
-          onApply={() => {
-            if (applicationByJobId.has(selectedJob.id)) return;
-            setSelectedJob(null);
-            setApplyJob(selectedJob);
-          }}
-          chatHref={
-            applicationByJobId.get(selectedJob.id)
-              ? `/chat?applicationId=${applicationByJobId.get(selectedJob.id)}`
-              : undefined
-          }
-        />
-      )}
-
-      {applyJob && (
-        <ApplyModal
-          job={applyJob}
-          onClose={() => setApplyJob(null)}
-          onSuccess={(application) => {
-            if (application?.jobId && application.id) {
-              setApplicationByJobId((prev) => {
-                const next = new Map(prev);
-                next.set(application.jobId, application.id);
-                return next;
-              });
+      <AnimatePresence>
+        {selectedJob && (
+          <JobDetailModal
+            key={selectedJob.id}
+            job={selectedJob}
+            isSaved={true}
+            applied={applicationByJobId.has(selectedJob.id)}
+            onClose={() => setSelectedJob(null)}
+            onSave={() => {}}
+            onApply={() => {
+              if (applicationByJobId.has(selectedJob.id)) return;
+              setSelectedJob(null);
+              setApplyJob(selectedJob);
+            }}
+            chatHref={
+              applicationByJobId.get(selectedJob.id)
+                ? `/chat?applicationId=${applicationByJobId.get(selectedJob.id)}`
+                : undefined
             }
-            setApplyJob(null);
-            void table.refetch();
-          }}
-        />
-      )}
+          />
+        )}
+
+        {applyJob && (
+          <ApplyModal
+            key={applyJob.id}
+            job={applyJob}
+            onClose={() => setApplyJob(null)}
+            onSuccess={(application) => {
+              if (application?.jobId && application.id) {
+                setApplicationByJobId((prev) => {
+                  const next = new Map(prev);
+                  next.set(application.jobId, application.id);
+                  return next;
+                });
+              }
+              setApplyJob(null);
+              void table.refetch();
+            }}
+          />
+        )}
+      </AnimatePresence>
     </AppPage>
   );
 }

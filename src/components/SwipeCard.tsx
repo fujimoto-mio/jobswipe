@@ -1,13 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
-import { flushSync } from "react-dom";
-import { motion, useMotionValue, useTransform, animate, type PanInfo } from "framer-motion";
+import { useCallback, useEffect, useRef, useState } from "react";
 import VideoFeedItem from "./VideoFeedItem";
 import type { JobFeedItem } from "@/lib/types";
 
-const SWIPE_THRESHOLD = 72;
-const SNAP_DURATION = 0.12;
+type SlideSlot = {
+  role: "prev" | "current" | "next";
+  job: JobFeedItem;
+};
 
 type SwipeCardProps = {
   prevJob: JobFeedItem | null;
@@ -26,59 +26,16 @@ type SwipeCardProps = {
   onDetail: (job: JobFeedItem) => void;
 };
 
-type StackSlideProps = {
-  job: JobFeedItem;
-  placement: "prev" | "current" | "next";
-  scale?: ReturnType<typeof useTransform<number, number>>;
-  isActive: boolean;
-  preloadVideo?: boolean;
-  swipeEnabled?: boolean;
-  chromeVisible: boolean;
-  isSaved: boolean;
-  zIndex: number;
-  onChromeActivity?: () => void;
-  onSave: () => void;
-  onApply: () => void;
-  onDetail: () => void;
-};
-
-function StackSlide({
-  job,
-  placement,
-  scale,
-  isActive,
-  preloadVideo = false,
-  swipeEnabled = false,
-  chromeVisible,
-  isSaved,
-  zIndex,
-  onChromeActivity,
-  onSave,
-  onApply,
-  onDetail,
-}: StackSlideProps) {
-  const placementClass =
-    placement === "prev" ? "bottom-full" : placement === "next" ? "top-full" : "inset-0";
-
-  return (
-    <motion.div
-      className={`absolute left-0 right-0 h-full will-change-transform ${placementClass}`}
-      style={{ scale: scale ?? 1, zIndex }}
-    >
-      <VideoFeedItem
-        job={job}
-        isActive={isActive}
-        preloadVideo={preloadVideo}
-        swipeEnabled={swipeEnabled}
-        chromeVisible={chromeVisible}
-        isSaved={isSaved}
-        onChromeActivity={onChromeActivity}
-        onSave={onSave}
-        onApply={onApply}
-        onDetail={onDetail}
-      />
-    </motion.div>
-  );
+function buildSlides(
+  prevJob: JobFeedItem | null,
+  currentJob: JobFeedItem,
+  nextJob: JobFeedItem | null
+): SlideSlot[] {
+  const slides: SlideSlot[] = [];
+  if (prevJob) slides.push({ role: "prev", job: prevJob });
+  slides.push({ role: "current", job: currentJob });
+  if (nextJob) slides.push({ role: "next", job: nextJob });
+  return slides;
 }
 
 export default function SwipeCard({
@@ -97,151 +54,162 @@ export default function SwipeCard({
   onApply,
   onDetail,
 }: SwipeCardProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const dragY = useMotionValue(0);
-  const heightRef = useRef(0);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const pageHeightRef = useRef(0);
+  const isResettingRef = useRef(false);
+  const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
 
-  const currentScale = useTransform(dragY, (v) => {
-    const h = heightRef.current || 1;
-    return 1 - Math.min(Math.abs(v) / h, 1) * 0.04;
-  });
-  const prevOpacity = useTransform(dragY, [0, 80], [0, 1]);
-  const nextOpacity = useTransform(dragY, [-80, 0], [1, 0]);
+  const slides = buildSlides(prevJob, currentJob, nextJob);
+  const currentSlotIndex = prevJob ? 1 : 0;
+  const [activeSlot, setActiveSlot] = useState(currentSlotIndex);
 
   const measureHeight = useCallback(() => {
-    const h = containerRef.current?.offsetHeight ?? 0;
-    if (h > 0) heightRef.current = h;
+    const h = scrollerRef.current?.clientHeight ?? 0;
+    if (h > 0) pageHeightRef.current = h;
   }, []);
+
+  const scrollToCurrent = useCallback(
+    (behavior: ScrollBehavior = "auto") => {
+      const el = scrollerRef.current;
+      const h = pageHeightRef.current;
+      if (!el || !h) return;
+
+      isResettingRef.current = true;
+      el.scrollTo({ top: currentSlotIndex * h, behavior });
+      requestAnimationFrame(() => {
+        isResettingRef.current = false;
+      });
+    },
+    [currentSlotIndex]
+  );
 
   useEffect(() => {
     measureHeight();
-    const el = containerRef.current;
+    const el = scrollerRef.current;
     if (!el) return;
-    const ro = new ResizeObserver(measureHeight);
+    const ro = new ResizeObserver(() => {
+      measureHeight();
+      scrollToCurrent();
+    });
     ro.observe(el);
     return () => ro.disconnect();
-  }, [measureHeight]);
+  }, [measureHeight, scrollToCurrent]);
 
   useEffect(() => {
-    dragY.set(0);
-  }, [currentJob.id, dragY]);
+    setActiveSlot(currentSlotIndex);
+    scrollToCurrent();
+  }, [currentJob.id, currentSlotIndex, scrollToCurrent]);
 
-  const snapBack = () => {
-    animate(dragY, 0, { type: "spring", stiffness: 420, damping: 36, mass: 0.85 });
-  };
+  const syncActiveSlot = useCallback(() => {
+    const el = scrollerRef.current;
+    const h = pageHeightRef.current;
+    if (!el || !h || isResettingRef.current) return;
+    setActiveSlot(Math.round(el.scrollTop / h));
+  }, []);
 
-  const commitSwipe = (direction: "up" | "down") => {
-    flushSync(() => {
-      if (direction === "up") onSwipeUp();
-      else onSwipeDown();
-    });
-    animate(dragY, 0, { duration: SNAP_DURATION, ease: [0.32, 0.72, 0, 1] });
-  };
+  const handleScrollSettled = useCallback(() => {
+    if (isResettingRef.current) return;
 
-  const handleDragEnd = (_: unknown, info: PanInfo) => {
-    const { offset, velocity } = info;
-    const passedThreshold = Math.abs(offset.y) > SWIPE_THRESHOLD || Math.abs(velocity.y) > 500;
+    const el = scrollerRef.current;
+    const h = pageHeightRef.current;
+    if (!el || !h) return;
 
-    if (offset.y < 0 && passedThreshold) {
-      if (!canSwipeUp) {
-        snapBack();
+    const slot = Math.round(el.scrollTop / h);
+    if (slot < currentSlotIndex) {
+      if (!canSwipeDown || !prevJob) {
+        scrollToCurrent("smooth");
         return;
       }
-      commitSwipe("up");
-    } else if (offset.y > 0 && passedThreshold) {
-      if (!canSwipeDown) {
-        snapBack();
+      onSwipeDown();
+      return;
+    }
+
+    if (slot > currentSlotIndex) {
+      if (!canSwipeUp || !nextJob) {
+        scrollToCurrent("smooth");
         return;
       }
-      commitSwipe("down");
-    } else {
-      snapBack();
+      onSwipeUp();
+    }
+  }, [
+    canSwipeDown,
+    canSwipeUp,
+    currentSlotIndex,
+    nextJob,
+    onSwipeDown,
+    onSwipeUp,
+    prevJob,
+    scrollToCurrent,
+  ]);
+
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+
+    let settleTimer: ReturnType<typeof setTimeout> | null = null;
+    const scheduleSettle = () => {
+      syncActiveSlot();
+      if (settleTimer) clearTimeout(settleTimer);
+      settleTimer = setTimeout(() => {
+        settleTimer = null;
+        handleScrollSettled();
+      }, 80);
+    };
+
+    const onScrollEnd = () => handleScrollSettled();
+    el.addEventListener("scroll", scheduleSettle, { passive: true });
+    el.addEventListener("scrollend", onScrollEnd);
+
+    return () => {
+      if (settleTimer) clearTimeout(settleTimer);
+      el.removeEventListener("scroll", scheduleSettle);
+      el.removeEventListener("scrollend", onScrollEnd);
+    };
+  }, [handleScrollSettled, syncActiveSlot]);
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if ((event.target as HTMLElement).closest("button, a, input, textarea, select")) return;
+    pointerStartRef.current = { x: event.clientX, y: event.clientY };
+  };
+
+  const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    if ((event.target as HTMLElement).closest("button, a, input, textarea, select")) return;
+    const start = pointerStartRef.current;
+    pointerStartRef.current = null;
+    if (!start || !onToggleChrome) return;
+
+    const dx = Math.abs(event.clientX - start.x);
+    const dy = Math.abs(event.clientY - start.y);
+    if (dx < 10 && dy < 10) {
+      onToggleChrome();
     }
   };
 
   return (
-    <div ref={containerRef} className="relative h-full w-full overflow-hidden">
-      <motion.div
-        className="absolute inset-0 cursor-grab select-none active:cursor-grabbing"
-        style={{ y: dragY, touchAction: "none" }}
-        drag="y"
-        dragConstraints={{ top: 0, bottom: 0 }}
-        dragElastic={
-          canSwipeUp && canSwipeDown ? 0.35 : canSwipeUp ? { top: 0.35, bottom: 0.08 } : { top: 0.08, bottom: 0.35 }
-        }
-        dragMomentum={false}
-        onDragEnd={handleDragEnd}
-        onTap={onToggleChrome}
+    <div className="relative h-full w-full overflow-hidden bg-black">
+      <div
+        ref={scrollerRef}
+        className="seeker-video-feed-scroller"
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
       >
-        {prevJob && (
-          <StackSlide
-            key={prevJob.id}
-            job={prevJob}
-            placement="prev"
-            isActive={false}
-            preloadVideo
-            chromeVisible={false}
-            isSaved={isSaved(prevJob.id)}
-            zIndex={1}
-            onSave={() => onSave(prevJob)}
-            onApply={() => onApply(prevJob)}
-            onDetail={() => onDetail(prevJob)}
-          />
-        )}
-
-        <StackSlide
-          key={currentJob.id}
-          job={currentJob}
-          placement="current"
-          scale={currentScale}
-          isActive
-          swipeEnabled
-          chromeVisible={chromeVisible}
-          isSaved={isSaved(currentJob.id)}
-          zIndex={10}
-          onChromeActivity={onChromeActivity}
-          onSave={() => onSave(currentJob)}
-          onApply={() => onApply(currentJob)}
-          onDetail={() => onDetail(currentJob)}
-        />
-
-        {nextJob && (
-          <StackSlide
-            key={nextJob.id}
-            job={nextJob}
-            placement="next"
-            isActive={false}
-            preloadVideo
-            chromeVisible={false}
-            isSaved={isSaved(nextJob.id)}
-            zIndex={1}
-            onSave={() => onSave(nextJob)}
-            onApply={() => onApply(nextJob)}
-            onDetail={() => onDetail(nextJob)}
-          />
-        )}
-
-        <div
-          className={`seeker-video-feed-chrome pointer-events-none absolute inset-0 z-30 ${chromeVisible ? "" : "seeker-video-feed-chrome--off"}`}
-        >
-          <motion.div
-            style={{ opacity: prevOpacity }}
-            className="absolute left-1/2 top-[38%] -translate-x-1/2"
-          >
-            <div className="rounded-2xl border-[3px] border-white/60 px-6 py-2">
-              <span className="text-3xl font-black tracking-wide text-white/80">前へ</span>
-            </div>
-          </motion.div>
-          <motion.div
-            style={{ opacity: nextOpacity }}
-            className="absolute left-1/2 top-[32%] -translate-x-1/2"
-          >
-            <div className="rounded-2xl border-[3px] border-emerald-400 px-6 py-2">
-              <span className="text-3xl font-black tracking-wide text-emerald-400">次へ</span>
-            </div>
-          </motion.div>
-        </div>
-      </motion.div>
+        {slides.map(({ role, job }, slideIndex) => (
+          <div key={`${role}-${job.id}`} className="seeker-video-feed-slide">
+            <VideoFeedItem
+              job={job}
+              isActive={slideIndex === activeSlot}
+              preloadVideo={slideIndex !== activeSlot}
+              swipeEnabled={slideIndex === activeSlot}
+              chromeVisible={slideIndex === activeSlot ? chromeVisible : false}
+              isSaved={isSaved(job.id)}
+              onChromeActivity={onChromeActivity}
+              onSave={() => onSave(job)}
+              onApply={() => onApply(job)}
+              onDetail={() => onDetail(job)}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

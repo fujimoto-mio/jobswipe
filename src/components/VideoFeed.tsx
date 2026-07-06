@@ -251,9 +251,16 @@ export default function VideoFeed({
         )}
       </AnimatePresence>
 
-      {applyJob && (
-        <ApplyModal job={applyJob} onClose={() => setApplyJob(null)} onSuccess={handleApplySuccess} />
-      )}
+      <AnimatePresence>
+        {applyJob && (
+          <ApplyModal
+            key={applyJob.id}
+            job={applyJob}
+            onClose={() => setApplyJob(null)}
+            onSuccess={handleApplySuccess}
+          />
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {toast && (
