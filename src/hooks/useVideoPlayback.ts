@@ -151,6 +151,11 @@ export function useVideoPlayback({ src, isActive, preload = false, muted = true 
   }, [isActive, play]);
 
   useEffect(() => {
+    const video = videoRef.current;
+    if (video && videoMatchesSrc(video, src) && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+      setHasFrame(true);
+      return;
+    }
     setHasFrame(false);
   }, [src]);
 
