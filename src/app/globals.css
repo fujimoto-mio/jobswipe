@@ -1166,27 +1166,29 @@ body {
   bottom: var(--seeker-video-swipe-hint-bottom);
 }
 
-/* TikTok-style native scroll-snap feed */
-.seeker-video-feed-scroller {
+/* TikTok-style pointer paging feed */
+.seeker-video-feed-viewport {
   height: 100%;
   width: 100%;
-  overflow-x: hidden;
-  overflow-y: scroll;
-  scroll-snap-type: y mandatory;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
-  scrollbar-width: none;
-  touch-action: pan-y;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.seeker-video-feed-scroller::-webkit-scrollbar {
-  display: none;
+.seeker-video-feed-track {
+  height: 100%;
+  width: 100%;
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 .seeker-video-feed-slide {
   height: 100%;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
+  overflow: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 .seeker-bottom-sheet-panel {
