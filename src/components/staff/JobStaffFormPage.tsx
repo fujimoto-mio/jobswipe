@@ -16,6 +16,8 @@ import { jobFormSchema } from "@/lib/validation/schemas";
 import { jobFormValuesToBody, jobToFormValues } from "@/lib/validation/job-form-utils";
 import JobVideoUploadField from "@/components/staff/JobVideoUploadField";
 import { uploadFile } from "@/lib/upload-client";
+import type { JobSubmissionContent } from "@/lib/types";
+
 type JobStaffFormPageProps = {
   jobId: string;
 };
@@ -26,6 +28,8 @@ export default function JobStaffFormPage({ jobId }: JobStaffFormPageProps) {
   const isCompany = role === "company";
 
   const [job, setJob] = useState<Job | null>(null);
+  const [editJob, setEditJob] = useState<Job | null>(null);
+  const [pendingSubmission, setPendingSubmission] = useState<JobSubmissionContent | null>(null);
   const [loading, setLoading] = useState(true);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -61,19 +65,16 @@ export default function JobStaffFormPage({ jobId }: JobStaffFormPageProps) {
         return r.json();
       })
       .then((d) => {
-        setJob(d.job);
-        setVideoPreview(d.job.videoUrl || null);
+        const loadedJob = d.job as Job;
+        const loadedEditJob = (d.editJob as Job | undefined) ?? loadedJob;
+        setJob(loadedJob);
+        setEditJob(loadedEditJob);
+        setPendingSubmission((d.pendingSubmission as JobSubmissionContent | null) ?? null);
+        setVideoPreview(loadedEditJob.videoUrl || null);
       })
       .catch(() => router.replace(`${basePath}/jobs`))
       .finally(() => setLoading(false));
   }, [jobId, router, basePath]);
-
-  useEffect(() => {
-    if (!job || loading || !isCompany) return;
-    if (job.approvalStatus === "Active") {
-      router.replace(`${basePath}/jobs/${jobId}/view`);
-    }
-  }, [job, loading, isCompany, jobId, basePath, router]);
 
   const handleVideoFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -101,13 +102,54 @@ export default function JobStaffFormPage({ jobId }: JobStaffFormPageProps) {
     setUploadError(null);
   };
 
-  if (loading || !job) {
+  const saveJob = async (
+    values: ReturnType<typeof jobToFormValues>,
+    setSubmitting: (value: boolean) => void,
+    submit: boolean
+  ) => {
+    if (!job || !editJob) return;
+
+    setUploadError(null);
+    setSubmitting(true);
+
+    try {
+      let videoUrl = values.videoUrl?.trim() ?? "";
+
+      if (videoFile) {
+        videoUrl = await uploadFile(videoFile, "video");
+      } else if (!videoCleared) {
+        videoUrl = videoUrl || editJob.videoUrl;
+      }
+
+      const res = await apiFetch(`/api/jobs/${jobId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ ...jobFormValuesToBody(values, videoUrl), submit }),
+      });
+
+      if (res.ok) {
+        router.push(`${basePath}/jobs`);
+      } else {
+        const data = await res.json();
+        setUploadError(data.error ?? "更新に失敗しました");
+      }
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "更新に失敗しました");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading || !job || !editJob) {
     return <PageLoading message="求人情報を読み込み中..." minHeight="min-h-[320px]" staff />;
   }
 
-  if (isCompany && job.approvalStatus === "Active") {
-    return <PageLoading message="表示ページへ移動中..." minHeight="min-h-[320px]" staff />;
-  }
+  const isActiveRevision = isCompany && job.approvalStatus === "Active";
+  const canDraftSave =
+    !isActiveRevision &&
+    (job.approvalStatus === "Draft" ||
+      job.approvalStatus === "Cancelled" ||
+      job.approvalStatus === "Pending" ||
+      role === "admin");
 
   return (
     <>
@@ -118,51 +160,31 @@ export default function JobStaffFormPage({ jobId }: JobStaffFormPageProps) {
 
       <div className="mb-8 flex flex-wrap items-center gap-3">
         <div className="staff-page-header">
-          <h1>求人編集</h1>
-          <p>{job.title}</p>
+          <h1>{isActiveRevision ? "求人変更申請" : "求人編集"}</h1>
+          <p>{editJob.title}</p>
         </div>
         <span className={`badge ${JOB_APPROVAL_BADGE_CLASS[job.approvalStatus]}`}>
           {JOB_APPROVAL_LABELS[job.approvalStatus]}
         </span>
+        {pendingSubmission && (
+          <span className="badge badge-amber">変更申請中</span>
+        )}
       </div>
 
+      {isActiveRevision && (
+        <p className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          承認されるまで求職者には現在公開中の内容が表示されます。
+        </p>
+      )}
+
       <Formik
-        initialValues={jobToFormValues(job)}
+        initialValues={jobToFormValues(editJob)}
         validationSchema={jobFormSchema}
         validationContext={{ companyLocked, hasCompanies: companies.length > 0 }}
         enableReinitialize
-        onSubmit={async (values, { setSubmitting }) => {
-          setUploadError(null);
-          setSubmitting(true);
-
-          try {
-            let videoUrl = values.videoUrl?.trim() ?? "";
-
-            if (videoFile) {
-              videoUrl = await uploadFile(videoFile, "video");
-            } else if (!videoCleared) {
-              videoUrl = videoUrl || job.videoUrl;
-            }
-
-            const res = await apiFetch(`/api/jobs/${jobId}`, {
-              method: "PATCH",
-              body: JSON.stringify(jobFormValuesToBody(values, videoUrl)),
-            });
-
-            if (res.ok) {
-              router.push(`${basePath}/jobs`);
-            } else {
-              const data = await res.json();
-              setUploadError(data.error ?? "更新に失敗しました");
-            }
-          } catch (err) {
-            setUploadError(err instanceof Error ? err.message : "更新に失敗しました");
-          } finally {
-            setSubmitting(false);
-          }
-        }}
+        onSubmit={() => {}}
       >
-        {({ isSubmitting, setFieldValue }) => (
+        {({ isSubmitting, values, setSubmitting, setFieldValue }) => (
           <Form className="staff-ui space-y-5">
             <div className="staff-form-card space-y-5">
               <JobFormFields companyLocked={companyLocked} companies={companies} />
@@ -174,12 +196,44 @@ export default function JobStaffFormPage({ jobId }: JobStaffFormPageProps) {
               uploadError={uploadError}
               onVideoFile={handleVideoFile}
               onClearVideo={() => clearVideo(setFieldValue)}
-              existingVideo={!videoFile && !videoCleared && Boolean(job.videoUrl && videoPreview)}
+              existingVideo={!videoFile && !videoCleared && Boolean(editJob.videoUrl && videoPreview)}
             />
 
-            <button type="submit" disabled={isSubmitting} className="staff-ui btn-primary w-full py-3">
-              {isSubmitting ? "保存中..." : "変更を保存"}
-            </button>
+            {isActiveRevision ? (
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => void saveJob(values, setSubmitting, true)}
+                className="staff-ui btn-primary w-full py-3"
+              >
+                {isSubmitting ? "申請中..." : "変更を申請"}
+              </button>
+            ) : (
+              <div className={canDraftSave ? "grid gap-3 sm:grid-cols-2" : ""}>
+                {canDraftSave && (
+                  <button
+                    type="button"
+                    disabled={isSubmitting}
+                    onClick={() => void saveJob(values, setSubmitting, false)}
+                    className="staff-ui btn-secondary w-full py-3"
+                  >
+                    {isSubmitting ? "保存中..." : "下書き保存"}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={() => void saveJob(values, setSubmitting, true)}
+                  className="btn-primary w-full py-3"
+                >
+                  {isSubmitting
+                    ? "申請中..."
+                    : job.approvalStatus === "Draft" || job.approvalStatus === "Cancelled"
+                      ? "投稿申請"
+                      : "変更を保存して申請"}
+                </button>
+              </div>
+            )}
           </Form>
         )}
       </Formik>

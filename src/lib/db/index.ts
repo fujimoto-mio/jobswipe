@@ -12,6 +12,12 @@ import { fetchSavedApplyMessages, resolveApplicationMessage } from "@/lib/db/sav
 import { now } from "@/lib/datetime";
 import { parseBirthday } from "@/lib/birthday";
 import { resolveCompanyIdForJob } from "@/lib/db/companies";
+import {
+  createJobWithStatus,
+  getPendingSubmissionForJob,
+  submitJobForReview,
+  upsertPendingJobSubmission,
+} from "@/lib/db/job-submissions";
 import type {
   Application,
   ApplicationStatus,
@@ -30,6 +36,10 @@ import { resolveAvatarUrl } from "@/lib/storage/resolve-media";
 import { sendMatchNotificationEmail } from "@/lib/email";
 
 const jobInclude = { company: true } as const;
+
+function asJsonStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? (value as string[]) : [];
+}
 
 export { listCompanies } from "@/lib/db/companies";
 
@@ -91,34 +101,10 @@ export async function createJob(
   input: CreateJobInput,
   options?: { staffCompanyId?: string | null }
 ): Promise<Job> {
-  const companyId = await resolveCompanyIdForJob({
-    companyId: input.companyId,
-    companyName: input.company,
+  return createJobWithStatus(input, {
     staffCompanyId: options?.staffCompanyId,
+    submit: input.submit ?? false,
   });
-
-  const row = await prisma.job.create({
-    data: {
-      companyId,
-      title: input.title,
-      location: input.location,
-      area: input.area ?? "東京都",
-      category: input.category ?? "エンジニア",
-      salaryDisplay: input.salary,
-      employmentType: input.employmentType,
-      description: input.description,
-      requirements: input.requirements ?? [],
-      benefits: input.benefits ?? [],
-      tags: input.tags ?? [],
-      videoUrl: input.videoUrl ?? "",
-      thumbnailUrl: input.thumbnailUrl,
-      links: input.links ?? {},
-      approvalStatus: PrismaJobApprovalStatus.Pending,
-    },
-    include: jobInclude,
-  });
-
-  return mapJobResolved(row);
 }
 
 export async function updateJobApproval(id: string, status: JobApprovalStatus): Promise<Job | null> {
@@ -140,46 +126,95 @@ export async function updateJobApproval(id: string, status: JobApprovalStatus): 
 export async function updateJob(
   id: string,
   input: UpdateJobInput,
-  options?: { staffCompanyId?: string | null }
+  options?: { staffCompanyId?: string | null; allowActiveDirectEdit?: boolean }
 ): Promise<Job | null> {
   try {
     const existing = await prisma.job.findUnique({ where: { id }, include: jobInclude });
     if (!existing) return null;
 
+    if (options?.staffCompanyId) {
+      if (existing.companyId !== options.staffCompanyId) return null;
+    }
+
+    const { submit, approvalStatus: requestedApprovalStatus, ...contentInput } = input;
+
+    if (existing.approvalStatus === PrismaJobApprovalStatus.Active) {
+      if (requestedApprovalStatus && requestedApprovalStatus !== "Active") {
+        return null;
+      }
+      if (options?.allowActiveDirectEdit) {
+        // Admin may edit published jobs directly.
+      } else if (submit) {
+        await upsertPendingJobSubmission(id, {
+          title: contentInput.title ?? existing.title,
+          location: contentInput.location ?? existing.location,
+          area: contentInput.area ?? existing.area,
+          category: contentInput.category ?? existing.category,
+          salary: contentInput.salary ?? existing.salaryDisplay,
+          employmentType: (contentInput.employmentType ?? existing.employmentType) as CreateJobInput["employmentType"],
+          description: contentInput.description ?? existing.description,
+          videoUrl: contentInput.videoUrl ?? existing.videoUrl,
+          thumbnailUrl: contentInput.thumbnailUrl ?? existing.thumbnailUrl ?? undefined,
+          tags: contentInput.tags ?? asJsonStringArray(existing.tags),
+          requirements: contentInput.requirements ?? asJsonStringArray(existing.requirements),
+          benefits: contentInput.benefits ?? asJsonStringArray(existing.benefits),
+          links: (contentInput.links ?? existing.links) as CreateJobInput["links"],
+        });
+        return mapJobResolved(existing);
+      } else {
+        return null;
+      }
+    }
+
     let companyId = existing.companyId;
 
     if (options?.staffCompanyId) {
-      if (existing.companyId !== options.staffCompanyId) return null;
       companyId = options.staffCompanyId;
-    } else if (input.companyId !== undefined) {
-      companyId = await resolveCompanyIdForJob({ companyId: input.companyId });
-    } else if (input.company !== undefined && input.company.trim() !== existing.company.name) {
-      companyId = await resolveCompanyIdForJob({ companyName: input.company });
+    } else if (contentInput.companyId !== undefined) {
+      companyId = await resolveCompanyIdForJob({ companyId: contentInput.companyId });
+    } else if (
+      contentInput.company !== undefined &&
+      contentInput.company.trim() !== existing.company.name
+    ) {
+      companyId = await resolveCompanyIdForJob({ companyName: contentInput.company });
     }
+
+    const nextApprovalStatus =
+      requestedApprovalStatus !== undefined
+        ? (requestedApprovalStatus as PrismaJobApprovalStatus)
+        : submit &&
+            (existing.approvalStatus === PrismaJobApprovalStatus.Draft ||
+              existing.approvalStatus === PrismaJobApprovalStatus.Cancelled)
+          ? PrismaJobApprovalStatus.Pending
+          : undefined;
 
     const row = await prisma.job.update({
       where: { id },
       data: {
-        ...(input.title !== undefined ? { title: input.title } : {}),
-        ...(input.company !== undefined || input.companyId !== undefined || options?.staffCompanyId
+        ...(contentInput.title !== undefined ? { title: contentInput.title } : {}),
+        ...(contentInput.company !== undefined ||
+        contentInput.companyId !== undefined ||
+        options?.staffCompanyId
           ? { companyId }
           : {}),
-        ...(input.location !== undefined ? { location: input.location } : {}),
-        ...(input.area !== undefined ? { area: input.area } : {}),
-        ...(input.category !== undefined ? { category: input.category } : {}),
-        ...(input.salary !== undefined ? { salaryDisplay: input.salary } : {}),
-        ...(input.employmentType !== undefined ? { employmentType: input.employmentType } : {}),
-        ...(input.description !== undefined ? { description: input.description } : {}),
-        ...(input.videoUrl !== undefined ? { videoUrl: input.videoUrl } : {}),
-        ...(input.thumbnailUrl !== undefined ? { thumbnailUrl: input.thumbnailUrl } : {}),
-        ...(input.tags !== undefined ? { tags: input.tags } : {}),
-        ...(input.requirements !== undefined ? { requirements: input.requirements } : {}),
-        ...(input.benefits !== undefined ? { benefits: input.benefits } : {}),
-        ...(input.links !== undefined ? { links: input.links } : {}),
-        ...(input.approvalStatus !== undefined
+        ...(contentInput.location !== undefined ? { location: contentInput.location } : {}),
+        ...(contentInput.area !== undefined ? { area: contentInput.area } : {}),
+        ...(contentInput.category !== undefined ? { category: contentInput.category } : {}),
+        ...(contentInput.salary !== undefined ? { salaryDisplay: contentInput.salary } : {}),
+        ...(contentInput.employmentType !== undefined
+          ? { employmentType: contentInput.employmentType }
+          : {}),
+        ...(contentInput.description !== undefined ? { description: contentInput.description } : {}),
+        ...(contentInput.videoUrl !== undefined ? { videoUrl: contentInput.videoUrl } : {}),
+        ...(contentInput.thumbnailUrl !== undefined ? { thumbnailUrl: contentInput.thumbnailUrl } : {}),
+        ...(contentInput.tags !== undefined ? { tags: contentInput.tags } : {}),
+        ...(contentInput.requirements !== undefined ? { requirements: contentInput.requirements } : {}),
+        ...(contentInput.benefits !== undefined ? { benefits: contentInput.benefits } : {}),
+        ...(contentInput.links !== undefined ? { links: contentInput.links } : {}),
+        ...(nextApprovalStatus !== undefined
           ? {
-              approvalStatus: input.approvalStatus as PrismaJobApprovalStatus,
-              approvedAt: input.approvalStatus === "Active" ? now() : null,
+              approvalStatus: nextApprovalStatus,
+              approvedAt: nextApprovalStatus === PrismaJobApprovalStatus.Active ? now() : null,
             }
           : {}),
       },
@@ -190,6 +225,16 @@ export async function updateJob(
     return null;
   }
 }
+
+export async function submitJob(id: string, companyId?: string | null): Promise<Job | null> {
+  if (companyId) {
+    const existing = await prisma.job.findUnique({ where: { id }, select: { companyId: true } });
+    if (!existing || existing.companyId !== companyId) return null;
+  }
+  return submitJobForReview(id);
+}
+
+export { getPendingSubmissionForJob } from "@/lib/db/job-submissions";
 
 export async function getJobsForStaff(companyId?: string | null, includeUnapproved = true): Promise<Job[]> {
   const rows = await prisma.job.findMany({

@@ -6835,6 +6835,10 @@ html[data-staff-theme="dark"] .staff-ui {
   background: #fef2f2;
   color: #dc2626;
 }
+.badge-slate {
+  background: #f1f5f9;
+  color: #64748b;
+}
 
 .spinner {
   height: 2rem;

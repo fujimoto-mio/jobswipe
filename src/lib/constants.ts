@@ -104,20 +104,32 @@ export const APPLICATION_STATUS_LABELS = {
   rejected: "不採用",
 } as const;
 
-export type JobApprovalStatus = "Pending" | "Active" | "Cancelled";
+export type JobApprovalStatus = "Draft" | "Pending" | "Active" | "Cancelled";
 
-export const JOB_APPROVAL_STATUSES: JobApprovalStatus[] = ["Pending", "Active", "Cancelled"];
+export const JOB_APPROVAL_STATUSES: JobApprovalStatus[] = ["Draft", "Pending", "Active", "Cancelled"];
 
 export const JOB_APPROVAL_LABELS: Record<JobApprovalStatus, string> = {
-  Pending: "審査中",
-  Active: "公開中",
-  Cancelled: "却下",
+  Draft: "下書き",
+  Pending: "申請中",
+  Active: "承認済み",
+  Cancelled: "差し戻し",
 };
 
 export const JOB_APPROVAL_BADGE_CLASS: Record<JobApprovalStatus, string> = {
+  Draft: "badge-slate",
   Pending: "badge-amber",
   Active: "badge-green",
   Cancelled: "badge-red",
+};
+
+export type JobSubmissionStatus = "Pending" | "Approved" | "Rejected";
+
+export const JOB_SUBMISSION_STATUSES: JobSubmissionStatus[] = ["Pending", "Approved", "Rejected"];
+
+export const JOB_SUBMISSION_LABELS: Record<JobSubmissionStatus, string> = {
+  Pending: "申請中",
+  Approved: "承認済み",
+  Rejected: "差し戻し",
 };
 
 export type CompanyStatus = "Active" | "Pending" | "Suspended";

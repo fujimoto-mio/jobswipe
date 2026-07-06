@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getJobById, incrementJobView, updateJob } from "@/lib/db";
+import { getJobById, incrementJobView, updateJob, getPendingSubmissionForJob } from "@/lib/db";
+import { submissionToPreviewJob } from "@/lib/db/job-submissions";
 import { getStaffUser, requireStaffUser } from "@/lib/auth/admin";
 import { prisma } from "@/lib/prisma";
 import type { UpdateJobInput } from "@/lib/types";
@@ -46,7 +47,16 @@ export async function GET(
     }
   }
 
-  return NextResponse.json({ job });
+  const pendingSubmission = staff ? await getPendingSubmissionForJob(id) : null;
+  const editJob =
+    staff && staff.role !== "admin" && job.approvalStatus === "Active" && pendingSubmission
+      ? submissionToPreviewJob(job, pendingSubmission)
+      : job;
+
+  return NextResponse.json({
+    job,
+    ...(staff ? { pendingSubmission, editJob } : {}),
+  });
 }
 
 export async function PATCH(
@@ -68,23 +78,36 @@ export async function PATCH(
       }
 
       const existing = await getJobById(id);
-      if (existing?.approvalStatus === "Active") {
-        return NextResponse.json({ error: "承認済みの求人は編集できません" }, { status: 403 });
+
+      if (existing?.approvalStatus === "Active" && !body.submit) {
+        return NextResponse.json(
+          { error: "承認済みの求人は変更を申請してください" },
+          { status: 400 }
+        );
       }
     }
 
-    if (staff.role === "company" && body.approvalStatus && body.approvalStatus !== "Pending") {
+    if (
+      staff.role === "company" &&
+      body.approvalStatus &&
+      body.approvalStatus !== "Pending" &&
+      body.approvalStatus !== "Draft"
+    ) {
       return NextResponse.json({ error: API_ERRORS.adminOnlyApproval }, { status: 403 });
     }
 
     const job = await updateJob(id, body, {
       staffCompanyId: staff.role === "company" ? staff.companyId : null,
+      allowActiveDirectEdit: staff.role === "admin",
     });
     if (!job) {
       return NextResponse.json({ error: API_ERRORS.jobNotFound }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, job });
+    const pendingSubmission =
+      staff.role === "company" ? await getPendingSubmissionForJob(id) : null;
+
+    return NextResponse.json({ success: true, job, pendingSubmission });
   } catch {
     return NextResponse.json({ error: API_ERRORS.invalidJson }, { status: 400 });
   }
