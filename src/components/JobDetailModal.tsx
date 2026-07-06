@@ -64,44 +64,45 @@ export default function JobDetailModal({
   return (
     <SeekerBottomSheet
       onClose={onClose}
-      panelClassName="job-detail-modal-panel relative flex max-h-[85vh] w-full max-w-3xl flex-col bg-white"
+      panelClassName="job-detail-modal-panel relative max-h-[85vh] w-full max-w-3xl bg-white"
     >
-        <div className="sticky top-0 z-30 h-0 overflow-visible">
-          <button
-            type="button"
-            onClick={onClose}
-            className="job-detail-modal-close absolute right-4 top-[max(0.75rem,env(safe-area-inset-top,0px))] flex h-11 w-11 items-center justify-center rounded-full border border-[var(--seeker-border,#e2e8f0)] bg-white text-[var(--seeker-text,#0f172a)] shadow-[0_2px_12px_rgba(15,23,42,0.18)] transition active:scale-95"
-            aria-label="閉じる"
-          >
-            <X className="h-5 w-5" strokeWidth={2.25} />
-          </button>
-        </div>
+        <div className="job-detail-modal-scroll max-h-[85vh] overflow-y-auto overflow-x-hidden">
+          <div className="sticky top-0 z-30 h-0 overflow-visible">
+            <button
+              type="button"
+              onClick={onClose}
+              className="job-detail-modal-close absolute right-4 top-[max(0.75rem,env(safe-area-inset-top,0px))] flex h-11 w-11 items-center justify-center rounded-full border border-[var(--seeker-border,#e2e8f0)] bg-white text-[var(--seeker-text,#0f172a)] shadow-[0_2px_12px_rgba(15,23,42,0.18)] transition active:scale-95"
+              aria-label="閉じる"
+            >
+              <X className="h-5 w-5" strokeWidth={2.25} />
+            </button>
+          </div>
 
-        <div className="relative aspect-video shrink-0 overflow-hidden">
-          <video
-            ref={videoRef}
-            className="h-full w-full object-cover"
-            loop
-            muted={isMuted}
-            playsInline
-            preload="auto"
-          />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30" />
-          <button
-            type="button"
-            onClick={toggleMute}
-            className="absolute left-4 top-[max(0.75rem,env(safe-area-inset-top,0px))] z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm"
-            aria-label={isMuted ? "ミュート解除" : "ミュート"}
-          >
-            {isMuted ? (
-              <VolumeX className="h-4 w-4 text-white" />
-            ) : (
-              <Volume2 className="h-4 w-4 text-white" />
-            )}
-          </button>
-        </div>
+          <div className="relative aspect-video overflow-hidden">
+            <video
+              ref={videoRef}
+              className="h-full w-full object-cover"
+              loop
+              muted={isMuted}
+              playsInline
+              preload="auto"
+            />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30" />
+            <button
+              type="button"
+              onClick={toggleMute}
+              className="absolute left-4 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm"
+              aria-label={isMuted ? "ミュート解除" : "ミュート"}
+            >
+              {isMuted ? (
+                <VolumeX className="h-4 w-4 text-white" />
+              ) : (
+                <Volume2 className="h-4 w-4 text-white" />
+              )}
+            </button>
+          </div>
 
-        <div className="job-detail-modal-content min-h-0 flex-1 overflow-y-auto p-6">
+          <div className="job-detail-modal-content p-6">
           <div className="mb-4 flex items-center gap-3">
             <img src={job.companyLogo} alt={job.company} className="h-12 w-12 rounded-xl object-cover" />
             <div>
@@ -208,6 +209,7 @@ export default function JobDetailModal({
             <FileText className="h-4 w-4" />
             詳細ページで見る
           </Link>
+          </div>
         </div>
     </SeekerBottomSheet>
   );
