@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import SeekerBrandHeader from "@/components/seeker/SeekerBrandHeader";
 import { useSeekerThemeOptional } from "@/components/seeker/SeekerThemeProvider";
+import { DEFAULT_SEEKER_THEME } from "@/lib/seeker-theme";
 
 type AppHeaderProps = {
   title?: string;
@@ -28,7 +29,7 @@ export function AppHeader({
   className = "",
 }: AppHeaderProps) {
   const seekerTheme = useSeekerThemeOptional();
-  const resolvedTheme = theme ?? (seekerTheme?.theme === "light" ? "light" : "dark");
+  const resolvedTheme = theme ?? seekerTheme?.theme ?? DEFAULT_SEEKER_THEME;
 
   return (
     <header className={`page-header ${className}`.trim()}>

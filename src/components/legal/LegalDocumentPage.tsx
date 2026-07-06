@@ -7,33 +7,20 @@ import {
   SEEKER_THEME_CHANGE_EVENT,
   type SeekerTheme,
 } from "@/lib/seeker-theme";
-import {
-  loadStaffTheme,
-  STAFF_THEME_CHANGE_EVENT,
-} from "@/lib/staff-theme";
 
 type LegalDocumentPageProps = {
   title: string;
   src: string;
 };
 
-function loadLegalPageTheme(): SeekerTheme {
-  return loadSeekerTheme() === "dark" || loadStaffTheme() === "dark" ? "dark" : "light";
-}
-
 export function LegalDocumentPage({ title, src }: LegalDocumentPageProps) {
   const [theme, setTheme] = useState<SeekerTheme | null>(null);
 
   useEffect(() => {
-    setTheme(loadLegalPageTheme());
-    const onSeekerThemeChange = () => setTheme(loadLegalPageTheme());
-    const onStaffThemeChange = () => setTheme(loadLegalPageTheme());
-    window.addEventListener(SEEKER_THEME_CHANGE_EVENT, onSeekerThemeChange);
-    window.addEventListener(STAFF_THEME_CHANGE_EVENT, onStaffThemeChange);
-    return () => {
-      window.removeEventListener(SEEKER_THEME_CHANGE_EVENT, onSeekerThemeChange);
-      window.removeEventListener(STAFF_THEME_CHANGE_EVENT, onStaffThemeChange);
-    };
+    setTheme(loadSeekerTheme());
+    const onThemeChange = () => setTheme(loadSeekerTheme());
+    window.addEventListener(SEEKER_THEME_CHANGE_EVENT, onThemeChange);
+    return () => window.removeEventListener(SEEKER_THEME_CHANGE_EVENT, onThemeChange);
   }, []);
 
   const isDark = theme === "dark";

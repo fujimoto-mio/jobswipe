@@ -3,9 +3,10 @@
   var theme = params.get("theme");
 
   if (theme !== "dark" && theme !== "light" && window.localStorage) {
+    var unified = window.localStorage.getItem("jobswipe-theme");
     var seeker = window.localStorage.getItem("jobswipe-seeker-theme");
     var staff = window.localStorage.getItem("jobswipe-staff-theme");
-    if (seeker === "dark" || staff === "dark") {
+    if (unified === "dark" || seeker === "dark" || staff === "dark") {
       theme = "dark";
     }
   }

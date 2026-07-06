@@ -1,18 +1,17 @@
-export type StaffTheme = "light" | "dark";
+import {
+  APP_THEME_CHANGE_EVENT,
+  APP_THEME_STORAGE_KEY,
+  DEFAULT_APP_THEME,
+  loadAppTheme,
+  saveAppTheme,
+  type AppTheme,
+} from "@/lib/app-theme";
 
-export const STAFF_THEME_STORAGE_KEY = "jobswipe-staff-theme";
-export const STAFF_THEME_CHANGE_EVENT = "jobswipe-staff-theme-change";
+export type StaffTheme = AppTheme;
 
-export const DEFAULT_STAFF_THEME: StaffTheme = "light";
+export const STAFF_THEME_STORAGE_KEY = APP_THEME_STORAGE_KEY;
+export const STAFF_THEME_CHANGE_EVENT = APP_THEME_CHANGE_EVENT;
+export const DEFAULT_STAFF_THEME = DEFAULT_APP_THEME;
 
-export function loadStaffTheme(): StaffTheme {
-  if (typeof window === "undefined") return DEFAULT_STAFF_THEME;
-  const stored = window.localStorage.getItem(STAFF_THEME_STORAGE_KEY);
-  return stored === "light" || stored === "dark" ? stored : DEFAULT_STAFF_THEME;
-}
-
-export function saveStaffTheme(theme: StaffTheme) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(STAFF_THEME_STORAGE_KEY, theme);
-  window.dispatchEvent(new CustomEvent(STAFF_THEME_CHANGE_EVENT, { detail: theme }));
-}
+export const loadStaffTheme = loadAppTheme;
+export const saveStaffTheme = saveAppTheme;

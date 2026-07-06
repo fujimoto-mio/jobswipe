@@ -8,7 +8,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="seeker-ui seeker-auth seeker-theme-dark flex min-h-[100dvh] items-center justify-center">
+        <div className="seeker-ui seeker-auth seeker-theme-light flex min-h-[100dvh] items-center justify-center">
           <PageLoading seeker />
         </div>
       }

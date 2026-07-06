@@ -74,10 +74,21 @@ export default function JobDetailModal({
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 30, stiffness: 300 }}
-        className="job-detail-modal-panel max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-t-3xl bg-white sm:rounded-3xl"
+        className="job-detail-modal-panel relative max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-t-3xl bg-white sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="relative aspect-video">
+        <div className="sticky top-0 z-30 h-0 overflow-visible">
+          <button
+            type="button"
+            onClick={onClose}
+            className="job-detail-modal-close absolute right-4 top-[max(0.75rem,env(safe-area-inset-top,0px))] flex h-11 w-11 items-center justify-center rounded-full border border-[var(--seeker-border,#e2e8f0)] bg-white text-[var(--seeker-text,#0f172a)] shadow-[0_2px_12px_rgba(15,23,42,0.18)] transition active:scale-95"
+            aria-label="閉じる"
+          >
+            <X className="h-5 w-5" strokeWidth={2.25} />
+          </button>
+        </div>
+
+        <div className="relative aspect-video overflow-hidden rounded-t-3xl sm:rounded-t-3xl">
           <video
             ref={videoRef}
             className="h-full w-full object-cover"
@@ -89,16 +100,8 @@ export default function JobDetailModal({
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30" />
           <button
             type="button"
-            onClick={onClose}
-            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm"
-            aria-label="閉じる"
-          >
-            <X className="h-5 w-5 text-white" />
-          </button>
-          <button
-            type="button"
             onClick={toggleMute}
-            className="absolute left-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm"
+            className="absolute left-4 top-[max(0.75rem,env(safe-area-inset-top,0px))] z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm"
             aria-label={isMuted ? "ミュート解除" : "ミュート"}
           >
             {isMuted ? (

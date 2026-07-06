@@ -7,6 +7,7 @@ import Logo from "@/components/ui/Logo";
 import SeekerAccountMenu from "@/components/seeker/SeekerAccountMenu";
 import PwaInstallTopbarButton from "@/components/pwa/PwaInstallTopbarButton";
 import { useSeekerThemeOptional } from "@/components/seeker/SeekerThemeProvider";
+import { DEFAULT_SEEKER_THEME } from "@/lib/seeker-theme";
 
 type SeekerBrandHeaderProps = {
   title?: string;
@@ -38,7 +39,7 @@ export default function SeekerBrandHeader({
   className = "",
 }: SeekerBrandHeaderProps) {
   const seekerTheme = useSeekerThemeOptional();
-  const theme = themeProp ?? (seekerTheme?.theme === "light" ? "light" : "dark");
+  const theme = themeProp ?? seekerTheme?.theme ?? DEFAULT_SEEKER_THEME;
   const backButtonClass =
     theme === "dark"
       ? "btn-icon inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-0 bg-transparent text-white/92 transition hover:bg-white/10 active:scale-95"
