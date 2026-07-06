@@ -6889,10 +6889,6 @@ html[data-staff-theme="dark"] .staff-ui {
   backface-visibility: hidden;
 }
 
-.seeker-ui.seeker-theme-light .loading-spinner-seeker-logo,
-.loading-spinner--seeker:not(.loading-spinner--seeker-dark) .loading-spinner-seeker-logo {
-  mix-blend-mode: lighten;
-}
 
 .loading-spinner-seeker--sm .loading-spinner-seeker-logo {
   height: 3rem;
@@ -6965,10 +6961,6 @@ html[data-staff-theme="dark"] .staff-ui {
   backface-visibility: hidden;
 }
 
-.seeker-ui.seeker-theme-light .button-spinner-seeker-logo,
-.loading-spinner--seeker:not(.loading-spinner--seeker-dark) .button-spinner-seeker-logo {
-  mix-blend-mode: lighten;
-}
 
 .modal-sheet.staff-ui,
 .staff-ui.modal-sheet {

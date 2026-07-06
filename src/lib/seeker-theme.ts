@@ -1,18 +1,17 @@
-export type SeekerTheme = "light" | "dark";
+import {
+  APP_THEME_CHANGE_EVENT,
+  APP_THEME_STORAGE_KEY,
+  DEFAULT_APP_THEME,
+  loadAppTheme,
+  saveAppTheme,
+  type AppTheme,
+} from "@/lib/app-theme";
 
-export const SEEKER_THEME_STORAGE_KEY = "jobswipe-seeker-theme";
-export const SEEKER_THEME_CHANGE_EVENT = "jobswipe-seeker-theme-change";
+export type SeekerTheme = AppTheme;
 
-export const DEFAULT_SEEKER_THEME: SeekerTheme = "dark";
+export const SEEKER_THEME_STORAGE_KEY = APP_THEME_STORAGE_KEY;
+export const SEEKER_THEME_CHANGE_EVENT = APP_THEME_CHANGE_EVENT;
+export const DEFAULT_SEEKER_THEME = DEFAULT_APP_THEME;
 
-export function loadSeekerTheme(): SeekerTheme {
-  if (typeof window === "undefined") return DEFAULT_SEEKER_THEME;
-  const stored = window.localStorage.getItem(SEEKER_THEME_STORAGE_KEY);
-  return stored === "light" || stored === "dark" ? stored : DEFAULT_SEEKER_THEME;
-}
-
-export function saveSeekerTheme(theme: SeekerTheme) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(SEEKER_THEME_STORAGE_KEY, theme);
-  window.dispatchEvent(new CustomEvent(SEEKER_THEME_CHANGE_EVENT, { detail: theme }));
-}
+export const loadSeekerTheme = loadAppTheme;
+export const saveSeekerTheme = saveAppTheme;
