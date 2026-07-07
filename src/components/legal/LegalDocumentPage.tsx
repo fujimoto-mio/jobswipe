@@ -28,11 +28,11 @@ export function LegalDocumentPage({ title, src }: LegalDocumentPageProps) {
 
   return (
     <div
-      className={`legal-page flex min-h-[100dvh] flex-col ${
+      className={`lp-root legal-page flex min-h-[100dvh] flex-col ${
         isDark ? "legal-page--dark" : "bg-[var(--surface)] text-slate-900"
       }`}
     >
-      <LandingHeader dark={isDark} />
+      <LandingHeader />
       {theme !== null ? (
         <iframe
           key={frameSrc}
