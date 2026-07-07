@@ -4182,13 +4182,14 @@ html[data-staff-theme="dark"] .select-picker-option-muted {
 
 .staff-ui .data-table-count-pill {
   display: inline-flex;
-  min-width: 2rem;
+  min-width: 1.75rem;
   align-items: center;
   justify-content: center;
-  border-radius: var(--staff-radius);
+  border-radius: 9999px;
+  border: 1px solid rgba(39, 169, 181, 0.18);
   background: var(--staff-primary-light);
-  padding: 0.25rem 0.75rem;
-  font-size: 0.875rem;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: var(--staff-primary-hover);
 }
@@ -4221,26 +4222,42 @@ html[data-staff-theme="dark"] .select-picker-option-muted {
   overflow: hidden;
 }
 
+.company-chat-page .company-chat-panel {
+  min-height: clamp(28rem, calc(100dvh - 11rem), 56rem);
+}
+
 .staff-ui.company-chat-panel {
-  border: none;
+  border: 1px solid var(--staff-border);
   border-radius: var(--staff-radius);
   background: var(--staff-card-bg);
   box-shadow: var(--staff-shadow-md);
 }
 
-.staff-ui .company-chat-column--jobs,
+.staff-ui .company-chat-column--jobs {
+  background: var(--staff-surface);
+  box-shadow: inset -1px 0 0 var(--staff-border);
+}
+
 .staff-ui .company-chat-column--seekers {
-  box-shadow: inset -1px 0 0 var(--staff-border-subtle);
+  background: var(--staff-surface-muted);
+  box-shadow: inset -1px 0 0 var(--staff-border);
 }
 
 .staff-ui .company-chat-column--chat {
   border-right: none;
+  background: var(--staff-surface);
   box-shadow: none;
 }
 
 .staff-ui .chat-column-header {
   border-bottom: 1px solid var(--staff-border);
-  background: var(--staff-surface-subtle);
+  background: var(--staff-surface);
+}
+
+.staff-ui .chat-column-header-label {
+  color: var(--staff-text-secondary);
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
 }
 
 .staff-ui .chat-column-header-icon {
@@ -4251,30 +4268,47 @@ html[data-staff-theme="dark"] .select-picker-option-muted {
   color: var(--staff-icon-muted);
 }
 
+.staff-ui .chat-column-resize-handle::before {
+  display: block;
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: var(--staff-border);
+}
+
+.staff-ui .chat-column-resize-handle:hover::before,
+.staff-ui .chat-column-resize-handle:active::before {
+  background: var(--staff-primary);
+  width: 2px;
+}
+
 .company-chat-list-item {
   display: flex;
   width: 100%;
   align-items: flex-start;
   gap: 0.75rem;
   border: none;
-  border-bottom: 1px solid var(--staff-border-subtle);
+  border-bottom: 1px solid var(--staff-border);
   padding: 0.75rem;
   text-align: left;
   background: transparent;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
   cursor: pointer;
 }
 
 .company-chat-list-item:hover {
-  background: var(--staff-surface-subtle);
+  background: var(--staff-surface-muted);
 }
 
 .company-chat-list-item--active {
-  background: rgba(39, 169, 181, 0.1);
+  background: var(--staff-primary-light);
+  box-shadow: inset 3px 0 0 var(--staff-primary);
 }
 
 .company-chat-list-item--active:hover {
-  background: rgba(39, 169, 181, 0.12);
+  background: rgba(39, 169, 181, 0.14);
 }
 
 .company-chat-list-thumb {
@@ -4282,6 +4316,7 @@ html[data-staff-theme="dark"] .select-picker-option-muted {
   width: 2.75rem;
   flex-shrink: 0;
   border-radius: var(--staff-radius);
+  border: 1px solid var(--staff-border);
   object-fit: cover;
 }
 
@@ -4298,20 +4333,21 @@ html[data-staff-theme="dark"] .select-picker-option-muted {
 .company-chat-seeker-item {
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--staff-border-subtle);
-  transition: background 0.15s ease;
+  border-bottom: 1px solid var(--staff-border);
+  transition: background 0.15s ease, box-shadow 0.15s ease;
 }
 
 .company-chat-seeker-item:hover {
-  background: var(--staff-surface-subtle);
+  background: var(--staff-surface);
 }
 
 .company-chat-seeker-item--active {
-  background: rgba(39, 169, 181, 0.1);
+  background: var(--staff-primary-light);
+  box-shadow: inset 3px 0 0 var(--staff-primary);
 }
 
 .company-chat-seeker-item--active:hover {
-  background: rgba(39, 169, 181, 0.12);
+  background: rgba(39, 169, 181, 0.14);
 }
 
 .company-chat-seeker-select {
@@ -4368,23 +4404,50 @@ html[data-staff-theme="dark"] .select-picker-option-muted {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.625rem;
   padding: 1.5rem 1rem;
   text-align: center;
   font-size: 0.875rem;
-  color: var(--staff-text-muted);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--staff-text-secondary);
 }
 
 .company-chat-empty--inline {
   flex: none;
   padding: 2rem 1rem;
+  color: var(--staff-text-muted);
+  font-weight: 400;
 }
 
 .company-chat-empty-icon {
-  height: 2rem;
-  width: 2rem;
+  height: 2.5rem;
+  width: 2.5rem;
+  color: var(--staff-icon-muted);
+  opacity: 0.8;
+}
+
+.staff-ui .company-chat-column--chat > .company-chat-empty,
+.staff-ui .company-chat-column--seekers > .company-chat-empty {
+  margin: 1rem;
+  border: 1px dashed var(--staff-border-strong);
+  border-radius: var(--staff-radius);
+  background: var(--staff-surface);
+}
+
+.staff-ui .company-chat-column--seekers > .company-chat-empty {
+  background: var(--staff-card-bg);
+}
+
+.staff-ui .company-chat-messages .company-chat-empty {
+  margin: 0;
+  border: none;
+  background: transparent;
+}
+
+.staff-ui .chat-list-item-meta {
   color: var(--staff-text-muted);
-  opacity: 0.55;
+  font-size: 0.75rem;
 }
 
 .company-chat-thread-bar {
@@ -4413,7 +4476,8 @@ html[data-staff-theme="dark"] .select-picker-option-muted {
 }
 
 .company-chat-messages--staff {
-  background: var(--staff-surface-subtle);
+  background: var(--staff-surface-muted);
+  border-top: 1px solid var(--staff-border);
 }
 
 .staff-ui.company-chat-panel .chat-message-bubble--own {
@@ -4576,10 +4640,6 @@ html[data-staff-theme="dark"] .select-picker-option-muted {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.staff-ui .chat-list-item-meta {
-  color: var(--staff-text-muted);
 }
 
 .chat-thread-header {
@@ -5099,6 +5159,10 @@ html[data-staff-theme="dark"] .select-picker-option-muted {
   .admin-summary-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+
+  .admin-summary-grid--5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
 }
 
 .admin-summary-card {
@@ -5242,6 +5306,352 @@ html[data-staff-theme="dark"] .select-picker-option-muted {
 .admin-summary-card--seekers .admin-summary-card-label,
 .admin-summary-card--seekers .admin-summary-card-go {
   color: #059669;
+}
+
+.admin-summary-card--views {
+  background: linear-gradient(180deg, #f5f3ff 0%, #ede9fe 100%);
+  border-color: rgba(124, 58, 237, 0.2);
+}
+
+.admin-summary-card--views .admin-summary-card-icon {
+  background: rgba(124, 58, 237, 0.12);
+  color: #7c3aed;
+}
+
+.admin-summary-card--views .admin-summary-card-value {
+  color: #4c1d95;
+}
+
+.admin-summary-card--views .admin-summary-card-label,
+.admin-summary-card--views .admin-summary-card-go {
+  color: #6d28d9;
+}
+
+.admin-summary-card--likes {
+  background: linear-gradient(180deg, #fff1f2 0%, #ffe4e6 100%);
+  border-color: rgba(244, 63, 94, 0.2);
+}
+
+.admin-summary-card--likes .admin-summary-card-icon {
+  background: rgba(244, 63, 94, 0.12);
+  color: #f43f5e;
+}
+
+.admin-summary-card--likes .admin-summary-card-value {
+  color: #9f1239;
+}
+
+.admin-summary-card--likes .admin-summary-card-label,
+.admin-summary-card--likes .admin-summary-card-go {
+  color: #e11d48;
+}
+
+.admin-summary-card--applications {
+  background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-color: rgba(14, 165, 233, 0.22);
+}
+
+.admin-summary-card--applications .admin-summary-card-icon {
+  background: rgba(14, 165, 233, 0.14);
+  color: #0ea5e9;
+}
+
+.admin-summary-card--applications .admin-summary-card-value {
+  color: #0c4a6e;
+}
+
+.admin-summary-card--applications .admin-summary-card-label,
+.admin-summary-card--applications .admin-summary-card-go {
+  color: #0284c7;
+}
+
+.admin-summary-card--interview {
+  background: linear-gradient(180deg, #eef2ff 0%, #e0e7ff 100%);
+  border-color: rgba(99, 102, 241, 0.22);
+}
+
+.admin-summary-card--interview .admin-summary-card-icon {
+  background: rgba(99, 102, 241, 0.14);
+  color: #6366f1;
+}
+
+.admin-summary-card--interview .admin-summary-card-value {
+  color: #312e81;
+}
+
+.admin-summary-card--interview .admin-summary-card-label,
+.admin-summary-card--interview .admin-summary-card-go {
+  color: #4f46e5;
+}
+
+.admin-summary-card--hire {
+  background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
+  border-color: rgba(16, 185, 129, 0.22);
+}
+
+.admin-summary-card--hire .admin-summary-card-icon {
+  background: rgba(16, 185, 129, 0.14);
+  color: #10b981;
+}
+
+.admin-summary-card--hire .admin-summary-card-value {
+  color: #065f46;
+}
+
+.admin-summary-card--hire .admin-summary-card-label,
+.admin-summary-card--hire .admin-summary-card-go {
+  color: #059669;
+}
+
+.admin-summary-card--attention {
+  background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
+  border-color: rgba(249, 115, 22, 0.22);
+}
+
+.admin-summary-card--attention .admin-summary-card-icon {
+  background: rgba(249, 115, 22, 0.14);
+  color: #f97316;
+}
+
+.admin-summary-card--attention .admin-summary-card-value {
+  color: #9a3412;
+}
+
+.admin-summary-card--attention .admin-summary-card-label,
+.admin-summary-card--attention .admin-summary-card-go {
+  color: #ea580c;
+}
+
+.admin-summary-card--chat {
+  background: linear-gradient(180deg, #fdf4ff 0%, #fae8ff 100%);
+  border-color: rgba(192, 38, 211, 0.2);
+}
+
+.admin-summary-card--chat .admin-summary-card-icon {
+  background: rgba(192, 38, 211, 0.12);
+  color: #c026d3;
+}
+
+.admin-summary-card--chat .admin-summary-card-value {
+  color: #701a75;
+}
+
+.admin-summary-card--chat .admin-summary-card-label,
+.admin-summary-card--chat .admin-summary-card-go {
+  color: #a21caf;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card:hover {
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--pending {
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.16) 0%, rgba(26, 34, 44, 0.96) 100%);
+  border-color: rgba(251, 191, 36, 0.28);
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--pending .admin-summary-card-icon {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--pending .admin-summary-card-value {
+  color: #fde68a;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--pending .admin-summary-card-label,
+.staff-ui.staff-theme-dark .admin-summary-card--pending .admin-summary-card-go {
+  color: #fbbf24;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--active {
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.16) 0%, rgba(26, 34, 44, 0.96) 100%);
+  border-color: rgba(96, 165, 250, 0.28);
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--active .admin-summary-card-icon {
+  background: rgba(59, 130, 246, 0.18);
+  color: #60a5fa;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--active .admin-summary-card-value {
+  color: #bfdbfe;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--active .admin-summary-card-label,
+.staff-ui.staff-theme-dark .admin-summary-card--active .admin-summary-card-go {
+  color: #93c5fd;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--companies {
+  background: linear-gradient(180deg, rgba(39, 169, 181, 0.16) 0%, rgba(26, 34, 44, 0.96) 100%);
+  border-color: rgba(94, 234, 212, 0.24);
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--companies .admin-summary-card-icon {
+  background: rgba(39, 169, 181, 0.18);
+  color: #5eead4;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--companies .admin-summary-card-value {
+  color: #ccfbf1;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--companies .admin-summary-card-label,
+.staff-ui.staff-theme-dark .admin-summary-card--companies .admin-summary-card-go {
+  color: #5eead4;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--seekers {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.16) 0%, rgba(26, 34, 44, 0.96) 100%);
+  border-color: rgba(52, 211, 153, 0.24);
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--seekers .admin-summary-card-icon {
+  background: rgba(16, 185, 129, 0.18);
+  color: #34d399;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--seekers .admin-summary-card-value {
+  color: #a7f3d0;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--seekers .admin-summary-card-label,
+.staff-ui.staff-theme-dark .admin-summary-card--seekers .admin-summary-card-go {
+  color: #6ee7b7;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--views {
+  background: linear-gradient(180deg, rgba(124, 58, 237, 0.16) 0%, rgba(26, 34, 44, 0.96) 100%);
+  border-color: rgba(167, 139, 250, 0.24);
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--views .admin-summary-card-icon {
+  background: rgba(124, 58, 237, 0.18);
+  color: #a78bfa;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--views .admin-summary-card-value {
+  color: #ddd6fe;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--views .admin-summary-card-label,
+.staff-ui.staff-theme-dark .admin-summary-card--views .admin-summary-card-go {
+  color: #c4b5fd;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--likes {
+  background: linear-gradient(180deg, rgba(244, 63, 94, 0.16) 0%, rgba(26, 34, 44, 0.96) 100%);
+  border-color: rgba(251, 113, 133, 0.24);
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--likes .admin-summary-card-icon {
+  background: rgba(244, 63, 94, 0.18);
+  color: #fb7185;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--likes .admin-summary-card-value {
+  color: #fecdd3;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--likes .admin-summary-card-label,
+.staff-ui.staff-theme-dark .admin-summary-card--likes .admin-summary-card-go {
+  color: #fda4af;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--applications {
+  background: linear-gradient(180deg, rgba(14, 165, 233, 0.16) 0%, rgba(26, 34, 44, 0.96) 100%);
+  border-color: rgba(56, 189, 248, 0.24);
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--applications .admin-summary-card-icon {
+  background: rgba(14, 165, 233, 0.18);
+  color: #38bdf8;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--applications .admin-summary-card-value {
+  color: #bae6fd;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--applications .admin-summary-card-label,
+.staff-ui.staff-theme-dark .admin-summary-card--applications .admin-summary-card-go {
+  color: #7dd3fc;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--interview {
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.16) 0%, rgba(26, 34, 44, 0.96) 100%);
+  border-color: rgba(129, 140, 248, 0.24);
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--interview .admin-summary-card-icon {
+  background: rgba(99, 102, 241, 0.18);
+  color: #818cf8;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--interview .admin-summary-card-value {
+  color: #c7d2fe;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--interview .admin-summary-card-label,
+.staff-ui.staff-theme-dark .admin-summary-card--interview .admin-summary-card-go {
+  color: #a5b4fc;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--hire {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.16) 0%, rgba(26, 34, 44, 0.96) 100%);
+  border-color: rgba(52, 211, 153, 0.24);
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--hire .admin-summary-card-icon {
+  background: rgba(16, 185, 129, 0.18);
+  color: #34d399;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--hire .admin-summary-card-value {
+  color: #a7f3d0;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--hire .admin-summary-card-label,
+.staff-ui.staff-theme-dark .admin-summary-card--hire .admin-summary-card-go {
+  color: #6ee7b7;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--attention {
+  background: linear-gradient(180deg, rgba(249, 115, 22, 0.16) 0%, rgba(26, 34, 44, 0.96) 100%);
+  border-color: rgba(251, 146, 60, 0.24);
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--attention .admin-summary-card-icon {
+  background: rgba(249, 115, 22, 0.18);
+  color: #fb923c;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--attention .admin-summary-card-value {
+  color: #fed7aa;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--attention .admin-summary-card-label,
+.staff-ui.staff-theme-dark .admin-summary-card--attention .admin-summary-card-go {
+  color: #fdba74;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--chat {
+  background: linear-gradient(180deg, rgba(192, 38, 211, 0.16) 0%, rgba(26, 34, 44, 0.96) 100%);
+  border-color: rgba(232, 121, 249, 0.24);
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--chat .admin-summary-card-icon {
+  background: rgba(192, 38, 211, 0.18);
+  color: #e879f9;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--chat .admin-summary-card-value {
+  color: #f5d0fe;
+}
+
+.staff-ui.staff-theme-dark .admin-summary-card--chat .admin-summary-card-label,
+.staff-ui.staff-theme-dark .admin-summary-card--chat .admin-summary-card-go {
+  color: #f0abfc;
 }
 
 .company-dashboard-action-list {

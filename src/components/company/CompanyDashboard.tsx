@@ -4,21 +4,20 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Briefcase,
-  FileText,
-  MessageCircle,
-  Eye,
-  Plus,
-  ArrowRight,
-  User,
-  Heart,
-  TrendingUp,
-  UserCheck,
   ChevronRight,
+  ClipboardClock,
+  Eye,
+  FileText,
+  Heart,
+  MessageCircle,
+  Plus,
+  TrendingUp,
+  User,
+  UserCheck,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import AdminJobStatisticsChart from "@/components/admin/AdminJobStatisticsChart";
 import { apiFetch } from "@/lib/api-client";
-import { APPLICATION_STATUS_LABELS } from "@/lib/constants";
-import { formatTimeJST } from "@/lib/datetime";
-import type { ApplicationWithSeeker, ChatMessage, Job } from "@/lib/types";
 
 type CompanyStats = {
   totalJobs: number;
@@ -33,67 +32,94 @@ type CompanyStats = {
   activeChatCount: number;
 };
 
-type Thread = {
-  application: ApplicationWithSeeker;
-  job: Job;
-  lastMessage?: ChatMessage;
-};
+type SummaryTone =
+  | "views"
+  | "likes"
+  | "applications"
+  | "interview"
+  | "hire"
+  | "active"
+  | "pending"
+  | "attention"
+  | "chat";
 
-type MetricItem = {
+type SummaryItem = {
   label: string;
   value: number;
-  icon: typeof Eye;
+  icon: LucideIcon;
+  href: string;
+  tone: SummaryTone;
   suffix?: string;
 };
 
-function DashboardMetricCard({
+function SummaryMetricCard({
   label,
   value,
   icon: Icon,
+  href,
+  tone,
   suffix = "",
-  loading = false,
-  delay = 0,
+}: SummaryItem) {
+  return (
+    <Link href={href} className={`admin-summary-card admin-summary-card--${tone}`}>
+      <div className="admin-summary-card-top">
+        <div className="admin-summary-card-icon">
+          <Icon className="h-4 w-4" />
+        </div>
+        <ChevronRight className="admin-summary-card-go" aria-hidden />
+      </div>
+      <p className="admin-summary-card-value">
+        {value.toLocaleString()}
+        {suffix}
+      </p>
+      <p className="admin-summary-card-label">{label}</p>
+    </Link>
+  );
+}
+
+function SummaryGridSkeleton({
+  items,
+  columns = 4,
 }: {
-  label: string;
-  value: number;
-  icon: typeof Eye;
-  suffix?: string;
-  loading?: boolean;
-  delay?: number;
+  items: Pick<SummaryItem, "label" | "icon" | "tone">[];
+  columns?: 4 | 5;
 }) {
   return (
-    <div className="company-dashboard-metric">
-      <div className="company-dashboard-metric-icon">
-        <Icon className="h-4 w-4" />
-      </div>
-      {loading ? (
-        <div
-          className="dashboard-skeleton-line dashboard-skeleton-line--metric"
-          style={{ animationDelay: `${delay}ms` }}
-          aria-hidden
-        />
-      ) : (
-        <p className="company-dashboard-metric-value">
-          {value.toLocaleString()}
-          {suffix}
-        </p>
-      )}
-      <p className="company-dashboard-metric-label">{label}</p>
+    <div
+      className={`admin-summary-grid${columns === 5 ? " admin-summary-grid--5" : ""}`}
+      aria-busy="true"
+      aria-label="指標を読み込み中"
+    >
+      {items.map(({ label, icon: Icon, tone }, index) => (
+        <div key={label} className={`admin-summary-card admin-summary-card--${tone}`} aria-hidden>
+          <div className="admin-summary-card-top">
+            <div className="admin-summary-card-icon">
+              <Icon className="h-4 w-4" />
+            </div>
+            <ChevronRight className="admin-summary-card-go" />
+          </div>
+          <div
+            className="dashboard-skeleton-line dashboard-skeleton-line--metric"
+            style={{ animationDelay: `${index * 90}ms`, marginTop: "0.625rem" }}
+          />
+          <p className="admin-summary-card-label">{label}</p>
+        </div>
+      ))}
     </div>
   );
 }
 
-function DashboardMetricGrid({
+function SummaryGrid({
   items,
-  loading = false,
+  columns = 4,
 }: {
-  items: MetricItem[];
-  loading?: boolean;
+  items: SummaryItem[];
+  columns?: 4 | 5;
 }) {
   return (
-    <div className="company-dashboard-metric-grid" aria-busy={loading}>
-      {items.map((item, index) => (
-        <DashboardMetricCard key={item.label} {...item} loading={loading} delay={index * 90} />
+    <div className={`admin-summary-grid${columns === 5 ? " admin-summary-grid--5" : ""}`}>
+      {items.map((item) => (
+        <SummaryMetricCard key={item.label} {...item} />
       ))}
     </div>
   );
@@ -130,27 +156,72 @@ function DashboardQuickAction({
   );
 }
 
-function DashboardChatListSkeleton({ rows = 3 }: { rows?: number }) {
-  return (
-    <ul className="company-dashboard-chat-list" aria-busy="true" aria-label="チャットを読み込み中">
-      {Array.from({ length: rows }, (_, index) => (
-        <li key={index} className="company-dashboard-chat-row company-dashboard-chat-row--skeleton">
-          <div
-            className="dashboard-skeleton-line dashboard-skeleton-line--chat"
-            style={{ animationDelay: `${index * 100}ms` }}
-            aria-hidden
-          />
-        </li>
-      ))}
-    </ul>
-  );
-}
+const KPI_CARD_DEFS: (Pick<SummaryItem, "label" | "icon" | "href" | "tone" | "suffix"> & {
+  key: keyof CompanyStats;
+})[] = [
+  { key: "videoViews", label: "動画再生数", icon: Eye, href: "/company/jobs?approval=Active", tone: "views" },
+  { key: "savedCount", label: "いいね数", icon: Heart, href: "/company/jobs?approval=Active", tone: "likes" },
+  {
+    key: "applicationCount",
+    label: "応募数",
+    icon: FileText,
+    href: "/company/applications",
+    tone: "applications",
+  },
+  {
+    key: "interviewRate",
+    label: "面接率",
+    icon: TrendingUp,
+    href: "/company/applications",
+    tone: "interview",
+    suffix: "%",
+  },
+  {
+    key: "hireRate",
+    label: "採用率",
+    icon: UserCheck,
+    href: "/company/applications",
+    tone: "hire",
+    suffix: "%",
+  },
+];
+
+const OPS_CARD_DEFS: (Pick<SummaryItem, "label" | "icon" | "href" | "tone"> & {
+  key: keyof CompanyStats;
+})[] = [
+  {
+    key: "approvedJobs",
+    label: "掲載中求人",
+    icon: Briefcase,
+    href: "/company/jobs?approval=Active",
+    tone: "active",
+  },
+  {
+    key: "pendingJobs",
+    label: "承認待ち",
+    icon: ClipboardClock,
+    href: "/company/jobs?approval=Pending",
+    tone: "pending",
+  },
+  {
+    key: "pendingApplications",
+    label: "未対応応募",
+    icon: User,
+    href: "/company/applications",
+    tone: "attention",
+  },
+  {
+    key: "activeChatCount",
+    label: "チャット",
+    icon: MessageCircle,
+    href: "/company/chat",
+    tone: "chat",
+  },
+];
 
 export default function CompanyDashboard() {
   const [stats, setStats] = useState<CompanyStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
-  const [threads, setThreads] = useState<Thread[]>([]);
-  const [threadsLoading, setThreadsLoading] = useState(true);
   const [companyName, setCompanyName] = useState("");
   const [profileLoading, setProfileLoading] = useState(true);
 
@@ -162,33 +233,21 @@ export default function CompanyDashboard() {
   }, []);
 
   useEffect(() => {
-    apiFetch("/api/chat")
-      .then((r) => r.json())
-      .then((data) => setThreads((data.threads ?? []).slice(0, 5)))
-      .finally(() => setThreadsLoading(false));
-  }, []);
-
-  useEffect(() => {
     apiFetch("/api/admin/me")
       .then((r) => r.json())
       .then((data) => setCompanyName(data.companyName ?? ""))
       .finally(() => setProfileLoading(false));
   }, []);
 
-  const kpiCards: MetricItem[] = [
-    { label: "動画再生数", value: stats?.videoViews ?? 0, icon: Eye },
-    { label: "いいね数", value: stats?.savedCount ?? 0, icon: Heart },
-    { label: "応募数", value: stats?.applicationCount ?? 0, icon: FileText },
-    { label: "面接率", value: stats?.interviewRate ?? 0, icon: TrendingUp, suffix: "%" },
-    { label: "採用率", value: stats?.hireRate ?? 0, icon: UserCheck, suffix: "%" },
-  ];
+  const kpiCards: SummaryItem[] = KPI_CARD_DEFS.map(({ key, ...card }) => ({
+    ...card,
+    value: stats?.[key] ?? 0,
+  }));
 
-  const opsCards: MetricItem[] = [
-    { label: "掲載中求人", value: stats?.approvedJobs ?? 0, icon: Briefcase },
-    { label: "承認待ち", value: stats?.pendingJobs ?? 0, icon: Briefcase },
-    { label: "未対応応募", value: stats?.pendingApplications ?? 0, icon: User },
-    { label: "チャット", value: stats?.activeChatCount ?? 0, icon: MessageCircle },
-  ];
+  const opsCards: SummaryItem[] = OPS_CARD_DEFS.map(({ key, ...card }) => ({
+    ...card,
+    value: stats?.[key] ?? 0,
+  }));
 
   return (
     <div className="company-dashboard-page">
@@ -214,7 +273,11 @@ export default function CompanyDashboard() {
             <h2 className="company-profile-section-title">採用KPI</h2>
           </div>
           <div className="company-profile-section-body">
-            <DashboardMetricGrid items={kpiCards} loading={statsLoading} />
+            {statsLoading ? (
+              <SummaryGridSkeleton items={KPI_CARD_DEFS} columns={5} />
+            ) : (
+              <SummaryGrid items={kpiCards} columns={5} />
+            )}
           </div>
         </section>
 
@@ -223,9 +286,15 @@ export default function CompanyDashboard() {
             <h2 className="company-profile-section-title">運用状況</h2>
           </div>
           <div className="company-profile-section-body">
-            <DashboardMetricGrid items={opsCards} loading={statsLoading} />
+            {statsLoading ? (
+              <SummaryGridSkeleton items={OPS_CARD_DEFS} />
+            ) : (
+              <SummaryGrid items={opsCards} />
+            )}
           </div>
         </section>
+
+        <AdminJobStatisticsChart />
 
         <section className="company-profile-section">
           <div className="company-profile-section-header">
@@ -253,59 +322,6 @@ export default function CompanyDashboard() {
                 icon={MessageCircle}
               />
             </div>
-          </div>
-        </section>
-
-        <section className="company-profile-section">
-          <div className="company-profile-section-header company-dashboard-section-header-row">
-            <h2 className="company-profile-section-title">最近のチャット</h2>
-            <Link href="/company/chat" className="company-dashboard-link">
-              すべて見る
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
-          <div className="company-profile-section-body company-profile-section-body--flush">
-            {threadsLoading ? (
-              <DashboardChatListSkeleton />
-            ) : threads.length === 0 ? (
-              <p className="company-profile-text company-profile-text--muted px-4 py-6 text-center">
-                応募があると、ここに求職者とのチャットが表示されます
-              </p>
-            ) : (
-              <ul className="company-dashboard-chat-list">
-                {threads.map((t) => (
-                  <li key={t.application.id}>
-                    <Link
-                      href={`/company/chat?jobId=${t.job.id}&applicationId=${t.application.id}`}
-                      className="company-dashboard-chat-row"
-                    >
-                      <div className="company-dashboard-chat-avatar">
-                        {t.application.applicantName.charAt(0)}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="truncate font-semibold text-slate-900">
-                            {t.application.applicantName}
-                          </p>
-                          {t.lastMessage && (
-                            <span className="shrink-0 text-[10px] text-slate-400">
-                              {formatTimeJST(t.lastMessage.createdAt)}
-                            </span>
-                          )}
-                        </div>
-                        <p className="truncate text-xs text-slate-500">{t.job.title}</p>
-                        <p className="mt-0.5 truncate text-xs text-slate-400">
-                          {t.lastMessage?.content ?? "メッセージを送信して会話を始めましょう"}
-                        </p>
-                      </div>
-                      <span className="badge badge-blue shrink-0 text-[10px]">
-                        {APPLICATION_STATUS_LABELS[t.application.status]}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
           </div>
         </section>
       </div>

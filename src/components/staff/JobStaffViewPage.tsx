@@ -28,10 +28,8 @@ const APPROVAL_BADGE = JOB_APPROVAL_BADGE_CLASS;
 
 function JobViewHero({
   job,
-  basePath,
 }: {
   job: Job;
-  basePath: string;
 }) {
   const videoUrl = job.videoUrl?.trim() ?? "";
   const { videoRef, isMuted, toggleMute } = useVideoPlayback({
@@ -58,14 +56,6 @@ function JobViewHero({
         )}
 
         <div className="pointer-events-none absolute inset-0 z-[3] bg-gradient-to-t from-slate-900/50 via-transparent to-black/40" />
-
-        <Link
-          href={`${basePath}/jobs`}
-          className="absolute left-4 top-4 z-[10] flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition hover:bg-black/55"
-          aria-label="求人一覧に戻る"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
 
         {videoUrl && (
           <button
@@ -286,6 +276,11 @@ export default function JobStaffViewPage({ jobId }: JobStaffViewPageProps) {
 
   return (
     <div className="company-profile-page staff-ui">
+      <Link href={`${basePath}/jobs`} className="staff-back-link mb-4 inline-flex items-center gap-2 text-sm">
+        <ArrowLeft className="h-4 w-4" />
+        求人一覧に戻る
+      </Link>
+
       <p className="company-profile-toolbar-note mb-4">{toolbarNote}</p>
 
       {hasPublishedAndReview && (
@@ -315,7 +310,7 @@ export default function JobStaffViewPage({ jobId }: JobStaffViewPageProps) {
         </div>
       )}
 
-      <JobViewHero job={displayJob} basePath={basePath} />
+      <JobViewHero job={displayJob} />
 
       <div className="mt-4 flex flex-col gap-4">
         <JobDetailBody
