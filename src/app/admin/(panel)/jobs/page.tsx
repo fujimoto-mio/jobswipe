@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import JobApprovalConfirmModal from "@/components/admin/JobApprovalConfirmModal";
@@ -40,6 +41,13 @@ const APPROVAL_FILTER_OPTIONS: { value: "" | JobApprovalStatus; label: string }[
   })),
 ];
 
+function parseApprovalFilter(value: string | null): "" | JobApprovalStatus {
+  if (value && JOB_APPROVAL_STATUSES.includes(value as JobApprovalStatus)) {
+    return value as JobApprovalStatus;
+  }
+  return "";
+}
+
 function FilterSelect<T extends string>({
   value,
   options,
@@ -73,8 +81,11 @@ function FilterSelect<T extends string>({
 export default function AdminJobsPage() {
   const { basePath, role } = useStaffPanel();
   const isAdmin = role === "admin";
+  const searchParams = useSearchParams();
   const tableRef = useRef<PaginatedDataTableHandle>(null);
-  const [approvalFilter, setApprovalFilter] = useState<"" | JobApprovalStatus>("");
+  const [approvalFilter, setApprovalFilter] = useState<"" | JobApprovalStatus>(() =>
+    parseApprovalFilter(searchParams.get("approval"))
+  );
   const [pendingApproval, setPendingApproval] = useState<{
     job: StaffJobRow;
     action: Extract<JobApprovalStatus, "Active" | "Cancelled">;
