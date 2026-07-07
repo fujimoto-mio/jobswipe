@@ -1,41 +1,99 @@
 "use client";
 
 import { useEffect } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import LandingHeader, { scrollToSection, SECTION_IDS } from "@/components/landing/LandingHeader";
 import LandingContactForm from "@/components/landing/LandingContactForm";
 import LandingFooter from "@/components/landing/LandingFooter";
-import PwaInstallBanner from "@/components/pwa/PwaInstallBanner";
-import PwaProvider from "@/components/pwa/PwaProvider";
-import {
-  CASE_ITEMS,
-  COMPARISON_ROWS,
-  FAQ_ITEMS,
-  INDUSTRY_TAGS,
-  PAIN_POINTS,
-  PARTNER_LOGOS,
-  PLAN_FEATURES,
-  PLAN_RESULTS,
-  VOICES,
-  lpImg,
-} from "@/components/landing/landing-data";
 import { apiFetch } from "@/lib/api-client";
 
-function CaseMockup({ caseImage }: { caseImage: string }) {
+const STATS = [
+  { label: "応募完了まで", value: "最短", suffix: "1分" },
+  { label: "職場の雰囲気", value: "動画で", suffix: "伝わる" },
+  { label: "求職者の利用料", value: "完全", suffix: "無料" },
+];
+
+const PLAN_FEATURES = [
+  { title: "動画求人", desc: "15〜30秒のショート動画で職場の空気感を伝達" },
+  { title: "スワイプ操作", desc: "気になる求人を直感的に保存・スキップ" },
+  { title: "チャット", desc: "応募後は企業担当者とその場で連絡" },
+  { title: "応募管理", desc: "プロフィール自動入力でスムーズに応募" },
+  { title: "レポート", desc: "保存・応募状況をマイページで一元管理" },
+];
+
+const CASE_ITEMS = [
+  { src: "/companies/job-001.webp", label: "IT・Web業界" },
+  { src: "/companies/job-002.webp", label: "スタートアップ" },
+  { src: "/companies/job-003.webp", label: "クリエイティブ" },
+  { src: "/companies/job-004.webp", label: "メディア" },
+];
+
+const COMPARISON_ROWS = [
+  { label: "目的", jobswipe: "職場の空気感・ミスマッチ防止", other: "応募数の獲得", media: "閲覧数・露出" },
+  { label: "情報形式", jobswipe: "ショート動画＋スワイプUI", other: "テキスト中心の求人票", media: "バナー・記事広告" },
+  { label: "KPI", jobswipe: "応募の納得度・定着", other: "応募数", media: "PV・クリック数" },
+  { label: "コスト（求職者）", jobswipe: "無料", other: "無料", media: "無料" },
+];
+
+const VOICES = [
+  {
+    meta: "東京都 / IT企業",
+    title: "動画で社風が伝わり、ミスマッチが減った",
+    body: "テキストだけの求人票では伝わらなかった職場の雰囲気が、動画で一目でわかるようになりました。応募者との初期コミュニケーションもスムーズです。",
+  },
+  {
+    meta: "大阪府 / 建設業",
+    title: "若手の応募が増えました",
+    body: "スワイプ形式は若い求職者に好評で、動画を見て興味を持った方からの応募が着実に増えています。",
+  },
+  {
+    meta: "東京都 / 不動産業",
+    title: "採用担当の工数が大幅に削減",
+    body: "応募からチャットまでアプリ内で完結するため、メールや電話のやり取りが減り、採用活動の効率が上がりました。",
+  },
+];
+
+const FAQ_ITEMS = [
+  {
+    q: "JobSwipeは無料で使えますか？",
+    a: "はい、求職者の方は登録・求人閲覧・応募・チャットまで無料でご利用いただけます。",
+  },
+  {
+    q: "動画がない求人もありますか？",
+    a: "動画付き求人を中心に掲載しています。企業によってはテキスト情報のみの求人もございます。",
+  },
+  {
+    q: "企業として求人を掲載するには？",
+    a: "企業アカウントを作成いただき、管理画面から求人（動画付き）を登録してください。審査後に公開されます。",
+  },
+  {
+    q: "社員の顔出しが難しい場合でも動画は掲載できますか？",
+    a: "職場の雰囲気や業務風景、オフィスツアーなど、顔出しなしでも効果的な動画構成が可能です。",
+  },
+];
+
+const PARTNER_LOGOS = [
+  "/companies/techstart-logo.svg",
+  "/companies/cloudsol-logo.svg",
+  "/companies/mediaworks-logo.svg",
+  "/companies/innovation-logo.svg",
+  "/companies/airecruit-logo.svg",
+  "/companies/creativelab-logo.svg",
+];
+
+function PhoneMock({ src, alt }: { src: string; alt: string }) {
   return (
-    <div className="case-item">
-      <img src={lpImg("mockup-img01.webp")} alt="" className="case-item__frame" />
-      <div className="case-item__screen">
-        <img src={lpImg(caseImage)} alt="投稿事例" />
-      </div>
-      <img src={lpImg("mockup-img02.webp")} alt="" className="case-item__bezel" />
+    <div className="lp-mock">
+      <div className="lp-mock__notch" />
+      <Image src={src} alt={alt} width={400} height={700} className="h-full w-full object-cover" />
     </div>
   );
 }
 
 export default function LandingPage() {
   const router = useRouter();
-  const logoSlides = [...PARTNER_LOGOS, ...PARTNER_LOGOS];
 
   useEffect(() => {
     void apiFetch("/api/auth/session")
@@ -64,306 +122,171 @@ export default function LandingPage() {
     return () => window.removeEventListener("hashchange", scrollToHash);
   }, []);
 
+  const logoSlides = [...PARTNER_LOGOS, ...PARTNER_LOGOS];
+
   return (
-    <PwaProvider alwaysShowInstallUi>
-      <div className="lp-root">
+    <div className="lp-root w-full">
       <LandingHeader onLandingPage />
 
-      <section id="top" className="hero">
-        <div className="hero-bg1" aria-hidden />
-        <div className="hero-bg2" aria-hidden />
-        <div className="hero-dot1" aria-hidden />
-        <div className="hero-dot2" aria-hidden />
-        <div className="hero-inner">
-          <div className="hero-text">
-            <p className="hero-label">選ばれる企業になるためにSNSを始めたい方へ</p>
-            <h1 className="hero-title">
-              <span className="hero-title__lead">採用のプロ集団が提案する</span>
-              <span className="hero-title__sub">
-                <span className="hero-title__accent">SNS運用代行</span>サービス
-              </span>
-            </h1>
-            <p className="hero-desc">
-              SNS運用×動画で届ける会社の<strong>&ldquo;空気感&rdquo;</strong>。
-              <br />
-              応募者が知っていれば生じなかったミスマッチを、
-              <br />
-              <strong style={{ color: "#1a56c8" }}>月15万円から完全代行</strong>で防ぎます。
-            </p>
-            <div className="hero-stats">
-              <div className="stat-card">
-                <div className="stat-label">説明会予約率</div>
-                <div className="stat-num">176%</div>
-                <div className="stat-up">▲ 向上</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-label">面接出席率</div>
-                <div className="stat-num">142%</div>
-                <div className="stat-up">▲ 向上</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-label">内定承諾率</div>
-                <div className="stat-num">118%</div>
-                <div className="stat-up">▲ 改善</div>
-              </div>
-            </div>
-            <button type="button" className="btn-hero" onClick={() => scrollToSection("contact")}>
-              無料で資料をもらう →
-            </button>
-          </div>
-          <div className="hero-visual">
-            <div className="hero-visual__group">
-              <img
-                src={lpImg("fv-img01.webp")}
-                alt="スマートフォンを見る男性"
-                className="hero-visual__img hero-visual__img--left"
-              />
-              <img
-                src={lpImg("fv-img02.webp")}
-                alt="スマートフォンを見る女性"
-                className="hero-visual__img hero-visual__img--right"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="logos-section">
-        <div style={{ textAlign: "center", marginBottom: 20 }}>
-          <p
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: "#888",
-              letterSpacing: 3,
-              fontFamily: "var(--font-montserrat), Montserrat, sans-serif",
-            }}
-          >
-            PARTNER COMPANIES — 導入企業さま
+      {/* Hero */}
+      <section id="top" className="lp-hero">
+        <div className="lp-hero__circle lp-hero__circle--1" aria-hidden />
+        <div className="lp-hero__circle lp-hero__circle--2" aria-hidden />
+        <div className="lp-inner lp-hero__content">
+          <p className="lp-hero__eyebrow">動画×スワイプで、いい仕事に出会う方へ</p>
+          <h1 className="lp-hero__title">
+            動画で届ける、
+            <br />
+            職場の&ldquo;空気感&rdquo;。
+          </h1>
+          <p className="lp-hero__lead">
+            JobSwipeは求人動画をスワイプするだけで探せる、新しい求職プラットフォーム。
+            応募者が知っていれば生じなかったミスマッチを、動画で先に防ぎます。
           </p>
-        </div>
-        <div className="logos-track">
-          <div className="logos-inner">
-            {logoSlides.map((logo, i) => (
-              <img
-                key={`${logo}-${i}`}
-                src={lpImg(logo)}
-                alt="導入先ロゴ"
-                style={{ height: 36, objectFit: "contain" }}
-              />
+          <div className="lp-hero__stats">
+            {STATS.map((s) => (
+              <div key={s.label} className="lp-stat">
+                <p className="lp-stat__label">{s.label}</p>
+                <p className="lp-stat__value">{s.value}</p>
+                <span className="lp-stat__suffix">{s.suffix}</span>
+              </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      <section id="sec01" className="why-section">
-        <div className="why-inner">
-          <div className="text-center mb-60">
-            <span className="section-tag">WHY?</span>
-            <p className="section-sub">「求人票は良かった。でも、想像と違った」</p>
-            <h2 className="section-title mb-16">
-              なぜ、採用しても
-              <br />
-              辞めてしまうの？
-            </h2>
-            <p style={{ fontSize: 15, color: "#666", lineHeight: 1.8 }}>
-              Z世代が内定辞退・早期離職する理由の多くは、
-              <br />
-              事前の認識ギャップにあります。
-            </p>
+          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <Link href="/register" className="lp-cta-btn">
+              無料で始める
+            </Link>
+            <button type="button" onClick={() => scrollToSection("contact")} className="lp-cta-btn lp-cta-btn--outline">
+              お問い合わせ
+            </button>
           </div>
-
-          <div className="why-cards">
-            <div className="why-card why-card--blue">
-              <p className="why-card__label">企業側</p>
-              <img src={lpImg("why-img01.webp")} alt="" className="why-card__image" />
-              <p className="why-card__text">
-                &ldquo;採用&rdquo;が
-                <br />
-                ゴールになっている
-              </p>
-            </div>
-            <div className="why-divider" aria-hidden>
-              <div className="why-divider__line" />
-              <div className="why-divider__icon">⚡</div>
-              <div className="why-divider__line" />
-            </div>
-            <div className="why-card why-card--gold">
-              <p className="why-card__label">学生側</p>
-              <img src={lpImg("why-img02.webp")} alt="" className="why-card__image" />
-              <p className="why-card__text">
-                &ldquo;内定&rdquo;が
-                <br />
-                ゴールになっている
-              </p>
-            </div>
-          </div>
-
-          <div className="why-result">
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#e84040", marginBottom: 10 }}>▼ その結果</div>
-            <p style={{ fontSize: 16, fontWeight: 700, color: "#0d1a38", lineHeight: 1.7 }}>
-              面接ではお互いに<strong style={{ color: "#e84040" }}>&ldquo;良いトコロ&rdquo;</strong>しか見せ合わないから、
-              <br />
-              入社後にミスマッチが顕在化。
-            </p>
-          </div>
-
-          <div className="why-solution">
-            <div
-              style={{
-                position: "absolute",
-                top: -40,
-                right: -40,
-                width: 200,
-                height: 200,
-                background: "rgba(255,255,255,0.03)",
-                borderRadius: "50%",
-              }}
-              aria-hidden
-            />
-            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginBottom: 16, position: "relative" }}>
-              採用市場では当たり前となったこの構造に、
-            </p>
-            <h3
-              style={{
-                fontSize: "clamp(20px, 3vw, 30px)",
-                fontWeight: 900,
-                lineHeight: 1.4,
-                marginBottom: 20,
-                position: "relative",
-              }}
-            >
-              私たちは <span style={{ color: "#7eb4ff" }}>&ldquo;SNSで信頼関係を構築する&rdquo;</span>
-              <br />
-              という解決策を提示します。
-            </h3>
-            <div
-              style={{
-                width: 60,
-                height: 3,
-                background: "#c8952a",
-                borderRadius: 2,
-                margin: "20px auto",
-                position: "relative",
-              }}
-            />
-            <p
-              style={{
-                fontSize: 15,
-                color: "rgba(255,255,255,0.8)",
-                lineHeight: 1.8,
-                position: "relative",
-                maxWidth: 540,
-                margin: "0 auto",
-              }}
-            >
-              投稿の量ではなく<strong style={{ color: "#fff" }}>&ldquo;何を伝えるか&rdquo;</strong>。
-              <br />
-              Z世代に向けて会社のリアルな魅力が伝わり、
-              <br />
-              入社前・入社後のミスマッチを防ぎます。
-            </p>
+          <div className="lp-hero__visual">
+            <PhoneMock src="/companies/job-001.webp" alt="求人動画サンプル1" />
+            <PhoneMock src="/companies/job-003.webp" alt="求人動画サンプル2" />
           </div>
         </div>
       </section>
 
-      <section id="sec02" className="plan-section">
-        <div className="plan-inner">
-          <div className="text-center mb-60">
-            <span className="section-tag">PLAN</span>
-            <p className="section-sub">一般的なSNS運用代行サービスとは目的も成果も違う</p>
-            <h2 className="section-title">信用形成プラン</h2>
-          </div>
-
-          <div className="plan-card">
-            <div className="plan-header">
-              <p style={{ fontSize: 13, fontWeight: 600, opacity: 0.8, marginBottom: 8 }}>月額費用</p>
-              <p className="plan-price">
-                15万円<span style={{ fontSize: 24, fontWeight: 600 }}>〜</span>
-              </p>
-            </div>
-            <div className="plan-features">
-              {PLAN_FEATURES.map((feature) => (
-                <div key={feature.title} className={`plan-feature${feature.full ? " plan-feature--full" : ""}`}>
-                  <div className="plan-icon">{feature.icon}</div>
-                  <div>
-                    <div style={{ fontSize: 15, fontWeight: 800, color: "#0d1a38", marginBottom: 4 }}>{feature.title}</div>
-                    <div style={{ fontSize: 13, color: "#666", lineHeight: 1.6, whiteSpace: "pre-line" }}>{feature.desc}</div>
-                  </div>
+      {/* Partners */}
+      <section className="lp-section lp-section--white">
+        <div className="lp-inner">
+          <h2 className="lp-section-heading">Partner Companies</h2>
+          <p className="lp-section-title">掲載企業さま</p>
+          <div className="lp-logo-slider">
+            <div className="lp-logo-track">
+              {logoSlides.map((src, i) => (
+                <div key={`${src}-${i}`} className="lp-logo-slide">
+                  <Image src={src} alt="" width={120} height={40} />
                 </div>
               ))}
             </div>
           </div>
+        </div>
+      </section>
 
-          <div className="plan-results">
-            {PLAN_RESULTS.map((result) => (
-              <div key={result.label} className="plan-result-card">
-                <div style={{ fontSize: 13, color: "#888", marginBottom: 8, fontWeight: 600 }}>{result.label}</div>
-                <div
-                  style={{
-                    fontSize: 22,
-                    fontWeight: 900,
-                    color: "#1a56c8",
-                    fontFamily: "var(--font-montserrat), Montserrat, sans-serif",
-                  }}
-                >
-                  {result.value}
+      {/* Why */}
+      <section id="why" className="lp-section lp-section--gray scroll-mt-24">
+        <div className="lp-inner--wide">
+          <div className="lp-white-panel">
+            <h2 className="lp-section-heading">Why?</h2>
+            <p className="lp-quote">「求人票は良さそうだった。でも、想像と違った」</p>
+            <p className="lp-section-title">なぜ、採用しても辞めてしまうの？</p>
+            <p className="lp-section-lead">
+              求職者が内定辞退・早期離職する理由の多くは、事前の認識ギャップにあります。
+            </p>
+            <div className="lp-why-grid">
+              <div className="lp-why-card">
+                <p className="lp-why-card__role">企業</p>
+                <p className="lp-why-card__text">&ldquo;採用&rdquo;がゴールになっている</p>
+              </div>
+              <div className="lp-why-card">
+                <p className="lp-why-card__role">求職者</p>
+                <p className="lp-why-card__text">&ldquo;内定&rdquo;がゴールになっている</p>
+              </div>
+            </div>
+            <p className="lp-result-label">その結果</p>
+            <p className="lp-section-lead">
+              テキストの求人票だけでは職場の空気感や人間関係が伝わらず、入社後にミスマッチが顕在化してしまいます。
+            </p>
+            <p className="lp-section-sub mt-8">ただし、最重要は「投稿数」ではありません。</p>
+            <p className="lp-section-lead">
+              投稿の量ではなく&ldquo;何を伝えるか&rdquo;。JobSwipeなら、動画で会社のリアルな魅力が伝わり、入社前のミスマッチを防ぎます。
+            </p>
+            <div className="lp-highlight-box">
+              &ldquo;認知ではなく、納得&rdquo;の採用へ。
+              <br />
+              動画×スワイプで職場の「空気」を届ける設計。
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Plan */}
+      <section id="plan" className="lp-section lp-section--white scroll-mt-24">
+        <div className="lp-inner">
+          <h2 className="lp-section-heading">Plan</h2>
+          <p className="lp-section-title">一般的な求人媒体とは目的も成果も違う</p>
+          <p className="lp-section-sub">JobSwipe 基本プラン</p>
+          <div className="lp-plan-card">
+            <div className="lp-plan-card__head">
+              <p className="lp-plan-card__name">動画×スワイプ求人プラットフォーム</p>
+              <p className="lp-plan-card__price">
+                求職者利用料 <strong>無料</strong>
+              </p>
+            </div>
+            <div className="lp-plan-features">
+              {PLAN_FEATURES.map((f) => (
+                <div key={f.title} className="lp-plan-feature">
+                  <h3>{f.title}</h3>
+                  <p>{f.desc}</p>
                 </div>
+              ))}
+            </div>
+          </div>
+          <p className="lp-section-lead mt-10">
+            「企業が見せたい情報」と「求職者が知りたい情報」には大きなズレがあります。JobSwipeは動画で&ldquo;社内の空気感&rdquo;を先に届けます。
+          </p>
+        </div>
+      </section>
+
+      {/* Case */}
+      <section id="case" className="lp-section lp-section--gray scroll-mt-24">
+        <div className="lp-inner">
+          <h2 className="lp-section-heading">Case</h2>
+          <p className="lp-section-title">動画求人の掲載事例</p>
+          <div className="lp-case-scroll">
+            {CASE_ITEMS.map((item) => (
+              <div key={item.src} className="lp-case-item">
+                <PhoneMock src={item.src} alt={item.label} />
+                <p>{item.label}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="sec03" className="case-section">
-        <div className="case-bg-glow" aria-hidden />
-        <div className="case-inner">
-          <div className="text-center mb-60">
-            <span className="dark-tag">CASE</span>
-            <h2 className="section-title" style={{ color: "#fff" }}>
-              Z世代採用の投稿事例
-            </h2>
-          </div>
-          <div className="case-grid">
-            {CASE_ITEMS.map((caseImage) => (
-              <CaseMockup key={caseImage} caseImage={caseImage} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="sec04" className="comparison-section">
-        <div className="comparison-inner">
-          <div className="text-center mb-60">
-            <span className="section-tag">COMPARISON</span>
-            <h2 className="section-title">他のサービスとの比較</h2>
-          </div>
-          <div className="comparison-table-wrap">
-            <table className="comparison-table">
+      {/* Comparison */}
+      <section id="comparison" className="lp-section lp-section--white scroll-mt-24">
+        <div className="lp-inner--narrow">
+          <h2 className="lp-section-heading">Comparison</h2>
+          <p className="lp-section-title">他のサービスとの比較</p>
+          <div className="mt-10 overflow-x-auto">
+            <table className="lp-compare min-w-[640px]">
               <thead>
                 <tr>
-                  <th className="comparison-table__corner" />
-                  <th className="th-highlight">
-                    <span className="comparison-badge">おすすめ</span>
-                    信用形成プラン
-                  </th>
-                  <th className="comparison-table__head">他社SNS運用</th>
-                  <th className="comparison-table__head comparison-table__head--last">求人媒体系</th>
+                  <th />
+                  <th className="lp-compare--highlight">JobSwipe</th>
+                  <th>従来の求人媒体</th>
+                  <th>求人広告</th>
                 </tr>
               </thead>
               <tbody>
                 {COMPARISON_ROWS.map((row) => (
                   <tr key={row.label}>
-                    <td className="comparison-table__label">{row.label}</td>
-                    <td className={`td-highlight${row.price ? " td-highlight--price" : ""}`}>{row.highlight}</td>
-                    <td className={`comparison-table__cell${row.price ? " comparison-table__cell--price" : ""}`}>
-                      {row.other1}
-                    </td>
-                    <td
-                      className={`comparison-table__cell comparison-table__cell--last${row.price ? " comparison-table__cell--price" : ""}`}
-                    >
-                      {row.other2}
-                    </td>
+                    <th>{row.label}</th>
+                    <td className="lp-compare--highlight">{row.jobswipe}</td>
+                    <td>{row.other}</td>
+                    <td>{row.media}</td>
                   </tr>
                 ))}
               </tbody>
@@ -372,292 +295,75 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="sec05" className="voice-section">
-        <div className="voice-inner">
-          <div className="text-center mb-60">
-            <span className="section-tag">VOICE</span>
-            <h2 className="section-title">導入企業の声をご紹介</h2>
-          </div>
-          <div className="voice-grid">
-            {VOICES.map((voice) => (
-              <div key={voice.title} className="voice-card">
-                <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                  <img
-                    src={lpImg(voice.illust)}
-                    alt=""
-                    style={{ width: 60, height: 60, objectFit: "contain", flexShrink: 0 }}
-                  />
-                  <div>
-                    <div style={{ fontSize: 11, color: "#888" }}>{voice.region}</div>
-                    <div style={{ fontSize: 11, color: "#aaa", marginTop: 2 }}>{voice.meta}</div>
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: "#0d1a38", marginBottom: 10 }}>{voice.title}</div>
-                  <p style={{ fontSize: 13, color: "#555", lineHeight: 1.8 }}>{voice.body}</p>
-                </div>
-                <div style={{ color: "#c8952a", fontSize: 14 }}>★★★★★</div>
-              </div>
+      {/* Voice */}
+      <section id="voice" className="lp-section lp-section--gray scroll-mt-24">
+        <div className="lp-inner">
+          <h2 className="lp-section-heading">Voice</h2>
+          <p className="lp-section-title">導入企業の声</p>
+          <div className="lp-voice-grid">
+            {VOICES.map((v) => (
+              <article key={v.title} className="lp-voice-card">
+                <p className="lp-voice-card__meta">{v.meta}</p>
+                <h3>{v.title}</h3>
+                <p>{v.body}</p>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="sec06" className="service-section">
-        <div className="service-inner">
-          <div className="text-center mb-60">
-            <span className="section-tag">SERVICE</span>
-            <p className="section-sub">30秒の動画で信用形成を勝ち取る秘密は</p>
-            <h2 className="section-title">
-              SNS×動画の力で
-              <br />
-              <span style={{ color: "#1a56c8" }}>「中小企業でも新卒採用を成功させる」</span>
-              <br />
-              SNS運用代行サービス
-            </h2>
+      {/* Service */}
+      <section id="service" className="lp-section lp-section--white scroll-mt-24">
+        <div className="lp-inner">
+          <h2 className="lp-section-heading">Service</h2>
+          <p className="lp-section-title">動画で信用形成を勝ち取る</p>
+          <p className="lp-section-lead">
+            動画×スワイプの力で「中小企業でもミスマッチの少ない採用を実現する」求職プラットフォーム
+          </p>
+          <p className="lp-section-sub mt-10">こんな採用の悩みを解決</p>
+          <div className="lp-pain-grid">
+            <div className="lp-pain-card">ネームバリューのある大手企業に勝てない</div>
+            <div className="lp-pain-card">条件だけでは人が集まらない</div>
+            <div className="lp-pain-card">採用後の定着率が低い</div>
           </div>
-          <div className="industry-tags">
-            {INDUSTRY_TAGS.map((tag) => (
-              <span key={tag} className="industry-tag">
-                {tag}
-              </span>
-            ))}
-          </div>
-          <div className="service-panel">
-            <h3 style={{ textAlign: "center", fontSize: 18, fontWeight: 800, color: "#0d1a38", marginBottom: 32 }}>
-              中小企業が採用に苦しむ悩みを解決
-            </h3>
-            <div className="pain-grid">
-              {PAIN_POINTS.map((pain) => (
-                <div key={pain.text} className="pain-card">
-                  <div style={{ fontSize: 30, marginBottom: 12 }}>{pain.emoji}</div>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: "#0d1a38", lineHeight: 1.5, whiteSpace: "pre-line" }}>
-                    {pain.text}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="service-cta">
-            <p style={{ fontSize: 15, color: "rgba(255,255,255,0.7)", lineHeight: 1.8, marginBottom: 20 }}>
-              働く人や会社の文化・雰囲気を見てもらい、企業のソフト面で勝負できる環境をご用意。
-              <br />
-              ショート動画を通して企業の新たな魅力を創造し学生に直接届ける
-            </p>
-            <h3 style={{ fontSize: "clamp(18px, 2.5vw, 26px)", fontWeight: 900 }}>
-              求人広告代理店が本気で作った
-              <br />
-              <span style={{ color: "#7eb4ff" }}>Z世代の心をつかむ新卒プラットフォームです。</span>
-            </h3>
+          <p className="lp-section-lead mt-10">
+            働く人や会社の文化・雰囲気を動画で見てもらい、企業のソフト面で勝負できる環境をご用意。ショート動画を通じて企業の魅力を求職者に直接届けます。
+          </p>
+          <div className="mt-10 text-center">
+            <Link href="/company/login" className="lp-cta-btn">
+              企業ログインはこちら
+            </Link>
           </div>
         </div>
       </section>
 
-      <section id="sec07" className="management-section">
-        <div className="management-inner">
-          <div className="text-center mb-60">
-            <span className="section-tag">SNS MANAGEMENT</span>
-            <p className="section-sub">まだSNSアカウントすら持ってないから...という企業でも安心</p>
-            <h2 className="section-title">
-              SNS運用目的に応じて
-              <br />
-              多様なプランもご用意
-            </h2>
-          </div>
-          <div style={{ overflowX: "auto" }}>
-            <table className="mgmt-table">
-              <thead>
-                <tr>
-                  <th
-                    style={{
-                      padding: "14px 18px",
-                      background: "#e8edf4",
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: "#666",
-                      textAlign: "left",
-                      borderRadius: "12px 0 0 0",
-                    }}
-                  >
-                    プラン
-                  </th>
-                  <th
-                    style={{
-                      padding: "14px 18px",
-                      background: "#e8edf4",
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: "#666",
-                      textAlign: "center",
-                    }}
-                  >
-                    採用促進
-                  </th>
-                  <th
-                    style={{
-                      padding: "14px 18px",
-                      background: "#e8edf4",
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: "#666",
-                      textAlign: "center",
-                    }}
-                  >
-                    アカウント育成
-                  </th>
-                  <th className="mgmt-highlight-th" style={{ padding: "14px 18px", fontSize: 13, textAlign: "center" }}>
-                    信用形成
-                  </th>
-                  <th
-                    style={{
-                      padding: "14px 18px",
-                      background: "#e8edf4",
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: "#666",
-                      textAlign: "center",
-                      borderRadius: "0 12px 0 0",
-                    }}
-                  >
-                    オウンドメディア強化
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td
-                    style={{
-                      padding: "14px 18px",
-                      borderBottom: "1px solid #e8edf4",
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: "#444",
-                      background: "#fafafa",
-                    }}
-                  >
-                    動画制作
-                  </td>
-                  <td style={{ padding: "14px 18px", borderBottom: "1px solid #e8edf4", textAlign: "center", fontSize: 13, color: "#666", background: "#fff" }}>月2本</td>
-                  <td style={{ padding: "14px 18px", borderBottom: "1px solid #e8edf4", textAlign: "center", fontSize: 13, color: "#666", background: "#fff" }}>月4本</td>
-                  <td className="mgmt-highlight-td" style={{ padding: "14px 18px", borderBottom: "1px solid #dbe6ff", fontSize: 13 }}>月4本</td>
-                  <td style={{ padding: "14px 18px", borderBottom: "1px solid #e8edf4", textAlign: "center", fontSize: 13, color: "#666", background: "#fff" }}>月8本</td>
-                </tr>
-                <tr>
-                  <td
-                    style={{
-                      padding: "14px 18px",
-                      borderBottom: "1px solid #e8edf4",
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: "#444",
-                      background: "#fafafa",
-                    }}
-                  >
-                    ストーリーズ
-                  </td>
-                  <td style={{ padding: "14px 18px", borderBottom: "1px solid #e8edf4", textAlign: "center", fontSize: 13, color: "#999", background: "#fff" }}>—</td>
-                  <td style={{ padding: "14px 18px", borderBottom: "1px solid #e8edf4", textAlign: "center", fontSize: 13, color: "#999", background: "#fff" }}>—</td>
-                  <td className="mgmt-highlight-td" style={{ padding: "14px 18px", borderBottom: "1px solid #dbe6ff", fontSize: 13 }}>毎日更新</td>
-                  <td style={{ padding: "14px 18px", borderBottom: "1px solid #e8edf4", textAlign: "center", fontSize: 13, color: "#666", background: "#fff" }}>毎日更新</td>
-                </tr>
-                <tr>
-                  <td
-                    style={{
-                      padding: "14px 18px",
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: "#444",
-                      background: "#fafafa",
-                      borderRadius: "0 0 0 12px",
-                    }}
-                  >
-                    月額費用
-                  </td>
-                  <td style={{ padding: "14px 18px", textAlign: "center", fontSize: 13, fontWeight: 700, color: "#444", background: "#fff" }}>8万円〜</td>
-                  <td style={{ padding: "14px 18px", textAlign: "center", fontSize: 13, fontWeight: 700, color: "#444", background: "#fff" }}>12万円〜</td>
-                  <td className="mgmt-highlight-td" style={{ padding: "14px 18px", fontSize: 15 }}>15万円〜</td>
-                  <td style={{ padding: "14px 18px", textAlign: "center", fontSize: 13, fontWeight: 700, color: "#444", background: "#fff", borderRadius: "0 0 12px 0" }}>20万円〜</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div className="mgmt-summary">
-            <p style={{ fontSize: 16, fontWeight: 800, color: "#0d1a38", marginBottom: 6 }}>企画・撮影・編集・投稿</p>
-            <p style={{ fontSize: 15, color: "#1a56c8", fontWeight: 700 }}>すべて代行します</p>
-          </div>
-        </div>
-      </section>
-
-      <section id="sec08" className="faq-section">
-        <div className="faq-inner">
-          <div className="text-center mb-60">
-            <span className="section-tag">FAQ</span>
-            <h2 className="section-title">よくある質問</h2>
-          </div>
-          <div className="faq-list">
+      {/* FAQ */}
+      <section id="faq" className="lp-section lp-section--gray scroll-mt-24">
+        <div className="lp-inner--narrow">
+          <h2 className="lp-section-heading">Faq</h2>
+          <p className="lp-section-title">よくある質問</p>
+          <div className="lp-faq-list">
             {FAQ_ITEMS.map((item) => (
-              <div key={item.q} className="faq-item">
-                <div className="faq-q">
-                  {item.useIllust ? (
-                    <img src={lpImg("faq-illust-q.webp")} alt="Q" style={{ width: 36, height: 36, objectFit: "contain", flexShrink: 0 }} />
-                  ) : (
-                    <div className="faq-badge-q">Q</div>
-                  )}
-                  <p style={{ fontSize: 15, fontWeight: 700, color: "#0d1a38", lineHeight: 1.6 }}>{item.q}</p>
-                </div>
-                <div className="faq-a">
-                  {item.useIllust ? (
-                    <img src={lpImg("faq-illust-a.webp")} alt="A" style={{ width: 36, height: 36, objectFit: "contain", flexShrink: 0 }} />
-                  ) : (
-                    <div className="faq-badge-a">A</div>
-                  )}
-                  <p style={{ fontSize: 14, color: "#555", lineHeight: 1.8 }}>{item.a}</p>
-                </div>
-              </div>
+              <details key={item.q} className="lp-faq-item">
+                <summary>{item.q}</summary>
+                <p className="lp-faq-answer">{item.a}</p>
+              </details>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="contact" className="contact-section">
-        <div className="contact-inner">
-          <div className="text-center mb-48">
-            <span className="section-tag">CONTACT</span>
-            <h2 className="section-title">お問い合わせ</h2>
-          </div>
-
-          <div className="contact-gift">
-            <div style={{ flex: 1 }}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: "#7eb4ff", marginBottom: 10 }}>
-                お問い合わせいただいた企業様に特別なプレゼントをご用意
-              </p>
-              <h3 style={{ fontSize: 18, fontWeight: 900, color: "#fff", lineHeight: 1.5, marginBottom: 14 }}>
-                新卒採用に効くSNS活用術！
-                <br />
-                成功の秘訣を今日からお役立てください
-              </h3>
-              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
-                {["なぜ今SNSが必要なのか", "SNS市場について", "新卒採用にもたらす効果"].map((item) => (
-                  <li key={item} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.8)" }}>
-                    <span style={{ color: "#c8952a" }}>✓</span> {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <img
-              src={lpImg("contact-img.webp")}
-              alt="採用向けSNS運用代行の提案資料"
-              style={{ width: 180, objectFit: "contain", flexShrink: 0, borderRadius: 12 }}
-            />
-          </div>
-
+      {/* Contact */}
+      <section id="contact" className="lp-section lp-contact scroll-mt-24">
+        <div className="lp-inner--narrow">
+          <h2 className="lp-section-heading">Contact</h2>
+          <p className="lp-section-title">お問い合わせ</p>
+          <p className="lp-section-lead">下記フォームへ必要事項をご記入の上、送信ください。</p>
           <LandingContactForm />
         </div>
       </section>
 
       <LandingFooter />
-      <PwaInstallBanner alwaysShowInstallUi />
     </div>
-    </PwaProvider>
   );
 }
