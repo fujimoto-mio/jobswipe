@@ -11,6 +11,7 @@ import {
   NEW_COMPANY_VALUE,
 } from "@/lib/constants";
 import { FormError, FormSelect, FormTextInput, FormTextarea } from "@/components/form/FormFields";
+import FormJobTagsField from "@/components/form/FormJobTagsField";
 import FormSelectPicker from "@/components/form/FormSelectPicker";
 import type { JobFormValues } from "@/lib/validation/schemas";
 import { formatJobSalary, defaultMaxForMin, isValidJobSalaryRange } from "@/lib/validation/job-salary";
@@ -232,7 +233,7 @@ export default function JobFormFields({
         placeholder={"リモートワーク可\nフレックスタイム制"}
         readOnly={readOnly}
       />
-      <FormTextInput name="tags" label="タグ（カンマ区切り）" placeholder="React, リモート可, フレックス" readOnly={readOnly} />
+      <FormJobTagsField readOnly={readOnly} />
     </>
   );
 }

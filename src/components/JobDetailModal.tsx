@@ -19,6 +19,7 @@ import { formatDateJST } from "@/lib/datetime";
 import { useVideoPlayback } from "@/hooks/useVideoPlayback";
 import SeekerBottomSheet from "@/components/seeker/SeekerBottomSheet";
 import type { Job } from "@/lib/types";
+import { jobTagLabel } from "@/lib/job-tags";
 
 type JobDetailModalProps = {
   job: Job;
@@ -125,7 +126,7 @@ export default function JobDetailModal({
           <div className="mb-5 flex flex-wrap gap-2">
             {job.tags.map((tag) => (
               <span key={tag} className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-[#2563EB]">
-                {tag}
+                {jobTagLabel(tag)}
               </span>
             ))}
           </div>

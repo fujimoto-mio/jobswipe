@@ -22,6 +22,7 @@ import { useStaffPanel } from "@/components/staff/StaffPanelContext";
 import { useVideoPlayback } from "@/hooks/useVideoPlayback";
 import { apiFetch } from "@/lib/api-client";
 import type { Job, JobApprovalStatus, JobSubmissionContent } from "@/lib/types";
+import { jobTagLabel } from "@/lib/job-tags";
 
 const APPROVAL_BADGE = JOB_APPROVAL_BADGE_CLASS;
 
@@ -132,7 +133,7 @@ function JobDetailBody({
             <div className="mt-4 flex flex-wrap gap-2">
               {job.tags.map((tag) => (
                 <span key={tag} className="badge badge-blue">
-                  {tag}
+                  {jobTagLabel(tag)}
                 </span>
               ))}
             </div>

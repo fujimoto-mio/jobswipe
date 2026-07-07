@@ -23,6 +23,7 @@ import { apiFetch } from "@/lib/api-client";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
 import { formatDateJST } from "@/lib/datetime";
 import type { Job } from "@/lib/types";
+import { jobTagLabel } from "@/lib/job-tags";
 
 function LinkItem({ href, label }: { href?: string; label: string }) {
   if (!href) return null;
@@ -167,7 +168,7 @@ export default function JobDetailPage() {
 
           <div className="mt-3 flex flex-wrap gap-1.5">
             {job.tags.map((tag) => (
-              <span key={tag} className="badge badge-blue">{tag}</span>
+              <span key={tag} className="badge badge-blue">{jobTagLabel(tag)}</span>
             ))}
           </div>
           <p className="mt-3 text-xs text-slate-400">掲載日: {formatDateJST(job.postedAt)}</p>
