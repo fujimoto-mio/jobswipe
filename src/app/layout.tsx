@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Montserrat, Noto_Sans_JP } from "next/font/google";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { APP_NAME, APP_PAGE_TITLE, APP_TAGLINE } from "@/lib/brand";
 import "./globals.css";
 import "./landing.css";
@@ -60,7 +61,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja" className={`${notoSansJP.variable} ${montserrat.variable} h-full antialiased`}>
-      <body className="min-h-full bg-[var(--background)] text-[var(--foreground)] font-sans antialiased">{children}</body>
+      <body className="min-h-full bg-[var(--background)] text-[var(--foreground)] font-sans antialiased">
+        <GoogleAnalytics />
+        {children}
+      </body>
     </html>
   );
 }
