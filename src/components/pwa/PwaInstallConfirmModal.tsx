@@ -11,7 +11,7 @@ type PwaInstallConfirmModalProps = {
   onClose: () => void;
 };
 
-type Step = "confirm" | "ios-guide" | "android-fallback";
+type Step = "confirm" | "ios-guide" | "android-fallback" | "desktop-guide";
 
 export default function PwaInstallConfirmModal({ open, onClose }: PwaInstallConfirmModalProps) {
   const pwa = usePwaInstallOptional();
@@ -42,7 +42,7 @@ export default function PwaInstallConfirmModal({ open, onClose }: PwaInstallConf
   const handleConfirm = async () => {
     if (!pwa) return;
 
-    if (pwa.platform === "android" && pwa.canNativeInstall) {
+    if (pwa.canNativeInstall) {
       setInstalling(true);
       try {
         const accepted = await pwa.promptInstall();
@@ -58,7 +58,12 @@ export default function PwaInstallConfirmModal({ open, onClose }: PwaInstallConf
       return;
     }
 
-    setStep("android-fallback");
+    if (pwa.platform === "android") {
+      setStep("android-fallback");
+      return;
+    }
+
+    setStep("desktop-guide");
   };
 
   if (!open || !pwa) return null;
@@ -170,6 +175,40 @@ export default function PwaInstallConfirmModal({ open, onClose }: PwaInstallConf
                     <p className="mt-2 text-sm leading-relaxed text-white/75">
                       ブラウザ右上のメニュー（⋮）から「アプリをインストール」または「ホーム画面に追加」を選んでください。
                     </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="w-full rounded-full bg-[#fe2c55] py-2.5 text-sm font-bold text-white transition active:scale-[0.98]"
+                  >
+                    OK
+                  </button>
+                </>
+              ) : null}
+
+              {step === "desktop-guide" ? (
+                <>
+                  <div className="mb-5 flex flex-col items-center text-center">
+                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10">
+                      <Download className="h-7 w-7 text-white" strokeWidth={2} />
+                    </div>
+                    <h2 id="pwa-install-modal-title" className="text-lg font-bold">
+                      アプリをインストール
+                    </h2>
+                    <ol className="mt-3 space-y-2 text-left text-sm leading-relaxed text-white/80">
+                      <li className="flex gap-2">
+                        <span className="font-bold text-white">1.</span>
+                        <span>Chrome または Edge のアドレスバー右側にあるインストールアイコンをクリック</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="font-bold text-white">2.</span>
+                        <span>表示されない場合は、ブラウザ右上のメニュー（⋮）から「インストール」を選択</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="font-bold text-white">3.</span>
+                        <span>スマホで使う場合は、同じURLをスマホのブラウザで開いてホーム画面に追加</span>
+                      </li>
+                    </ol>
                   </div>
                   <button
                     type="button"

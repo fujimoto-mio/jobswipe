@@ -30,7 +30,13 @@ type PwaInstallContextValue = {
 
 const PwaInstallContext = createContext<PwaInstallContextValue | null>(null);
 
-export function PwaInstallProvider({ children }: { children: ReactNode }) {
+export function PwaInstallProvider({
+  children,
+  alwaysShowInstallUi = false,
+}: {
+  children: ReactNode;
+  alwaysShowInstallUi?: boolean;
+}) {
   const installPromptRef = useRef<BeforeInstallPromptEvent | null>(null);
   const [showInstallUi, setShowInstallUi] = useState(false);
   const [platform, setPlatform] = useState<"ios" | "android" | null>(null);
@@ -48,6 +54,18 @@ export function PwaInstallProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    if (alwaysShowInstallUi) {
+      if (isIosDevice()) {
+        setPlatform("ios");
+      } else if (isAndroidDevice()) {
+        setPlatform("android");
+      } else {
+        setPlatform(null);
+      }
+      setShowInstallUi(true);
+      return;
+    }
+
     if (isIosDevice()) {
       setPlatform("ios");
       setShowInstallUi(true);
@@ -62,7 +80,7 @@ export function PwaInstallProvider({ children }: { children: ReactNode }) {
 
     setPlatform(null);
     setShowInstallUi(false);
-  }, []);
+  }, [alwaysShowInstallUi]);
 
   useEffect(() => {
     void registerServiceWorker();
@@ -71,7 +89,13 @@ export function PwaInstallProvider({ children }: { children: ReactNode }) {
     const onBeforeInstallPrompt = (event: Event) => {
       event.preventDefault();
       installPromptRef.current = event as BeforeInstallPromptEvent;
-      setPlatform("android");
+      if (isIosDevice()) {
+        setPlatform("ios");
+      } else if (isAndroidDevice()) {
+        setPlatform("android");
+      } else {
+        setPlatform(null);
+      }
       setCanNativeInstall(true);
       setShowInstallUi(true);
     };
