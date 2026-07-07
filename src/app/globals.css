@@ -5089,6 +5089,161 @@ html[data-staff-theme="dark"] .select-picker-option-muted {
   margin-top: 0;
 }
 
+.admin-summary-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 1024px) {
+  .admin-summary-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.admin-summary-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid transparent;
+  border-radius: var(--staff-radius, 0.875rem);
+  padding: 1rem 1rem 0.875rem;
+  box-shadow: var(--staff-shadow-sm);
+  text-decoration: none;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.admin-summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.admin-summary-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.admin-summary-card-icon {
+  display: flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+}
+
+.admin-summary-card-go {
+  height: 1.125rem;
+  width: 1.125rem;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+  opacity: 0.55;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+.admin-summary-card:hover .admin-summary-card-go {
+  opacity: 1;
+  transform: translateX(2px);
+}
+
+.admin-summary-card-value {
+  margin-top: 0.625rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-summary-card-label {
+  margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.admin-summary-card--pending {
+  background: linear-gradient(180deg, #fffbeb 0%, #fff7ed 100%);
+  border-color: rgba(245, 158, 11, 0.22);
+}
+
+.admin-summary-card--pending .admin-summary-card-icon {
+  background: rgba(245, 158, 11, 0.16);
+  color: #d97706;
+}
+
+.admin-summary-card--pending .admin-summary-card-value {
+  color: #92400e;
+}
+
+.admin-summary-card--pending .admin-summary-card-label,
+.admin-summary-card--pending .admin-summary-card-go {
+  color: #b45309;
+}
+
+.admin-summary-card--active {
+  background: linear-gradient(180deg, #eff6ff 0%, #f0f9ff 100%);
+  border-color: rgba(37, 99, 235, 0.2);
+}
+
+.admin-summary-card--active .admin-summary-card-icon {
+  background: rgba(37, 99, 235, 0.12);
+  color: #2563eb;
+}
+
+.admin-summary-card--active .admin-summary-card-value {
+  color: #1e3a8a;
+}
+
+.admin-summary-card--active .admin-summary-card-label,
+.admin-summary-card--active .admin-summary-card-go {
+  color: #1d4ed8;
+}
+
+.admin-summary-card--companies {
+  background: linear-gradient(180deg, #ecfeff 0%, #f0fdfa 100%);
+  border-color: rgba(39, 169, 181, 0.22);
+}
+
+.admin-summary-card--companies .admin-summary-card-icon {
+  background: rgba(39, 169, 181, 0.14);
+  color: #27a9b5;
+}
+
+.admin-summary-card--companies .admin-summary-card-value {
+  color: #0f4c5c;
+}
+
+.admin-summary-card--companies .admin-summary-card-label,
+.admin-summary-card--companies .admin-summary-card-go {
+  color: #1f8f99;
+}
+
+.admin-summary-card--seekers {
+  background: linear-gradient(180deg, #ecfdf5 0%, #f0fdf4 100%);
+  border-color: rgba(16, 185, 129, 0.22);
+}
+
+.admin-summary-card--seekers .admin-summary-card-icon {
+  background: rgba(16, 185, 129, 0.14);
+  color: #10b981;
+}
+
+.admin-summary-card--seekers .admin-summary-card-value {
+  color: #065f46;
+}
+
+.admin-summary-card--seekers .admin-summary-card-label,
+.admin-summary-card--seekers .admin-summary-card-go {
+  color: #059669;
+}
+
 .company-dashboard-action-list {
   display: flex;
   flex-direction: column;

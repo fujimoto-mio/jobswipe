@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Building2, ChevronRight, ShieldCheck, Users } from "lucide-react";
+import { Briefcase, Building2, ChevronRight, ClipboardClock, ShieldCheck, Users } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import AdminJobStatisticsChart from "@/components/admin/AdminJobStatisticsChart";
 import AdminRegistrationChart from "@/components/admin/AdminRegistrationChart";
 import { apiFetch } from "@/lib/api-client";
@@ -14,33 +15,90 @@ type AdminStats = {
   pendingJobs: number;
 };
 
+type SummaryTone = "pending" | "active" | "companies" | "seekers";
+
 type SummaryItem = {
   label: string;
   value: number;
+  icon: LucideIcon;
+  href: string;
+  tone: SummaryTone;
 };
 
-const SUMMARY_ITEMS: { label: string; key: keyof AdminStats }[] = [
-  { label: "審査待ち求人", key: "pendingJobs" },
-  { label: "公開中求人", key: "approvedJobs" },
-  { label: "登録企業", key: "companyCount" },
-  { label: "登録求職者", key: "seekerCount" },
+const SUMMARY_ITEMS: {
+  label: string;
+  key: keyof AdminStats;
+  icon: LucideIcon;
+  href: string;
+  tone: SummaryTone;
+}[] = [
+  {
+    label: "審査待ち求人",
+    key: "pendingJobs",
+    icon: ClipboardClock,
+    href: "/admin/jobs?approval=Pending",
+    tone: "pending",
+  },
+  {
+    label: "公開中求人",
+    key: "approvedJobs",
+    icon: Briefcase,
+    href: "/admin/jobs?approval=Active",
+    tone: "active",
+  },
+  {
+    label: "登録企業",
+    key: "companyCount",
+    icon: Building2,
+    href: "/admin/companies",
+    tone: "companies",
+  },
+  {
+    label: "登録求職者",
+    key: "seekerCount",
+    icon: Users,
+    href: "/admin/seekers",
+    tone: "seekers",
+  },
 ];
 
-const SUMMARY_SKELETON_WIDTHS = ["4.5rem", "3.75rem", "4rem", "4.25rem"];
+function SummaryMetricCard({
+  label,
+  value,
+  icon: Icon,
+  href,
+  tone,
+}: SummaryItem) {
+  return (
+    <Link href={href} className={`admin-summary-card admin-summary-card--${tone}`}>
+      <div className="admin-summary-card-top">
+        <div className="admin-summary-card-icon">
+          <Icon className="h-4 w-4" />
+        </div>
+        <ChevronRight className="admin-summary-card-go" aria-hidden />
+      </div>
+      <p className="admin-summary-card-value">{value.toLocaleString()}</p>
+      <p className="admin-summary-card-label">{label}</p>
+    </Link>
+  );
+}
 
 function SummaryGridSkeleton() {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-busy="true" aria-label="概要を読み込み中">
-      {SUMMARY_ITEMS.map(({ label }, index) => (
-        <div key={label} className="dashboard-summary-skeleton-card">
+    <div className="admin-summary-grid" aria-busy="true" aria-label="概要を読み込み中">
+      {SUMMARY_ITEMS.map(({ label, icon: Icon, tone }, index) => (
+        <div key={label} className={`admin-summary-card admin-summary-card--${tone}`} aria-hidden>
+          <div className="admin-summary-card-top">
+            <div className="admin-summary-card-icon">
+              <Icon className="h-4 w-4" />
+            </div>
+            <ChevronRight className="admin-summary-card-go" />
+          </div>
           <div
-            className="dashboard-summary-skeleton-value"
-            style={{
-              width: SUMMARY_SKELETON_WIDTHS[index],
-              animationDelay: `${index * 140}ms`,
-            }}
+            className="dashboard-skeleton-line dashboard-skeleton-line--metric"
+            style={{ animationDelay: `${index * 140}ms`, marginTop: "0.625rem" }}
           />
-          <p className="dashboard-summary-skeleton-label">{label}</p>
+          <p className="admin-summary-card-label">{label}</p>
         </div>
       ))}
     </div>
@@ -49,12 +107,9 @@ function SummaryGridSkeleton() {
 
 function SummaryGrid({ items }: { items: SummaryItem[] }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      {items.map(({ label, value }) => (
-        <div key={label} className="company-dashboard-metric text-center">
-          <p className="company-dashboard-metric-value">{value.toLocaleString()}</p>
-          <p className="company-dashboard-metric-label">{label}</p>
-        </div>
+    <div className="admin-summary-grid">
+      {items.map((item) => (
+        <SummaryMetricCard key={item.label} {...item} />
       ))}
     </div>
   );
@@ -138,9 +193,12 @@ export default function AdminDashboard() {
               <SummaryGridSkeleton />
             ) : (
               <SummaryGrid
-                items={SUMMARY_ITEMS.map(({ label, key }) => ({
+                items={SUMMARY_ITEMS.map(({ label, key, icon, href, tone }) => ({
                   label,
                   value: stats?.[key] ?? 0,
+                  icon,
+                  href,
+                  tone,
                 }))}
               />
             )}
