@@ -10,6 +10,7 @@ import {
   SALARY_RANGES,
 } from "@/lib/constants";
 import { NEW_COMPANY_VALUE } from "@/lib/constants";
+import { JOB_TAGS } from "@/lib/job-tags";
 import { isValidJobSalaryRange, isValidSalaryMax, isValidSalaryMin } from "@/lib/validation/job-salary";
 
 const email = Yup.string()
@@ -322,7 +323,9 @@ export const jobFormSchema = Yup.object({
   description: Yup.string().trim().required("仕事内容を入力してください"),
   requirements: Yup.string(),
   benefits: Yup.string(),
-  tags: Yup.string(),
+  tags: Yup.array()
+    .of(Yup.string().oneOf([...JOB_TAGS], "無効なタグです"))
+    .default([]),
   videoUrl: Yup.string()
     .trim()
     .transform((v) => (v ? v : undefined))

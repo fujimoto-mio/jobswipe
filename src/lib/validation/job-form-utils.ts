@@ -1,6 +1,7 @@
 import type { Job } from "@/lib/types";
 import type { JobFormValues } from "@/lib/validation/schemas";
 import { AREAS, EMPLOYMENT_TYPES, NEW_COMPANY_VALUE } from "@/lib/constants";
+import { resolveJobTags } from "@/lib/job-tags";
 import { formatJobSalary, parseJobSalary } from "@/lib/validation/job-salary";
 
 function resolveJobLocation(job: Job): string {
@@ -22,7 +23,7 @@ export const emptyJobFormValues: JobFormValues = {
   description: "",
   requirements: "",
   benefits: "",
-  tags: "",
+  tags: [],
   videoUrl: "",
 };
 
@@ -40,7 +41,7 @@ export function jobToFormValues(job: Job): JobFormValues {
     description: job.description,
     requirements: job.requirements.join("\n"),
     benefits: job.benefits.join("\n"),
-    tags: job.tags.join(", "),
+    tags: resolveJobTags(job.tags),
     videoUrl: job.videoUrl,
   };
 }
@@ -66,9 +67,6 @@ export function jobFormValuesToBody(values: JobFormValues, videoUrl?: string) {
       .map((t) => t.trim())
       .filter(Boolean),
     videoUrl: videoUrl?.trim() || undefined,
-    tags: (values.tags ?? "")
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean),
+    tags: resolveJobTags((values.tags ?? []) as string[]),
   };
 }

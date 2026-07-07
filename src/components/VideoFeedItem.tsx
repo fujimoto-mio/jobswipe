@@ -2,11 +2,8 @@
 
 import { Volume2, VolumeX, Heart, Send, FileText, MapPin, Briefcase, UserRound } from "lucide-react";
 import type { JobFeedItem } from "@/lib/types";
+import { jobTagLabel } from "@/lib/job-tags";
 import { useVideoPlayback } from "@/hooks/useVideoPlayback";
-
-function displayVideoTag(tag: string) {
-  return tag.trim().replace(/^#/, "");
-}
 
 type VideoFeedItemProps = {
   job: JobFeedItem;
@@ -189,7 +186,7 @@ export default function VideoFeedItem({
                   key={tag}
                   className="rounded-full border border-white/30 bg-white/10 px-1.5 py-0.5 text-[9px] font-medium leading-tight text-white/85 backdrop-blur-sm"
                 >
-                  {displayVideoTag(tag)}
+                  {jobTagLabel(tag)}
                 </span>
               ))}
             </div>
