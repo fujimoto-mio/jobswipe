@@ -6,19 +6,33 @@ import { bucketLabel, buildTrendBucketKeys } from "@/lib/db/admin-stats-trend-ut
 
 type JobTrendRow = { bucket: Date; approval_status: string; count: bigint };
 
-export async function getAdminJobTrend(days: RegistrationTrendRange): Promise<JobTrendPoint[]> {
+export async function getAdminJobTrend(
+  days: RegistrationTrendRange,
+  companyId?: string | null
+): Promise<JobTrendPoint[]> {
   const { from, granularity, keys } = buildTrendBucketKeys(days);
   const trunc = granularity;
 
-  const rows = await prisma.$queryRaw<JobTrendRow[]>`
-    SELECT date_trunc(${trunc}, created_at AT TIME ZONE 'Asia/Tokyo')::date AS bucket,
-           approval_status,
-           COUNT(*)::bigint AS count
-    FROM jobs
-    WHERE created_at >= ${from}
-    GROUP BY 1, 2
-    ORDER BY 1, 2
-  `;
+  const rows = companyId
+    ? await prisma.$queryRaw<JobTrendRow[]>`
+        SELECT date_trunc(${trunc}, created_at AT TIME ZONE 'Asia/Tokyo')::date AS bucket,
+               approval_status,
+               COUNT(*)::bigint AS count
+        FROM jobs
+        WHERE created_at >= ${from}
+          AND company_id = ${companyId}
+        GROUP BY 1, 2
+        ORDER BY 1, 2
+      `
+    : await prisma.$queryRaw<JobTrendRow[]>`
+        SELECT date_trunc(${trunc}, created_at AT TIME ZONE 'Asia/Tokyo')::date AS bucket,
+               approval_status,
+               COUNT(*)::bigint AS count
+        FROM jobs
+        WHERE created_at >= ${from}
+        GROUP BY 1, 2
+        ORDER BY 1, 2
+      `;
 
   const byBucket = new Map<string, { pending: number; active: number; cancelled: number }>();
   for (const key of keys) {
