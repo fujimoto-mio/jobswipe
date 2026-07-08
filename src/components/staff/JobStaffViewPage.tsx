@@ -9,10 +9,12 @@ import {
   MapPin,
   Briefcase,
   Pencil,
+  Trash2,
   Volume2,
   VolumeX,
 } from "lucide-react";
 import JobApprovalConfirmModal from "@/components/admin/JobApprovalConfirmModal";
+import JobCancelConfirmModal, { type JobCancelVariant } from "@/components/admin/JobCancelConfirmModal";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
 import { formatDateTimeJST } from "@/lib/datetime";
 import { JOB_APPROVAL_BADGE_CLASS, JOB_APPROVAL_LABELS } from "@/lib/constants";
@@ -202,6 +204,10 @@ export default function JobStaffViewPage({ jobId }: JobStaffViewPageProps) {
     kind: "job" | "revision";
     targetId: string;
   } | null>(null);
+  const [pendingCancel, setPendingCancel] = useState<{
+    job: Job;
+    variant: JobCancelVariant;
+  } | null>(null);
 
   const loadJob = () =>
     apiFetch(`/api/jobs/${jobId}`)
@@ -261,6 +267,30 @@ export default function JobStaffViewPage({ jobId }: JobStaffViewPageProps) {
     }
     router.push(`${basePath}/jobs`);
   };
+
+  const submitCancel = async (id: string, variant: JobCancelVariant) => {
+    const res =
+      variant === "request"
+        ? await apiFetch("/api/admin/job-cancellations", {
+            method: "POST",
+            body: JSON.stringify({ id }),
+          })
+        : await apiFetch("/api/admin/job-cancellations", {
+            method: "PATCH",
+            body: JSON.stringify({
+              id,
+              action: variant === "direct" ? "cancel" : variant,
+            }),
+          });
+    if (!res.ok) {
+      throw new Error("cancel update failed");
+    }
+    router.push(`${basePath}/jobs`);
+  };
+
+  const hasCancelRequest = Boolean(job.cancelRequestedAt);
+  const canCancelDirect = isAdmin && job.approvalStatus === "Active" && !hasCancelRequest;
+  const canRequestCancel = !isAdmin && job.approvalStatus === "Active" && !hasCancelRequest;
 
   const toolbarNote = isAdmin
     ? viewMode === "review" && reviewJob
@@ -351,7 +381,42 @@ export default function JobStaffViewPage({ jobId }: JobStaffViewPageProps) {
           </div>
         )}
 
-        {!isAdmin && (
+        {isAdmin && hasCancelRequest && (
+          <>
+            <p className="company-profile-toolbar-note">
+              企業からキャンセル申請が届いています。
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setPendingCancel({ job, variant: "reject" })}
+                className="staff-ui btn-secondary w-full py-3"
+              >
+                申請を却下
+              </button>
+              <button
+                type="button"
+                onClick={() => setPendingCancel({ job, variant: "approve" })}
+                className="staff-ui confirm-modal-btn--danger flex w-full items-center justify-center py-3"
+              >
+                キャンセルを承認
+              </button>
+            </div>
+          </>
+        )}
+
+        {canCancelDirect && (
+          <button
+            type="button"
+            onClick={() => setPendingCancel({ job, variant: "direct" })}
+            className="staff-ui confirm-modal-btn--danger flex w-full items-center justify-center gap-2 py-3"
+          >
+            <Trash2 className="h-4 w-4" />
+            求人をキャンセル
+          </button>
+        )}
+
+        {!isAdmin && job.approvalStatus !== "Closed" && (
           <Link
             href={`${basePath}/jobs/${job.id}/edit`}
             className="staff-ui btn-primary flex w-full items-center justify-center gap-2 py-3"
@@ -359,6 +424,23 @@ export default function JobStaffViewPage({ jobId }: JobStaffViewPageProps) {
             <Pencil className="h-4 w-4" />
             {job.approvalStatus === "Active" ? "変更を申請" : "求人を編集"}
           </Link>
+        )}
+
+        {canRequestCancel && (
+          <button
+            type="button"
+            onClick={() => setPendingCancel({ job, variant: "request" })}
+            className="staff-ui btn-secondary flex w-full items-center justify-center gap-2 py-3"
+          >
+            <Trash2 className="h-4 w-4" />
+            掲載をキャンセル
+          </button>
+        )}
+
+        {!isAdmin && hasCancelRequest && (
+          <p className="company-profile-toolbar-note text-center">
+            キャンセル申請中です。管理者の承認をお待ちください。
+          </p>
         )}
       </div>
 
@@ -377,6 +459,15 @@ export default function JobStaffViewPage({ jobId }: JobStaffViewPageProps) {
                 pendingApproval.action
               )
             }
+          />
+        )}
+        {pendingCancel && (
+          <JobCancelConfirmModal
+            key={`${pendingCancel.job.id}-${pendingCancel.variant}`}
+            job={pendingCancel.job}
+            variant={pendingCancel.variant}
+            onClose={() => setPendingCancel(null)}
+            onConfirm={() => submitCancel(pendingCancel.job.id, pendingCancel.variant)}
           />
         )}
       </AnimatePresence>

@@ -108,6 +108,25 @@ export function TableSuspendButton({
   );
 }
 
+export function TableCancelButton({
+  onClick,
+  label = "キャンセル",
+}: {
+  onClick: () => void;
+  label?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="btn-icon btn-icon-danger h-9 w-9 shrink-0"
+      aria-label={label}
+    >
+      <Trash2 className="h-4 w-4" />
+    </button>
+  );
+}
+
 export function TableRestoreButton({
   onClick,
   label = "復元",

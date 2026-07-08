@@ -17,6 +17,7 @@ type FormSelectPickerProps = {
   touched?: boolean;
   compact?: boolean;
   allowClear?: boolean;
+  menuClassName?: string;
   onChange: (value: string) => void;
   onBlur: () => void;
 };
@@ -46,6 +47,7 @@ export default function FormSelectPicker({
   touched,
   compact = false,
   allowClear = true,
+  menuClassName = "",
   onChange,
   onBlur,
 }: FormSelectPickerProps) {
@@ -160,7 +162,7 @@ export default function FormSelectPicker({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={{ duration: 0.15 }}
-            className={`select-picker-menu absolute left-0 right-0 top-[calc(100%+0.375rem)] z-50 ${staff ? "select-picker-menu--staff" : ""}`}
+            className={`select-picker-menu absolute left-0 right-0 top-[calc(100%+0.375rem)] z-50 ${staff ? "select-picker-menu--staff" : ""} ${menuClassName}`.trim()}
             role="listbox"
             aria-labelledby={fieldId}
           >

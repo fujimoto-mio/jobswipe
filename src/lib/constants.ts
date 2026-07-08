@@ -104,15 +104,16 @@ export const APPLICATION_STATUS_LABELS = {
   rejected: "不採用",
 } as const;
 
-export type JobApprovalStatus = "Draft" | "Pending" | "Active" | "Cancelled";
+export type JobApprovalStatus = "Draft" | "Pending" | "Active" | "Cancelled" | "Closed";
 
-export const JOB_APPROVAL_STATUSES: JobApprovalStatus[] = ["Draft", "Pending", "Active", "Cancelled"];
+export const JOB_APPROVAL_STATUSES: JobApprovalStatus[] = ["Draft", "Pending", "Active", "Cancelled", "Closed"];
 
 export const JOB_APPROVAL_LABELS: Record<JobApprovalStatus, string> = {
   Draft: "下書き",
   Pending: "申請中",
   Active: "承認済み",
   Cancelled: "差し戻し",
+  Closed: "キャンセル済み",
 };
 
 export const JOB_APPROVAL_BADGE_CLASS: Record<JobApprovalStatus, string> = {
@@ -120,6 +121,7 @@ export const JOB_APPROVAL_BADGE_CLASS: Record<JobApprovalStatus, string> = {
   Pending: "badge-amber",
   Active: "badge-green",
   Cancelled: "badge-red",
+  Closed: "badge-slate",
 };
 
 export type JobSubmissionStatus = "Pending" | "Approved" | "Rejected";

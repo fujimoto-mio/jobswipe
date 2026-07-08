@@ -24,6 +24,7 @@ enum JobApprovalStatus {
   Pending
   Active
   Cancelled
+  Closed
 }
 
 enum JobSubmissionStatus {
@@ -75,6 +76,7 @@ model Job {
   links          Json     @default("{}")
   approvalStatus JobApprovalStatus @default(Draft) @map("approval_status")
   approvedAt     DateTime? @map("approved_at") @db.Timestamptz(3)
+  cancelRequestedAt DateTime? @map("cancel_requested_at") @db.Timestamptz(3)
   viewCount      Int      @default(0) @map("view_count")
   postedAt       DateTime @default(now()) @map("posted_at") @db.Timestamptz(3)
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)

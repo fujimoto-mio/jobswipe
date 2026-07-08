@@ -16,6 +16,7 @@ export type StaffJobsQuery = {
   limit: number;
   search?: string;
   approvalStatus?: JobApprovalStatus;
+  cancelRequested?: boolean;
   sort?: string;
   order?: "asc" | "desc";
 };
@@ -78,6 +79,7 @@ export async function queryStaffJobs(query: StaffJobsQuery): Promise<PaginatedJo
   const where = {
     ...(query.companyId ? { companyId: query.companyId } : {}),
     ...(query.approvalStatus ? { approvalStatus: query.approvalStatus as PrismaJobApprovalStatus } : {}),
+    ...(query.cancelRequested ? { cancelRequestedAt: { not: null } } : {}),
     ...jobSearchFilter(query.search),
   };
 
