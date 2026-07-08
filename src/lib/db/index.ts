@@ -114,6 +114,7 @@ export async function updateJobApproval(id: string, status: JobApprovalStatus): 
       data: {
         approvalStatus: status as PrismaJobApprovalStatus,
         approvedAt: status === "Active" ? now() : null,
+        cancelRequestedAt: null,
       },
       include: jobInclude,
     });

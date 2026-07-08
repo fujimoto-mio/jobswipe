@@ -45,6 +45,7 @@ export function mapJob(row: JobWithCompany): Job {
     thumbnailUrl: row.thumbnailUrl ?? "",
     postedAt: formatDateISOJST(row.postedAt),
     approvedAt: row.approvedAt ? serializeTimestamp(row.approvedAt) : null,
+    cancelRequestedAt: row.cancelRequestedAt ? serializeTimestamp(row.cancelRequestedAt) : null,
     links: resolveJobLinks(row.company, row.links),
     approvalStatus: row.approvalStatus as JobApprovalStatus,
     viewCount: row.viewCount,

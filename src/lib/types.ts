@@ -40,6 +40,7 @@ export type Job = {
   thumbnailUrl: string;
   postedAt: string;
   approvedAt?: string | null;
+  cancelRequestedAt?: string | null;
   links?: JobLinks;
   approvalStatus: JobApprovalStatus;
   viewCount: number;

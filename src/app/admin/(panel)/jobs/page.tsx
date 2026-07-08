@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import JobApprovalConfirmModal from "@/components/admin/JobApprovalConfirmModal";
+import JobCancelConfirmModal, { type JobCancelVariant } from "@/components/admin/JobCancelConfirmModal";
 import JobDeleteConfirmModal from "@/components/staff/JobDeleteConfirmModal";
 import JobThumbnail from "@/components/JobThumbnail";
 import PaginatedDataTable, {
@@ -15,6 +16,7 @@ import PaginatedDataTable, {
 import PaginatedTableToolbar from "@/components/ui/PaginatedTableToolbar";
 import {
   TableApproveButton,
+  TableCancelButton,
   TableDeleteButton,
   TableEditLink,
   TableRejectButton,
@@ -33,15 +35,20 @@ type StaffJobRow = Job & {
   pendingSubmission?: JobSubmissionContent | null;
 };
 
-const APPROVAL_FILTER_OPTIONS: { value: "" | JobApprovalStatus; label: string }[] = [
+const CANCEL_REQUESTED_FILTER = "CancelRequested" as const;
+type JobFilterValue = "" | JobApprovalStatus | typeof CANCEL_REQUESTED_FILTER;
+
+const APPROVAL_FILTER_OPTIONS: { value: JobFilterValue; label: string }[] = [
   { value: "", label: "すべて" },
   ...JOB_APPROVAL_STATUSES.map((status) => ({
-    value: status,
+    value: status as JobFilterValue,
     label: JOB_APPROVAL_LABELS[status],
   })),
+  { value: CANCEL_REQUESTED_FILTER, label: "キャンセル申請中" },
 ];
 
-function parseApprovalFilter(value: string | null): "" | JobApprovalStatus {
+function parseApprovalFilter(value: string | null): JobFilterValue {
+  if (value === CANCEL_REQUESTED_FILTER) return CANCEL_REQUESTED_FILTER;
   if (value && JOB_APPROVAL_STATUSES.includes(value as JobApprovalStatus)) {
     return value as JobApprovalStatus;
   }
@@ -53,11 +60,13 @@ function FilterSelect<T extends string>({
   options,
   onChange,
   title,
+  menuClassName,
 }: {
   value: T;
   options: readonly { value: T; label: string }[];
   onChange: (value: T) => void;
   title: string;
+  menuClassName?: string;
 }) {
   const selectedLabel = options.find((option) => option.value === value)?.label ?? options[0]?.label ?? "";
 
@@ -69,6 +78,7 @@ function FilterSelect<T extends string>({
       options={options.map((option) => option.label)}
       placeholder={options[0]?.label ?? "選択"}
       allowClear={false}
+      menuClassName={menuClassName}
       onChange={(label) => {
         const next = options.find((option) => option.label === label);
         if (next) onChange(next.value);
@@ -83,7 +93,7 @@ export default function AdminJobsPage() {
   const isAdmin = role === "admin";
   const searchParams = useSearchParams();
   const tableRef = useRef<PaginatedDataTableHandle>(null);
-  const [approvalFilter, setApprovalFilter] = useState<"" | JobApprovalStatus>(() =>
+  const [approvalFilter, setApprovalFilter] = useState<JobFilterValue>(() =>
     parseApprovalFilter(searchParams.get("approval"))
   );
   const [pendingApproval, setPendingApproval] = useState<{
@@ -91,6 +101,10 @@ export default function AdminJobsPage() {
     action: Extract<JobApprovalStatus, "Active" | "Cancelled">;
     kind: "job" | "revision";
     targetId: string;
+  } | null>(null);
+  const [pendingCancel, setPendingCancel] = useState<{
+    job: StaffJobRow;
+    variant: JobCancelVariant;
   } | null>(null);
   const [pendingDeleteJob, setPendingDeleteJob] = useState<Job | null>(null);
 
@@ -116,6 +130,26 @@ export default function AdminJobsPage() {
     );
     if (!res.ok) {
       throw new Error("approval update failed");
+    }
+    await refetch();
+  };
+
+  const submitCancel = async (id: string, variant: JobCancelVariant) => {
+    const res =
+      variant === "request"
+        ? await apiFetch("/api/admin/job-cancellations", {
+            method: "POST",
+            body: JSON.stringify({ id }),
+          })
+        : await apiFetch("/api/admin/job-cancellations", {
+            method: "PATCH",
+            body: JSON.stringify({
+              id,
+              action: variant === "direct" ? "cancel" : variant,
+            }),
+          });
+    if (!res.ok) {
+      throw new Error("cancel update failed");
     }
     await refetch();
   };
@@ -191,6 +225,9 @@ export default function AdminJobsPage() {
           {job.pendingSubmission && (
             <span className="badge badge-amber w-fit">変更申請中</span>
           )}
+          {job.cancelRequestedAt && (
+            <span className="badge badge-red w-fit">キャンセル申請中</span>
+          )}
         </div>
       ),
     },
@@ -225,8 +262,26 @@ export default function AdminJobsPage() {
       className: "data-table-col-actions text-right",
       cell: (job) => {
         if (isAdmin) {
+          const hasCancelRequest = Boolean(job.cancelRequestedAt);
           const canReviewJob = job.approvalStatus === "Pending";
           const canReviewRevision = Boolean(job.pendingSubmission);
+          const canCancelDirect = job.approvalStatus === "Active" && !hasCancelRequest;
+
+          if (hasCancelRequest) {
+            return (
+              <TableRowActions>
+                <TableViewLink href={`${basePath}/jobs/${job.id}/view`} />
+                <TableApproveButton
+                  label="キャンセル申請を承認"
+                  onClick={() => setPendingCancel({ job, variant: "approve" })}
+                />
+                <TableRejectButton
+                  label="キャンセル申請を却下"
+                  onClick={() => setPendingCancel({ job, variant: "reject" })}
+                />
+              </TableRowActions>
+            );
+          }
 
           return (
             <TableRowActions>
@@ -279,14 +334,30 @@ export default function AdminJobsPage() {
                   />
                 </>
               )}
+              {canCancelDirect && (
+                <TableCancelButton
+                  label="求人をキャンセル"
+                  onClick={() => setPendingCancel({ job, variant: "direct" })}
+                />
+              )}
             </TableRowActions>
           );
         }
 
+        const isClosed = job.approvalStatus === "Closed";
+        const companyCanRequestCancel =
+          job.approvalStatus === "Active" && !job.cancelRequestedAt;
+
         return (
           <TableRowActions>
             <TableViewLink href={`${basePath}/jobs/${job.id}/view`} />
-            <TableEditLink href={`${basePath}/jobs/${job.id}/edit`} />
+            {!isClosed && <TableEditLink href={`${basePath}/jobs/${job.id}/edit`} />}
+            {companyCanRequestCancel && (
+              <TableCancelButton
+                label="キャンセルを申請"
+                onClick={() => setPendingCancel({ job, variant: "request" })}
+              />
+            )}
             {(job.approvalStatus === "Draft" || job.approvalStatus === "Cancelled") && (
               <TableDeleteButton onClick={() => setPendingDeleteJob(job)} />
             )}
@@ -332,7 +403,11 @@ export default function AdminJobsPage() {
           search: search || undefined,
           sort: sort.column || undefined,
           order: sort.order,
-          ...(approvalFilter ? { approvalStatus: approvalFilter } : {}),
+          ...(approvalFilter === CANCEL_REQUESTED_FILTER
+            ? { cancelRequested: "true" }
+            : approvalFilter
+              ? { approvalStatus: approvalFilter }
+              : {}),
         })}
         parseResponse={(data) => {
           const payload = data as { items?: StaffJobRow[]; total?: number };
@@ -355,6 +430,7 @@ export default function AdminJobsPage() {
                 options={APPROVAL_FILTER_OPTIONS}
                 onChange={setApprovalFilter}
                 title="ステータス"
+                menuClassName="select-picker-menu--filter"
               />
             }
           />
@@ -376,6 +452,15 @@ export default function AdminJobsPage() {
                 pendingApproval.action
               )
             }
+          />
+        )}
+        {pendingCancel && (
+          <JobCancelConfirmModal
+            key={`${pendingCancel.job.id}-${pendingCancel.variant}`}
+            job={pendingCancel.job}
+            variant={pendingCancel.variant}
+            onClose={() => setPendingCancel(null)}
+            onConfirm={() => submitCancel(pendingCancel.job.id, pendingCancel.variant)}
           />
         )}
         {pendingDeleteJob && (

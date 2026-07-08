@@ -31,6 +31,7 @@ export async function GET(request: Request) {
   const approvalStatus = JOB_APPROVAL_STATUSES.includes(approvalStatusParam as JobApprovalStatus)
     ? (approvalStatusParam as JobApprovalStatus)
     : undefined;
+  const cancelRequested = searchParams.get("cancelRequested") === "true";
 
   try {
     const result = await queryStaffJobs({
@@ -41,6 +42,7 @@ export async function GET(request: Request) {
       sort,
       order,
       approvalStatus: approvalStatus || undefined,
+      cancelRequested,
     });
     return NextResponse.json(result);
   } catch (error) {

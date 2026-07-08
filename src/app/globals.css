@@ -3945,6 +3945,14 @@ html[data-seeker-theme="dark"] .seeker-ui .seeker-auth-note {
   scrollbar-color: var(--staff-scrollbar-thumb) var(--staff-scrollbar-track);
 }
 
+.select-picker-menu.select-picker-menu--filter,
+.staff-ui .select-picker-menu.select-picker-menu--filter,
+.select-picker--staff .select-picker-menu.select-picker-menu--filter,
+html[data-staff-theme="dark"] .select-picker-menu.select-picker-menu--filter {
+  max-height: none !important;
+  overflow-y: visible !important;
+}
+
 .staff-ui .select-picker-menu::-webkit-scrollbar {
   width: 6px;
 }
@@ -7272,6 +7280,11 @@ html[data-staff-theme="dark"] .staff-ui {
 .staff-ui.staff-theme-dark .badge-blue {
   background: rgba(39, 169, 181, 0.14);
   color: #7dd3db;
+}
+
+.staff-ui.staff-theme-dark .badge-slate {
+  background: rgba(148, 163, 184, 0.16);
+  color: #cbd5e1;
 }
 
 .staff-ui.staff-theme-dark .data-table-scroll th,
