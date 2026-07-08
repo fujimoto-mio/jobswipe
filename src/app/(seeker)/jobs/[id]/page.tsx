@@ -12,10 +12,11 @@ import {
   Gift,
   Send,
   Heart,
-  ExternalLink,
   Volume2,
   VolumeX,
+  Globe,
 } from "lucide-react";
+import { XBrandIcon, InstagramIcon, LinkedinIcon } from "@/components/icons/BrandIcons";
 import ApplyModal from "@/components/ApplyModal";
 import SeekerAccountMenu from "@/components/seeker/SeekerAccountMenu";
 import { useVideoPlayback } from "@/hooks/useVideoPlayback";
@@ -25,17 +26,23 @@ import { formatDateJST } from "@/lib/datetime";
 import type { Job } from "@/lib/types";
 import { jobTagLabel } from "@/lib/job-tags";
 
-function LinkItem({ href, label }: { href?: string; label: string }) {
+function LinkItem({
+  href,
+  icon: Icon,
+}: {
+  href?: string;
+  icon: React.ComponentType<{ className?: string }>;
+}) {
   if (!href) return null;
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center gap-2.5 rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition active:scale-[0.98] hover:bg-slate-50"
+      className="flex items-center gap-2.5 px-1 py-1.5 text-sm text-blue-600 transition hover:underline active:scale-[0.98]"
     >
-      <ExternalLink className="h-4 w-4 shrink-0" />
-      {label}
+      <Icon className="h-4 w-4 shrink-0" />
+      <span className="truncate font-medium">{href}</span>
     </a>
   );
 }
@@ -186,8 +193,7 @@ export default function JobDetailPage() {
           </h2>
           <ul className="space-y-2">
             {job.requirements.map((req) => (
-              <li key={req} className="flex items-start gap-2.5 text-sm text-slate-700">
-                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
+              <li key={req} className="text-sm text-slate-700">
                 {req}
               </li>
             ))}
@@ -201,8 +207,7 @@ export default function JobDetailPage() {
           </h2>
           <ul className="space-y-2">
             {job.benefits.map((benefit) => (
-              <li key={benefit} className="flex items-start gap-2.5 text-sm text-slate-700">
-                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+              <li key={benefit} className="text-sm text-slate-700">
                 {benefit}
               </li>
             ))}
@@ -212,10 +217,10 @@ export default function JobDetailPage() {
         <section className="mb-4">
           <h2 className="mb-2.5 px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">リンク</h2>
           <div className="grid gap-2">
-            <LinkItem href={links.careersPage} label="採用ページ" />
-            <LinkItem href={links.twitter} label="Twitter / X" />
-            <LinkItem href={links.instagram} label="Instagram" />
-            <LinkItem href={links.linkedin} label="LinkedIn" />
+            <LinkItem href={links.careersPage} icon={Globe} />
+            <LinkItem href={links.twitter} icon={XBrandIcon} />
+            <LinkItem href={links.instagram} icon={InstagramIcon} />
+            <LinkItem href={links.linkedin} icon={LinkedinIcon} />
           </div>
         </section>
       </div>

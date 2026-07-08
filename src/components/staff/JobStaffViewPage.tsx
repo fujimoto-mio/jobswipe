@@ -8,8 +8,6 @@ import {
   ArrowLeft,
   MapPin,
   Briefcase,
-  CheckCircle,
-  Gift,
   Pencil,
   Volume2,
   VolumeX,
@@ -153,8 +151,7 @@ function JobDetailBody({
           <div className="company-profile-section-body">
             <ul className="space-y-2">
               {job.requirements.map((req) => (
-                <li key={req} className="flex items-start gap-2.5 company-profile-text">
-                  <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
+                <li key={req} className="company-profile-text">
                   {req}
                 </li>
               ))}
@@ -171,8 +168,7 @@ function JobDetailBody({
           <div className="company-profile-section-body">
             <ul className="space-y-2">
               {job.benefits.map((benefit) => (
-                <li key={benefit} className="flex items-start gap-2.5 company-profile-text">
-                  <Gift className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                <li key={benefit} className="company-profile-text">
                   {benefit}
                 </li>
               ))}
