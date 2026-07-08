@@ -9,12 +9,13 @@ import {
   Gift,
   Send,
   Heart,
-  ExternalLink,
   FileText,
   MessageCircle,
   Volume2,
   VolumeX,
+  Globe,
 } from "lucide-react";
+import { XBrandIcon, InstagramIcon, LinkedinIcon } from "@/components/icons/BrandIcons";
 import { formatDateJST } from "@/lib/datetime";
 import { useVideoPlayback } from "@/hooks/useVideoPlayback";
 import SeekerBottomSheet from "@/components/seeker/SeekerBottomSheet";
@@ -31,17 +32,23 @@ type JobDetailModalProps = {
   onApply: () => void;
 };
 
-function LinkItem({ href, label }: { href?: string; label: string }) {
+function LinkItem({
+  href,
+  icon: Icon,
+}: {
+  href?: string;
+  icon: React.ComponentType<{ className?: string }>;
+}) {
   if (!href) return null;
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#2563EB] transition hover:bg-blue-50"
+      className="flex items-center gap-2 px-1 py-1.5 text-sm text-[#2563EB] transition hover:underline"
     >
-      <ExternalLink className="h-4 w-4 shrink-0" />
-      {label}
+      <Icon className="h-4 w-4 shrink-0" />
+      <span className="truncate">{href}</span>
     </a>
   );
 }
@@ -145,8 +152,7 @@ export default function JobDetailModal({
             </h3>
             <ul className="space-y-1.5">
               {job.requirements.map((req) => (
-                <li key={req} className="flex items-start gap-2 text-sm text-[#334155]">
-                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#2563EB]" />
+                <li key={req} className="text-sm text-[#334155]">
                   {req}
                 </li>
               ))}
@@ -160,8 +166,7 @@ export default function JobDetailModal({
             </h3>
             <ul className="space-y-1.5">
               {job.benefits.map((benefit) => (
-                <li key={benefit} className="flex items-start gap-2 text-sm text-[#334155]">
-                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                <li key={benefit} className="text-sm text-[#334155]">
                   {benefit}
                 </li>
               ))}
@@ -172,10 +177,10 @@ export default function JobDetailModal({
             <section className="mb-6">
               <h3 className="mb-2 text-sm font-semibold text-[#64748B]">リンク</h3>
               <div className="grid gap-2">
-                <LinkItem href={links.careersPage} label="採用ページ" />
-                <LinkItem href={links.twitter} label="Twitter / X" />
-                <LinkItem href={links.instagram} label="Instagram" />
-                <LinkItem href={links.linkedin} label="LinkedIn" />
+                <LinkItem href={links.careersPage} icon={Globe} />
+                <LinkItem href={links.twitter} icon={XBrandIcon} />
+                <LinkItem href={links.instagram} icon={InstagramIcon} />
+                <LinkItem href={links.linkedin} icon={LinkedinIcon} />
               </div>
             </section>
           )}
