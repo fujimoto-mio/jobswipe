@@ -337,6 +337,23 @@ export const chatMessageSchema = Yup.object({
   content: Yup.string().trim().required("メッセージを入力してください"),
 });
 
+export const contactInquirySchema = Yup.object({
+  company: Yup.string()
+    .trim()
+    .transform((v) => (v ? v : undefined))
+    .max(200, "会社名は200文字以内で入力してください")
+    .optional(),
+  name: Yup.string().trim().required("お名前を入力してください").max(100, "お名前は100文字以内で入力してください"),
+  email: Yup.string()
+    .trim()
+    .email("有効なメールアドレスを入力してください")
+    .required("メールアドレスを入力してください"),
+  message: Yup.string()
+    .trim()
+    .required("お問い合わせ内容を入力してください")
+    .max(5000, "お問い合わせ内容は5000文字以内で入力してください"),
+});
+
 export const staffProfileSchema = Yup.object({
   name: Yup.string().trim().required("担当者名を入力してください"),
 });
@@ -357,4 +374,5 @@ export type ProfileValues = Yup.InferType<typeof profileSchema>;
 export type CompanyProfileValues = Yup.InferType<typeof companyProfileSchema>;
 export type JobFormValues = Yup.InferType<typeof jobFormSchema>;
 export type ChatMessageValues = Yup.InferType<typeof chatMessageSchema>;
+export type ContactInquiryValues = Yup.InferType<typeof contactInquirySchema>;
 export type StaffProfileValues = Yup.InferType<typeof staffProfileSchema>;

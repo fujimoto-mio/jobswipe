@@ -1,77 +1,51 @@
 "use client";
 
 import Link from "next/link";
-import { Mail } from "lucide-react";
-import Logo from "@/components/ui/Logo";
-import { SUPPORT_EMAIL } from "@/lib/constants";
-
-const LEGAL_LINKS = [
-  { href: "/terms", label: "利用規約" },
-  { href: "/privacy", label: "プライバシーポリシー" },
-  { href: "/guidelines", label: "求人掲載ガイドライン" },
-] as const;
-
-const SERVICE_LINKS = [
-  { href: "/register", label: "無料で始める" },
-  { href: "/login", label: "ログイン" },
-  { href: "/company/login", label: "企業ログイン" },
-  { href: "/explore", label: "アプリを開く" },
-] as const;
+import { FOOTER_LEGAL_LINKS, LP_ASSETS, LP_CONTACT_PATH } from "@/components/service-lp/service-lp-data";
 
 export default function ServiceLpFooter() {
   return (
-    <footer>
-      <div className="footer-inner">
-        <div className="footer-grid">
-          <div className="footer-col footer-col--brand">
-            <div className="footer-logo">
-              <Logo size="sm" theme="dark" showText={false} />
+    <footer className="jslp-footer">
+      <div className="jslp-footer__inner">
+        <div className="jslp-footer__top">
+          <div className="jslp-footer__brand">
+            <div className="jslp-brand">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={LP_ASSETS.logo} alt="JobSwipe ロゴ" className="jslp-brand__logo" />
+              <span className="jslp-brand__name">JobSwipe</span>
             </div>
-            <p className="footer-company">株式会社MasKOFF</p>
-            <div className="footer-office">
-              <h4 className="footer-col__title">本社</h4>
-              <p>
-                〒150-0021
-                <br />
-                東京都渋谷区恵比寿西
-                <br />
-                1-33-6-216
-              </p>
+            <div className="jslp-footer__address">
+              株式会社MasKOFF
+              <br />
+              〒150-0021
+              <br />
+              東京都渋谷区恵比寿西1-33-6-216
             </div>
           </div>
 
-          <div className="footer-col">
-            <h4 className="footer-col__title">お問い合わせ</h4>
-            <a href={`mailto:${SUPPORT_EMAIL}`} className="footer-contact__mail">
-              <Mail className="h-4 w-4 shrink-0" aria-hidden />
-              {SUPPORT_EMAIL}
-            </a>
-          </div>
-
-          <div className="footer-col">
-            <h4 className="footer-col__title">法的情報</h4>
-            <nav className="footer-col__nav" aria-label="法的情報">
-              {LEGAL_LINKS.map((link) => (
-                <Link key={link.href} href={link.href} className="footer-nav__link">
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
-          </div>
-
-          <div className="footer-col">
-            <h4 className="footer-col__title">サービス</h4>
-            <nav className="footer-col__nav" aria-label="サービス">
-              {SERVICE_LINKS.map((link) => (
-                <Link key={link.href} href={link.href} className="footer-nav__link">
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
-          </div>
+          <nav className="jslp-footer__nav" aria-label="フッターナビゲーション">
+            <Link href={LP_CONTACT_PATH} className="jslp-nav-link">
+              お問い合わせ
+            </Link>
+          </nav>
         </div>
 
-        <p className="footer-copy">COPYRIGHT © MasKOFF - ALL RIGHTS RESERVED.</p>
+        <div className="jslp-footer__bottom">
+          <p className="jslp-footer__copy">© 2026 JobSwipe inc.</p>
+          <div className="jslp-footer__legal">
+            {FOOTER_LEGAL_LINKS.map((link) =>
+              link.href === "#" ? (
+                <a key={link.label} href="#" className="jslp-nav-link">
+                  {link.label} ↗
+                </a>
+              ) : (
+                <Link key={link.href} href={link.href} className="jslp-nav-link">
+                  {link.label} ↗
+                </Link>
+              )
+            )}
+          </div>
+        </div>
       </div>
     </footer>
   );
