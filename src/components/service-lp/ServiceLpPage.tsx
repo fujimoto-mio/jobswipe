@@ -3,6 +3,7 @@
 import Link from "next/link";
 import ServiceLpHeader from "@/components/service-lp/ServiceLpHeader";
 import ServiceLpFooter from "@/components/service-lp/ServiceLpFooter";
+import ServiceLpImage from "@/components/service-lp/ServiceLpImage";
 import {
   LP_ASSETS,
   LP_CONTACT_PATH,
@@ -18,8 +19,7 @@ export default function ServiceLpPage() {
       <div className="jslp-hero-row">
         <div className="jslp-hero-col">
           <div className="jslp-hero-image">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <ServiceLpImage
               src={LP_ASSETS.hero}
               alt="JobSwipe メインビジュアル"
               className="jslp-hero-image__img"

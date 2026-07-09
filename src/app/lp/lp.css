@@ -28,6 +28,11 @@
   color: #b3b8c2;
 }
 
+.jobswipe-lp img {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
 .jslp-accent {
   color: var(--jslp-accent);
 }

@@ -4,8 +4,8 @@ export const LP_BASE_PATH = "/lp";
 export const LP_CONTACT_PATH = "/lp/contact";
 
 export const LP_ASSETS = {
-  logo: "/lp/logo-mark.jpg",
-  hero: "/lp/JobSwipe-top.png",
+  logo: "/lp/logo-mark.webp",
+  hero: "/lp/JobSwipe-top.webp",
 } as const;
 
 export const PROBLEM_ITEMS = [
