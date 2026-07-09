@@ -1,122 +1,111 @@
 "use client";
 
 import Link from "next/link";
-import { SUPPORT_EMAIL } from "@/lib/constants";
-import { PREFECTURES } from "@/components/service-lp/service-lp-data";
+import { useEffect, useState } from "react";
+import { Send } from "lucide-react";
+import { apiFetch } from "@/lib/api-client";
+
+const SUCCESS_MESSAGE = "お問い合わせを送信しました。担当者よりご連絡いたします。";
 
 export default function ServiceLpContactForm() {
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = window.setTimeout(() => setToast(null), 4000);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
+
   return (
-    <form
-      className="contact-form"
-      onSubmit={(e) => {
-        e.preventDefault();
-        const form = e.currentTarget;
-        const company = (form.elements.namedItem("company") as HTMLInputElement).value;
-        const prefecture = (form.elements.namedItem("prefecture") as HTMLSelectElement).value;
-        const name = (form.elements.namedItem("name") as HTMLInputElement).value;
-        const email = (form.elements.namedItem("email") as HTMLInputElement).value;
-        const phone = (form.elements.namedItem("phone") as HTMLInputElement).value;
-        const message = (form.elements.namedItem("message") as HTMLTextAreaElement).value;
-        const subject = encodeURIComponent(`【MasKOFF】お問い合わせ（${company}）`);
-        const text = encodeURIComponent(
-          `企業名: ${company}\n都道府県: ${prefecture}\nお名前: ${name}\nメール: ${email}\n電話番号: ${phone}\n\n${message}`,
-        );
-        window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${text}`;
-      }}
+    <>
+      <form
+        className="jslp-contact-form"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setError("");
+          setToast(null);
+          setSubmitting(true);
+
+          const form = e.currentTarget;
+          const company = (form.elements.namedItem("company") as HTMLInputElement).value.trim();
+          const name = (form.elements.namedItem("name") as HTMLInputElement).value.trim();
+          const email = (form.elements.namedItem("email") as HTMLInputElement).value.trim();
+          const message = (form.elements.namedItem("message") as HTMLTextAreaElement).value.trim();
+
+          try {
+            const res = await apiFetch("/api/contact", {
+              method: "POST",
+              body: JSON.stringify({
+                company: company || undefined,
+                name,
+                email,
+                message,
+              }),
+            });
+
+            const data = (await res.json()) as { error?: string };
+
+            if (!res.ok) {
+              setError(data.error ?? "送信に失敗しました。しばらくしてから再度お試しください。");
+              return;
+            }
+
+            setToast(SUCCESS_MESSAGE);
+            form.reset();
+          } catch {
+            setError("送信に失敗しました。しばらくしてから再度お試しください。");
+          } finally {
+            setSubmitting(false);
+          }
+        }}
     >
-      <p style={{ fontSize: 13, color: "#888", marginBottom: 28, lineHeight: 1.7 }}>
-        下記フォームへ必要事項をご記入の上、送信ください。
-      </p>
-      <div className="form-row">
-        <div className="form-group">
-          <label className="form-label" htmlFor="company">
-            企業名<span className="form-required">必須</span>
-          </label>
-          <input id="company" name="company" type="text" className="form-input" required placeholder="株式会社〇〇" />
-        </div>
-        <div className="form-group">
-          <label className="form-label" htmlFor="prefecture">
-            都道府県<span className="form-required">必須</span>
-          </label>
-          <select id="prefecture" name="prefecture" className="form-select" required defaultValue="東京都">
-            <option value="">選択してください</option>
-            {PREFECTURES.map((pref) => (
-              <option key={pref} value={pref}>
-                {pref}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="jslp-form-field">
+        <label htmlFor="lp-company">会社名（任意）</label>
+        <input id="lp-company" name="company" type="text" placeholder="株式会社サンプル" autoComplete="organization" />
       </div>
-      <div className="form-row">
-        <div className="form-group">
-          <label className="form-label" htmlFor="name">
-            お名前<span className="form-required">必須</span>
-          </label>
-          <input
-            id="name"
-            name="name"
-            type="text"
-            className="form-input"
-            required
-            placeholder="山田 太郎"
-            autoComplete="name"
-          />
-        </div>
-        <div className="form-group">
-          <label className="form-label" htmlFor="email">
-            メールアドレス<span className="form-required">必須</span>
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            className="form-input"
-            required
-            placeholder="example@email.com"
-            autoComplete="email"
-          />
-        </div>
+      <div className="jslp-form-field">
+        <label htmlFor="lp-name">お名前</label>
+        <input id="lp-name" name="name" type="text" required placeholder="採用 太郎" autoComplete="name" />
       </div>
-      <div className="form-group">
-        <label className="form-label" htmlFor="phone">
-          電話番号<span className="form-required">必須</span>
-        </label>
-        <input
-          id="phone"
-          name="phone"
-          type="tel"
-          className="form-input"
-          required
-          placeholder="0312345678（ハイフンなし）"
-          autoComplete="tel"
-        />
+      <div className="jslp-form-field">
+        <label htmlFor="lp-email">メールアドレス</label>
+        <input id="lp-email" name="email" type="email" required placeholder="you@example.com" autoComplete="email" />
       </div>
-      <div className="form-group">
-        <label className="form-label" htmlFor="message">
-          備考
-        </label>
+      <div className="jslp-form-field">
+        <label htmlFor="lp-message">お問い合わせ内容</label>
         <textarea
-          id="message"
+          id="lp-message"
           name="message"
-          className="form-textarea"
-          placeholder="ご質問・ご要望などがあればご記入ください"
+          required
+          placeholder="ご質問・ご要望をご記入ください"
+          rows={6}
         />
       </div>
-      <div className="form-agree">
-        <input type="checkbox" id="agree" required />
-        <label htmlFor="agree">
-          当社規定の
-          <Link href="/privacy" target="_blank">
-            プライバシーポリシー
-          </Link>
-          へ同意する
+      <div className="jslp-contact-form__actions">
+        <label className="jslp-form-checkbox">
+          <input type="checkbox" required />
+          <span>
+            <Link href="/privacy" target="_blank">
+              プライバシーポリシー
+            </Link>
+            に同意の上送信します
+          </span>
         </label>
+        {error ? <p className="jslp-contact-form__message jslp-contact-form__message--error">{error}</p> : null}
+        <button type="submit" className="jslp-cta__btn jslp-contact-form__submit" disabled={submitting}>
+          <Send className="jslp-contact-form__submit-icon" aria-hidden />
+          {submitting ? "送信中..." : "送信する"}
+        </button>
       </div>
-      <button type="submit" className="btn-submit">
-        送信する
-      </button>
-      <p className="form-note">営業・広告キーワード除外依頼等は本フォームの対象外です。</p>
     </form>
+
+      {toast ? (
+        <div className="jslp-toast" role="status" aria-live="polite">
+          {toast}
+        </div>
+      ) : null}
+    </>
   );
 }
