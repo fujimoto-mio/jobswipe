@@ -22,6 +22,16 @@ const montserrat = Montserrat({
 export const metadata: Metadata = {
   title: APP_PAGE_TITLE,
   description: `${APP_TAGLINE}。求人動画をスワイプするだけで探せる、新しい求職体験。`,
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+    },
+  },
   keywords: ["求人", "就活", "スワイプ", "動画", "採用", "転職"],
   applicationName: APP_NAME,
   appleWebApp: {
