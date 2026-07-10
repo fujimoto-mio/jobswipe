@@ -31,11 +31,17 @@ export default function ServiceLpFooter() {
         </div>
 
         <div className="jslp-footer__bottom">
-          <p className="jslp-footer__copy">© 2026 JobSwipe inc.</p>
+          <p className="jslp-footer__copy">© 2026 MasKOFF inc.</p>
           <div className="jslp-footer__legal">
             {FOOTER_LEGAL_LINKS.map((link) =>
-              link.href === "#" ? (
-                <a key={link.label} href="#" className="jslp-nav-link">
+              link.external ? (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className="jslp-nav-link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   {link.label} ↗
                 </a>
               ) : (
