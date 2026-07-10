@@ -5,8 +5,10 @@ import ServiceLpHeader from "@/components/service-lp/ServiceLpHeader";
 import ServiceLpFooter from "@/components/service-lp/ServiceLpFooter";
 import ServiceLpImage from "@/components/service-lp/ServiceLpImage";
 import {
+  FEATURE_ITEMS,
   LP_ASSETS,
   LP_CONTACT_PATH,
+  ONBOARDING_STEPS,
   POSTING_METHODS,
   PROBLEM_ITEMS,
 } from "@/components/service-lp/service-lp-data";
@@ -16,73 +18,146 @@ export default function ServiceLpPage() {
     <div className="jobswipe-lp">
       <ServiceLpHeader />
 
-      <div className="jslp-hero-row">
-        <div className="jslp-hero-col">
-          <div className="jslp-hero-image">
-            <ServiceLpImage
-              src={LP_ASSETS.hero}
-              alt="JobSwipe メインビジュアル"
-              className="jslp-hero-image__img"
-            />
-          </div>
-
-          <h1 className="jslp-hero-title">
+      <section className="jslp-hero">
+        <ServiceLpImage src={LP_ASSETS.hero} alt="JobSwipe メインビジュアル" className="jslp-hero__img" />
+        <div className="jslp-container">
+          <h1 className="jslp-hero__title">
             <span className="jslp-accent">インフルエンサーPRの力を</span>
             <br />
             月額定額制で。
           </h1>
+        </div>
+      </section>
 
-          <div className="jslp-block">
-            <p className="jslp-section__label">既存採用媒体の課題</p>
+      <section className="jslp-section jslp-section--muted">
+        <div className="jslp-container">
+          <div className="jslp-section__header jslp-section__header--center">
+            <p className="jslp-section__label jslp-accent">既存採用媒体の課題</p>
             <h2 className="jslp-section__title">
-              コストは上がり、応募は減り、仕事を辞める人は増えている。
+              コストは上がり、応募は減り、
+              <br />
+              仕事を辞める人は増えている。
             </h2>
-            <div className="jslp-problem-grid">
-              {PROBLEM_ITEMS.map((item) => (
-                <div key={item.title} className="jslp-problem-card">
-                  <div
-                    className={`jslp-problem-card__icon${item.iconSize === "sm" ? " jslp-problem-card__icon--sm" : ""}`}
-                    aria-hidden
-                  >
-                    {item.icon}
-                  </div>
-                  <div>
-                    <div className="jslp-problem-card__title">{item.title}</div>
-                    <div className="jslp-problem-card__text">{item.description}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
 
-          <div className="jslp-block jslp-block--spaced">
+          <div className="jslp-problem-grid">
+            {PROBLEM_ITEMS.map((item) => (
+              <div key={item.title} className="jslp-problem-card">
+                <div
+                  className={`jslp-problem-card__icon${item.iconSize === "sm" ? " jslp-problem-card__icon--sm" : ""}`}
+                  aria-hidden
+                >
+                  {item.icon}
+                </div>
+                <div>
+                  <div className="jslp-problem-card__title">{item.title}</div>
+                  <div className="jslp-problem-card__text">{item.description}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="jslp-problem-resolve">
+            <div className="jslp-problem-resolve__arrow" aria-hidden />
+            <p className="jslp-problem-resolve__text">
+              その課題、<span className="jslp-accent">JobSwipe!が解決します！</span>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="jslp-section">
+        <div className="jslp-container">
+          <div className="jslp-section__header jslp-section__header--center">
             <p className="jslp-section__label jslp-accent">JobSwipeとは</p>
             <h2 className="jslp-section__title">スワイプで見て、そのまま応募・面談へ。</h2>
-            <p className="jslp-section__lead">
+            <p className="jslp-section__lead jslp-section__lead--center">
               #JobSwipe!は、求職者が企業紹介動画をスワイプしながら閲覧し、そのまま応募・面談まで進められる新しい採用サービスです。求人票だけでは伝わらない職場の雰囲気や働く人の魅力を、全国の求職者へ動画で届けられます。
             </p>
           </div>
 
-          <div className="jslp-block">
+          <div className="jslp-feature-intro">
+            <h3 className="jslp-feature-intro__title">
+              動画をスワイプするだけで
+              <br />
+              応募・面談まで一気通貫
+            </h3>
+            <p className="jslp-feature-intro__text">
+              TikTok感覚で企業紹介動画を見て、気になったらそのままスワイプ→応募。
+              <br />
+              求職者にとっても、採用企業にとっても、ストレスゼロの採用体験。
+            </p>
+          </div>
+
+          <div className="jslp-feature-grid">
+            {FEATURE_ITEMS.map((item) => (
+              <div key={item.title} className="jslp-feature-card">
+                <div className="jslp-feature-card__icon" aria-hidden>
+                  {item.icon}
+                </div>
+                <div className="jslp-feature-card__title">{item.title}</div>
+                <div className="jslp-feature-card__text">{item.description}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="jslp-section jslp-section--muted">
+        <div className="jslp-container">
+          <div className="jslp-section__header jslp-section__header--center">
+            <p className="jslp-section__label jslp-accent">掲載方法</p>
             <h2 className="jslp-section__title jslp-section__title--sm">
               企業様のご負担を抑える、3つの掲載方法
             </h2>
-            <div className="jslp-method-grid">
-              {POSTING_METHODS.map((item) => (
-                <div key={item.number} className="jslp-method-card">
-                  <div className="jslp-method-card__number">{item.number}</div>
-                  <div className="jslp-method-card__title">{item.title}</div>
-                  <div className="jslp-method-card__text">
-                    {item.description}
-                    {"footnote" in item && item.footnote ? (
-                      <span className="jslp-method-card__footnote">{item.footnote}</span>
-                    ) : null}
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
 
+          <div className="jslp-method-grid">
+            {POSTING_METHODS.map((item) => (
+              <div key={item.number} className="jslp-method-card">
+                <div className="jslp-method-card__number">{item.number}</div>
+                <div className="jslp-method-card__title">{item.title}</div>
+                <div className="jslp-method-card__text">
+                  {item.description}
+                  {"footnote" in item && item.footnote ? (
+                    <span className="jslp-method-card__footnote">{item.footnote}</span>
+                  ) : null}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="jslp-section jslp-section--flow">
+        <div className="jslp-container">
+          <div className="jslp-section__header jslp-section__header--center">
+            <p className="jslp-section__label jslp-accent">導入の流れ</p>
+            <h2 className="jslp-section__title">ご相談から導入まで、5ステップ</h2>
+            <p className="jslp-section__lead jslp-section__lead--center">
+              ご相談から導入までの流れです。最初に初回相談でお客様のニーズを理解します。次にヒアリングで現状を把握し、課題を診断します。その結果を基に解決策を提案し、納得いただければプロジェクトを開始となります。
+            </p>
+          </div>
+
+          <div className="jslp-flow-grid">
+            {ONBOARDING_STEPS.map((item) => (
+              <div key={item.number} className="jslp-flow-card">
+                <div className="jslp-flow-card__badge" aria-hidden>
+                  {item.number}
+                </div>
+                <div className="jslp-flow-card__icon" aria-hidden>
+                  {item.icon}
+                </div>
+                <div className="jslp-flow-card__title">{item.title}</div>
+                <div className="jslp-flow-card__text">{item.description}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="contact" className="jslp-cta-section">
+        <div className="jslp-container">
           <div className="jslp-cta">
             <p className="jslp-cta__label">モニター企業様 募集中</p>
             <p className="jslp-cta__title">まずは永年無料でお試しください。</p>
@@ -97,9 +172,7 @@ export default function ServiceLpPage() {
             </Link>
           </div>
         </div>
-      </div>
-
-      <div className="jslp-spacer" aria-hidden />
+      </section>
 
       <ServiceLpFooter />
     </div>

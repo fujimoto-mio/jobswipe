@@ -1,4 +1,4 @@
-export const LP_ACCENT = "#2b62c9";
+export const LP_ACCENT = "#3567B7";
 
 export const LP_BASE_PATH = "/lp";
 export const LP_CONTACT_PATH = "/lp/contact";
@@ -35,6 +35,24 @@ export const PROBLEM_ITEMS = [
   },
 ] as const;
 
+export const FEATURE_ITEMS = [
+  {
+    icon: "📱",
+    title: "スワイプで直感探し",
+    description: "求職者がスマホで動画を次々スワイプ。直感的に気になる企業を見つけられます。",
+  },
+  {
+    icon: "🎬",
+    title: "動画で職場をリアルに",
+    description: "文字では伝わらない社風・雰囲気・働く人の魅力を動画でダイレクトに発信。",
+  },
+  {
+    icon: "🚀",
+    title: "応募〜面談まで完結",
+    description: "気になった企業にそのままアプリ内で応募・面談まで進めるシームレスな体験。",
+  },
+] as const;
+
 export const POSTING_METHODS = [
   {
     number: "01",
@@ -55,8 +73,41 @@ export const POSTING_METHODS = [
   },
 ] as const;
 
+export const ONBOARDING_STEPS = [
+  {
+    number: 1,
+    icon: "💬",
+    title: "初回相談",
+    description: "顧客のニーズを理解するためには、まずヒアリングと現状把握を行います。",
+  },
+  {
+    number: 2,
+    icon: "🧩",
+    title: "採用課題診断",
+    description: "次に、現状を整理し、現在のビジネスにおける課題の診断を行います。",
+  },
+  {
+    number: 3,
+    icon: "📊",
+    title: "解決策提案",
+    description: "顧客のビジネスニーズに基づいて、最も効果的かつ効率的な解決策を提案します。",
+  },
+  {
+    number: 4,
+    icon: "🤝",
+    title: "キックオフ",
+    description: "お見積もりを提示し、その内容と金額にご納得いただければ、契約が成立します。",
+  },
+  {
+    number: 5,
+    icon: "⚙️",
+    title: "SNS支援開始",
+    description: "実際の運用を開始し、運用を支援していきます。継続的なサポートを提供します。",
+  },
+] as const;
+
 export const FOOTER_LEGAL_LINKS = [
-  { href: "/privacy", label: "プライバシーポリシー" },
-  { href: "/terms", label: "利用規約" },
-  { href: "#", label: "会社概要" },
+  { href: "/privacy", label: "プライバシーポリシー", external: false },
+  { href: "/terms", label: "利用規約", external: false },
+  { href: "https://maskoff.co.jp/", label: "会社概要", external: true },
 ] as const;

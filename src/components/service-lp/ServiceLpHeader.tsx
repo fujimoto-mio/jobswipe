@@ -13,8 +13,11 @@ export default function ServiceLpHeader() {
       </Link>
 
       <nav className="jslp-header__nav">
-        <Link href={LP_CONTACT_PATH} className="jslp-nav-link">
+        <Link href={LP_CONTACT_PATH} className="jslp-header__cta">
           お問い合わせ
+          <span className="jslp-header__cta-icon" aria-hidden>
+            →
+          </span>
         </Link>
       </nav>
     </header>

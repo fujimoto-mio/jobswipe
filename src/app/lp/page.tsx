@@ -1,6 +1,14 @@
 import type { Metadata } from "next";
+import { Zen_Kaku_Gothic_New } from "next/font/google";
 import ServiceLpPage from "@/components/service-lp/ServiceLpPage";
 import "./lp.css";
+
+const zenKaku = Zen_Kaku_Gothic_New({
+  subsets: ["latin"],
+  weight: ["400", "500", "700", "900"],
+  variable: "--font-zen-kaku",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "JobSwipe",
@@ -16,5 +24,9 @@ export const metadata: Metadata = {
 };
 
 export default function ServiceLpRoutePage() {
-  return <ServiceLpPage />;
+  return (
+    <div className={zenKaku.variable}>
+      <ServiceLpPage />
+    </div>
+  );
 }
