@@ -46,7 +46,10 @@ export function LegalAgreementField({ name, links }: LegalAgreementFieldProps) {
           type="checkbox"
           name={field.name}
           checked={Boolean(field.value)}
-          onChange={(e) => helpers.setValue(e.target.checked)}
+          onChange={(e) => {
+            void helpers.setValue(e.target.checked, true);
+            void helpers.setTouched(true, false);
+          }}
           onBlur={field.onBlur}
           className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 accent-[var(--accent)]"
         />
