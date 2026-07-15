@@ -69,7 +69,7 @@ export default function FormSelectPicker({
     (next: string) => {
       onChange(next);
       setOpen(false);
-      onBlur();
+      queueMicrotask(onBlur);
     },
     [onChange, onBlur]
   );

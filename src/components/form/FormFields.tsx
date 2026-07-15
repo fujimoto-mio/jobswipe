@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState, useRef, useEffect } from "react";
-import { useField } from "formik";
+import { useEffect, useMemo, useState, useRef } from "react";
+import { useField, useFormikContext } from "formik";
 import { Eye, EyeOff } from "lucide-react";
 import FormSelectPicker from "@/components/form/FormSelectPicker";
 import {
@@ -12,14 +12,16 @@ import {
   splitBirthday,
 } from "@/lib/birthday";
 
-function fieldClass(error?: string, touched?: boolean) {
-  return touched && error ? "input-field ring-1 ring-red-300" : "input-field";
-}
-
 export function FormError({ name }: { name: string }) {
   const [, meta] = useField(name);
-  if (!meta.touched || !meta.error) return null;
+  const { submitCount } = useFormikContext();
+  const show = Boolean(meta.error && (meta.touched || submitCount > 0));
+  if (!show) return null;
   return <p className="mt-1 text-xs text-red-600">{meta.error}</p>;
+}
+
+function shouldShowFieldError(error?: string, touched?: boolean, submitCount = 0) {
+  return Boolean(error && (touched || submitCount > 0));
 }
 
 type FormTextInputProps = {
@@ -48,6 +50,8 @@ export function FormTextInput({
   hint,
 }: FormTextInputProps) {
   const [field, meta] = useField(name);
+  const { submitCount } = useFormikContext();
+  const showError = shouldShowFieldError(meta.error, meta.touched, submitCount);
 
   return (
     <label className="block">
@@ -60,7 +64,7 @@ export function FormTextInput({
         readOnly={readOnly}
         min={min}
         max={max}
-        className={`${fieldClass(meta.error, meta.touched)} ${className}`}
+        className={`${showError ? "input-field ring-1 ring-red-300" : "input-field"} ${className}`}
       />
       {hint && !meta.error && <p className="form-field-hint">{hint}</p>}
       <FormError name={name} />
@@ -75,39 +79,56 @@ type FormBirthdayInputProps = {
 
 export function FormBirthdayInput({ name, label }: FormBirthdayInputProps) {
   const [field, meta, helpers] = useField(name);
-  const { year, month, day } = splitBirthday(field.value);
-  const hasError = Boolean(meta.error && meta.touched);
+  const { submitCount } = useFormikContext();
+  const initial = splitBirthday(field.value);
+  const [year, setYear] = useState(initial.year);
+  const [month, setMonth] = useState(initial.month);
+  const [day, setDay] = useState(initial.day);
+  const showError = shouldShowFieldError(meta.error, meta.touched, submitCount);
+
+  useEffect(() => {
+    if (!field.value) return;
+    const next = splitBirthday(field.value);
+    setYear(next.year);
+    setMonth(next.month);
+    setDay(next.day);
+  }, [field.value]);
 
   const yearOptions = useMemo(() => birthdayYearOptions(), []);
   const monthOptions = useMemo(() => birthdayMonthOptions(), []);
   const dayOptions = useMemo(() => birthdayDayOptions(year, month), [year, month]);
 
-  const handleBlur = () => helpers.setTouched(true);
-
-  const update = (nextYear: string, nextMonth: string, nextDay: string) => {
-    helpers.setValue(composeBirthday(nextYear, nextMonth, nextDay));
+  const commit = (nextYear: string, nextMonth: string, nextDay: string) => {
+    setYear(nextYear);
+    setMonth(nextMonth);
+    setDay(nextDay);
+    const nextValue = composeBirthday(nextYear, nextMonth, nextDay);
+    void helpers.setValue(nextValue, true);
+    if (nextValue) {
+      void helpers.setTouched(true, false);
+    }
   };
 
-  const setYear = (nextYear: string) => {
+  const setYearValue = (nextYear: string) => {
     const maxDay = birthdayDayOptions(nextYear, month).length;
     const nextDay = day && Number(day) > maxDay ? "" : day;
-    update(nextYear, month, nextDay);
+    commit(nextYear, month, nextDay);
   };
 
-  const setMonth = (nextMonth: string) => {
+  const setMonthValue = (nextMonth: string) => {
     const maxDay = birthdayDayOptions(year, nextMonth).length;
     const nextDay = day && Number(day) > maxDay ? "" : day;
-    update(year, nextMonth, nextDay);
+    commit(year, nextMonth, nextDay);
   };
 
-  const setDay = (nextDay: string) => update(year, month, nextDay);
+  const setDayValue = (nextDay: string) => commit(year, month, nextDay);
 
   const pickerProps = {
-    error: hasError,
-    touched: Boolean(meta.touched),
+    error: showError,
+    touched: showError,
     compact: true,
     allowClear: true,
-    onBlur: handleBlur,
+    onBlur: () => {},
   };
 
   return (
@@ -122,7 +143,7 @@ export function FormBirthdayInput({ name, label }: FormBirthdayInputProps) {
             options={yearOptions}
             placeholder="—"
             title="生年"
-            onChange={setYear}
+            onChange={setYearValue}
           />
         </div>
         <span className="birthday-unit">年</span>
@@ -134,7 +155,7 @@ export function FormBirthdayInput({ name, label }: FormBirthdayInputProps) {
             options={monthOptions}
             placeholder="—"
             title="生月"
-            onChange={setMonth}
+            onChange={setMonthValue}
           />
         </div>
         <span className="birthday-unit">月</span>
@@ -146,7 +167,7 @@ export function FormBirthdayInput({ name, label }: FormBirthdayInputProps) {
             options={dayOptions}
             placeholder="—"
             title="生日"
-            onChange={setDay}
+            onChange={setDayValue}
           />
         </div>
         <span className="birthday-unit">日</span>
@@ -166,6 +187,8 @@ type FormSelectProps = {
 
 export function FormSelect({ name, label, options, placeholder = "選択", readOnly }: FormSelectProps) {
   const [field, meta, helpers] = useField(name);
+  const { submitCount } = useFormikContext();
+  const showError = shouldShowFieldError(meta.error, meta.touched, submitCount);
 
   if (readOnly) {
     return (
@@ -187,10 +210,13 @@ export function FormSelect({ name, label, options, placeholder = "選択", readO
         options={options}
         placeholder={placeholder}
         title={label}
-        error={Boolean(meta.error)}
-        touched={Boolean(meta.touched)}
-        onChange={(value) => helpers.setValue(value)}
-        onBlur={() => helpers.setTouched(true)}
+        error={showError}
+        touched={showError}
+        onChange={(value) => {
+          void helpers.setValue(value, true);
+          void helpers.setTouched(true, false);
+        }}
+        onBlur={() => {}}
       />
       <FormError name={name} />
     </label>
@@ -224,6 +250,8 @@ export function FormTextarea({
   readOnly,
 }: FormTextareaProps) {
   const [field, meta] = useField(name);
+  const { submitCount } = useFormikContext();
+  const showError = shouldShowFieldError(meta.error, meta.touched, submitCount);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const length = typeof field.value === "string" ? field.value.length : 0;
 
@@ -245,7 +273,7 @@ export function FormTextarea({
           field.onChange(e);
           adjustTextareaHeight(e.target);
         }}
-        className={`${fieldClass(meta.error, meta.touched)} resize-none overflow-hidden ${readOnly ? "bg-[#F8FAFC] text-[#64748B]" : ""} ${className}`}
+        className={`${showError ? "input-field ring-1 ring-red-300" : "input-field"} resize-none overflow-hidden ${readOnly ? "bg-[#F8FAFC] text-[#64748B]" : ""} ${className}`}
       />
       {maxLength != null && (
         <p className="mt-1.5 text-right text-xs text-slate-400">
@@ -266,6 +294,8 @@ type FormPasswordProps = {
 
 export function FormPassword({ name, label, autoComplete = "current-password", hint }: FormPasswordProps) {
   const [field, meta] = useField(name);
+  const { submitCount } = useFormikContext();
+  const showError = shouldShowFieldError(meta.error, meta.touched, submitCount);
   const [visible, setVisible] = useState(false);
 
   return (
@@ -276,7 +306,7 @@ export function FormPassword({ name, label, autoComplete = "current-password", h
           {...field}
           type={visible ? "text" : "password"}
           autoComplete={autoComplete}
-          className={`${fieldClass(meta.error, meta.touched)} pr-11`}
+          className={`${showError ? "input-field ring-1 ring-red-300" : "input-field"} pr-11`}
           placeholder="••••••••"
         />
         <button
