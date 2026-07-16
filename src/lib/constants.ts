@@ -83,7 +83,6 @@ export const JOB_CATEGORIES = [
   "その他",
 ] as const;
 
-
 export const GENDERS = ["男性", "女性"] as const;
 
 export const EXPERIENCE_LEVELS = [
