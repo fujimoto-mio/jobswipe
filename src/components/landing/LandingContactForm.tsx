@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { APP_NAME } from "@/lib/brand";
 import { SUPPORT_EMAIL } from "@/lib/constants";
 
 export default function LandingContactForm() {
@@ -14,7 +15,7 @@ export default function LandingContactForm() {
         const name = (form.elements.namedItem("name") as HTMLInputElement).value;
         const email = (form.elements.namedItem("email") as HTMLInputElement).value;
         const body = (form.elements.namedItem("message") as HTMLTextAreaElement).value;
-        const subject = encodeURIComponent(`【JobSwipe】お問い合わせ（${company}）`);
+        const subject = encodeURIComponent(`【${APP_NAME}】お問い合わせ（${company}）`);
         const text = encodeURIComponent(`会社名: ${company}\nお名前: ${name}\nメール: ${email}\n\n${body}`);
         window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${text}`;
       }}

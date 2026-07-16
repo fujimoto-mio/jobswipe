@@ -63,7 +63,7 @@ export const POSTING_METHODS = [
   {
     number: "02",
     title: "採用動画をお持ちでない場合",
-    description: "JobSwipeが15秒の企業紹介動画の制作をサポートいたします。",
+    description: "#JobSwipe!が15秒の企業紹介動画の制作をサポートいたします。",
   },
   {
     number: "03",

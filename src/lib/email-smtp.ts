@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import type SMTPTransport from "nodemailer/lib/smtp-transport";
+import { APP_NAME } from "@/lib/brand";
 
 export function getSupportEmail(): string {
   return process.env.SUPPORT_EMAIL?.trim() ?? process.env.NEXT_PUBLIC_SUPPORT_EMAIL?.trim() ?? "";
@@ -10,7 +11,7 @@ function getEmailFrom(): string | null {
   if (from) return from;
 
   const user = process.env.SMTP_USER?.trim();
-  if (user) return `JobSwipe <${user}>`;
+  if (user) return `${APP_NAME} <${user}>`;
 
   return null;
 }
@@ -125,7 +126,7 @@ export async function sendContactInquiryEmail(input: ContactInquiryInput): Promi
   const supportEmail = getSupportEmail();
   if (!supportEmail) return false;
   const subjectLabel = input.company?.trim() || input.name;
-  const subject = `【JobSwipe】お問い合わせ（${subjectLabel}）`;
+  const subject = `【${APP_NAME}】お問い合わせ（${subjectLabel}）`;
 
   const companyLine = input.company?.trim() ? `会社名: ${input.company.trim()}\n` : "";
   const text = `${companyLine}お名前: ${input.name}\nメール: ${input.email}\n\n${input.message}`;
@@ -135,7 +136,7 @@ export async function sendContactInquiryEmail(input: ContactInquiryInput): Promi
     : "";
 
   const html = `
-    <p>JobSwipe お問い合わせフォームより送信されました。</p>
+    <p>${escapeHtml(APP_NAME)} お問い合わせフォームより送信されました。</p>
     <table cellpadding="6" cellspacing="0" border="0">
       ${companyHtml}
       <tr><th align="left">お名前</th><td>${escapeHtml(input.name)}</td></tr>
