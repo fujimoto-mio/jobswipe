@@ -149,7 +149,9 @@ export default function FormSelectPicker({
         className={triggerClass}
         onClick={() => setOpen((v) => !v)}
       >
-        <span className="truncate pr-6">{value || placeholder}</span>
+        <span className={`whitespace-nowrap ${compact ? "pr-4" : "truncate pr-6"}`}>
+          {value || placeholder}
+        </span>
         <ChevronDown
           className={`pointer-events-none absolute top-1/2 -translate-y-1/2 text-slate-500 transition-transform duration-200 ${compact ? "right-2 h-3.5 w-3.5" : "right-3.5 h-4 w-4"} ${open ? "rotate-180" : ""}`}
         />
