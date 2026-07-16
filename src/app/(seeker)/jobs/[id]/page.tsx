@@ -19,6 +19,7 @@ import {
 import { XBrandIcon, InstagramIcon, LinkedinIcon } from "@/components/icons/BrandIcons";
 import ApplyModal from "@/components/ApplyModal";
 import SeekerAccountMenu from "@/components/seeker/SeekerAccountMenu";
+import { useSeekerBadges } from "@/components/seeker/SeekerBadgeProvider";
 import { useVideoPlayback } from "@/hooks/useVideoPlayback";
 import { apiFetch } from "@/lib/api-client";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
@@ -98,6 +99,7 @@ function JobDetailHero({ videoUrl, onBack }: { videoUrl: string; onBack: () => v
 export default function JobDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { applySavesUpdate } = useSeekerBadges();
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [applyOpen, setApplyOpen] = useState(false);
@@ -111,19 +113,36 @@ export default function JobDetailPage() {
         setJob(jobData.job);
       }
       const savesData = await savesRes.json();
-      setIsSaved(savesData.savedIds.includes(id));
+      setIsSaved(Array.isArray(savesData.savedIds) && savesData.savedIds.includes(id));
       setLoading(false);
     });
   }, [params.id]);
 
   const handleSave = async () => {
     if (!job) return;
-    const res = await apiFetch("/api/saves", {
-      method: "POST",
-      body: JSON.stringify({ jobId: job.id }),
-    });
-    const data = await res.json();
-    setIsSaved(data.saved);
+    const previous = isSaved;
+    setIsSaved(!previous);
+    try {
+      const res = await apiFetch("/api/saves", {
+        method: "POST",
+        body: JSON.stringify({ jobId: job.id }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        saved?: boolean;
+        savedIds?: string[];
+        count?: number;
+      };
+      if (!res.ok || typeof data.saved !== "boolean") {
+        setIsSaved(previous);
+        return;
+      }
+      setIsSaved(data.saved);
+      if (Array.isArray(data.savedIds) && typeof data.count === "number") {
+        applySavesUpdate(data.savedIds, data.count);
+      }
+    } catch {
+      setIsSaved(previous);
+    }
   };
 
   if (loading) {
@@ -229,9 +248,12 @@ export default function JobDetailPage() {
         <div className="page-container flex gap-2.5">
           <button
             onClick={handleSave}
-            className={`btn-secondary flex-1 ${isSaved ? "border-blue-300 text-blue-600" : ""}`}
+            className={`btn-secondary flex-1 ${isSaved ? "border-[#fe2c55] text-[#fe2c55]" : ""}`}
           >
-            <Heart className={`h-4 w-4 ${isSaved ? "fill-blue-600" : ""}`} />
+            <Heart
+              className={`h-4 w-4 fill-none ${isSaved ? "text-[#fe2c55]" : ""}`}
+              strokeWidth={2.25}
+            />
             気になる
           </button>
           <button onClick={() => setApplyOpen(true)} className="btn-primary flex-1">

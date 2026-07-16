@@ -152,18 +152,42 @@ export default function VideoFeed({
 
   const handleSave = async (job: JobFeedItem) => {
     onChromeActivity?.();
-    const res = await apiFetch("/api/saves", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ jobId: job.id }),
-    });
-    const data = await res.json();
-    const nextSavedIds = data.savedIds as string[];
-    const nextCount = data.count as number;
-    applySavesUpdate(nextSavedIds, nextCount);
-    invalidateApiCache("/api/saves");
-    updateExploreFeedSaves(filterKey, fetchKey, nextSavedIds, nextCount);
-    showToast(data.saved ? "気になるに保存しました" : "保存を解除しました");
+
+    const { savedIds: currentSavedIds, saveCount: currentCount } = badgesRef.current;
+    const alreadySaved = currentSavedIds.has(job.id);
+    const optimisticIds = alreadySaved
+      ? [...currentSavedIds].filter((id) => id !== job.id)
+      : [...currentSavedIds, job.id];
+    const optimisticCount = Math.max(0, currentCount + (alreadySaved ? -1 : 1));
+    applySavesUpdate(optimisticIds, optimisticCount);
+
+    try {
+      const res = await apiFetch("/api/saves", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jobId: job.id }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        saved?: boolean;
+        savedIds?: string[];
+        count?: number;
+        error?: string;
+      };
+
+      if (!res.ok || !Array.isArray(data.savedIds) || typeof data.count !== "number") {
+        applySavesUpdate([...currentSavedIds], currentCount);
+        showToast(typeof data.error === "string" ? data.error : "保存に失敗しました");
+        return;
+      }
+
+      applySavesUpdate(data.savedIds, data.count);
+      invalidateApiCache("/api/saves");
+      updateExploreFeedSaves(filterKey, fetchKey, data.savedIds, data.count);
+      showToast(data.saved ? "気になるに保存しました" : "保存を解除しました");
+    } catch {
+      applySavesUpdate([...currentSavedIds], currentCount);
+      showToast("保存に失敗しました");
+    }
   };
 
   const openDetail = async (job: JobFeedItem) => {
@@ -268,7 +292,7 @@ export default function VideoFeed({
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] left-1/2 z-50 -translate-x-1/2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 shadow-xl ring-1 ring-slate-200"
+            className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 shadow-xl ring-1 ring-slate-200"
           >
             {toast}
           </motion.div>

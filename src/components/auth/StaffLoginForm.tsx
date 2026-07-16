@@ -37,14 +37,26 @@ const CONFIG = {
 function LoginAlerts({
   mode,
   staffOnlyError,
+  seekerOnlyError,
   error,
 }: {
   mode: "admin" | "company";
   staffOnlyError: boolean;
+  seekerOnlyError: boolean;
   error: string;
 }) {
   return (
     <>
+      {seekerOnlyError && (
+        <p className="mb-5 rounded-xl border border-amber-100 bg-amber-50 px-3.5 py-2.5 text-sm text-amber-800">
+          求人の閲覧・応募には求職者アカウントが必要です。求職者の方は
+          <Link href="/login" className="lp-auth-link">
+            求職者ログイン
+          </Link>
+          をご利用ください。
+        </p>
+      )}
+
       {staffOnlyError && mode === "company" && (
         <p className="mb-5 rounded-xl border border-amber-100 bg-amber-50 px-3.5 py-2.5 text-sm text-amber-800">
           管理画面のご利用にはログインが必要です。求職者の方は
@@ -95,6 +107,7 @@ export default function StaffLoginForm({ mode }: StaffLoginFormProps) {
   const [error, setError] = useState("");
 
   const staffOnlyError = searchParams.get("error") === "staff_only";
+  const seekerOnlyError = searchParams.get("error") === "seeker_only";
 
   const handleSubmit = async (
     values: { email: string; password: string },
@@ -160,7 +173,12 @@ export default function StaffLoginForm({ mode }: StaffLoginFormProps) {
 
   return (
     <LpAuthShell title={cfg.title} subtitle={cfg.subtitle} icon={cfg.icon} footer={footer}>
-      <LoginAlerts mode={mode} staffOnlyError={staffOnlyError} error={error} />
+      <LoginAlerts
+        mode={mode}
+        staffOnlyError={staffOnlyError}
+        seekerOnlyError={seekerOnlyError}
+        error={error}
+      />
       <Formik
         initialValues={{ email: "", password: "" }}
         validationSchema={loginSchema}

@@ -85,7 +85,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, saved, savedIds, count });
   } catch (error) {
-    if (error instanceof Error && error.message === "JOB_NOT_AVAILABLE") {
+    if (
+      error instanceof Error &&
+      (error.message === API_ERRORS.jobNotAvailable || error.message === "JOB_NOT_AVAILABLE")
+    ) {
       return NextResponse.json({ error: "この求人は保存できません" }, { status: 404 });
     }
     return NextResponse.json({ error: API_ERRORS.invalidJson }, { status: 400 });

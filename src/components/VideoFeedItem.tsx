@@ -107,8 +107,10 @@ export default function VideoFeedItem({
       >
         <RailIconButton onChromeActivity={onChromeActivity} onClick={onSave} label="気になる">
           <Heart
-            className={`h-7 w-7 drop-shadow-md fill-none ${isSaved ? "text-[#fe2c55]" : "text-white"}`}
-            strokeWidth={2}
+            className={`h-7 w-7 drop-shadow-md fill-none ${
+              isSaved ? "text-[#fe2c55]" : "text-white"
+            }`}
+            strokeWidth={2.25}
           />
         </RailIconButton>
 

@@ -2698,8 +2698,13 @@ html[data-seeker-theme="dark"] .seeker-ui .seeker-auth-note {
 }
 .birthday-part {
   flex: 1 1 0;
-  min-width: 0;
+  min-width: 3.25rem;
   display: flex;
+}
+/* Year needs room for 4 digits (e.g. 1990) without ellipsis */
+.birthday-part:first-child {
+  flex: 1.45 1 0;
+  min-width: 5rem;
 }
 .birthday-part .select-picker {
   flex: 1;
@@ -2708,6 +2713,11 @@ html[data-seeker-theme="dark"] .seeker-ui .seeker-auth-note {
 .birthday-part .select-picker-trigger {
   height: 100%;
   width: 100%;
+}
+.birthday-part .select-picker-trigger span {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
 }
 .birthday-unit {
   flex-shrink: 0;
@@ -3431,6 +3441,10 @@ html[data-seeker-theme="dark"] .seeker-ui .seeker-auth-note {
 }
 .profile-form-row-2 .birthday-part {
   display: flex;
+  min-width: 3.25rem;
+}
+.profile-form-row-2 .birthday-part:first-child {
+  min-width: 5rem;
 }
 .profile-form-row-2 .birthday-part .select-picker {
   flex: 1;

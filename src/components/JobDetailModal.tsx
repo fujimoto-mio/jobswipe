@@ -189,9 +189,12 @@ export default function JobDetailModal({
             {onSave && (
               <button
                 onClick={onSave}
-                className={`btn-secondary flex-1 ${isSaved ? "border-[#2563EB] text-[#2563EB]" : ""}`}
+                className={`btn-secondary flex-1 ${isSaved ? "border-[#fe2c55] text-[#fe2c55]" : ""}`}
               >
-                <Heart className={`h-4 w-4 ${isSaved ? "fill-[#2563EB]" : ""}`} />
+                <Heart
+                  className={`h-4 w-4 fill-none ${isSaved ? "text-[#fe2c55]" : ""}`}
+                  strokeWidth={2.25}
+                />
                 気になる
               </button>
             )}

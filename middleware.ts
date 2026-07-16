@@ -18,5 +18,13 @@ export const config = {
     "/courses",
     "/settings",
     "/jobs/:path*",
+    "/api/saves",
+    "/api/saves/:path*",
+    "/api/applications",
+    "/api/applications/:path*",
+    "/api/chat",
+    "/api/chat/:path*",
+    "/api/profile",
+    "/api/profile/:path*",
   ],
 };

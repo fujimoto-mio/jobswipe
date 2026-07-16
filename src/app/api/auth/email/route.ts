@@ -29,15 +29,16 @@ export async function PATCH(request: Request) {
   }
 
   const staff = await getStaffUser();
-  if (!staff) {
-    return NextResponse.json({ error: "ログインが必要です" }, { status: 401 });
+  if (staff) {
+    try {
+      await updateAuthCredentialEmail(staff.id, email);
+      await prisma.account.update({ where: { id: staff.id }, data: { email } });
+      return NextResponse.json({ success: true });
+    } catch {
+      return NextResponse.json({ error: "このメールアドレスは既に使用されています" }, { status: 409 });
+    }
   }
 
-  try {
-    await updateAuthCredentialEmail(staff.id, email);
-    await prisma.account.update({ where: { id: staff.id }, data: { email } });
-    return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: "このメールアドレスは既に使用されています" }, { status: 409 });
-  }
+  // Prefer the structured seeker auth error (code + loginPath).
+  return seeker;
 }
