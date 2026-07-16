@@ -19,7 +19,7 @@ export default function ServiceLpPage() {
       <ServiceLpHeader />
 
       <section className="jslp-hero">
-        <ServiceLpImage src={LP_ASSETS.hero} alt="JobSwipe メインビジュアル" className="jslp-hero__img" />
+        <ServiceLpImage src={LP_ASSETS.hero} alt="#JobSwipe! メインビジュアル" className="jslp-hero__img" />
         <div className="jslp-container">
           <h1 className="jslp-hero__title">
             <span className="jslp-accent">インフルエンサーPRの力を</span>
@@ -60,7 +60,7 @@ export default function ServiceLpPage() {
           <div className="jslp-problem-resolve">
             <div className="jslp-problem-resolve__arrow" aria-hidden />
             <p className="jslp-problem-resolve__text">
-              その課題、<span className="jslp-accent">JobSwipe!が解決します！</span>
+              その課題、<span className="jslp-accent">#JobSwipe!が解決します！</span>
             </p>
           </div>
         </div>
@@ -69,7 +69,7 @@ export default function ServiceLpPage() {
       <section className="jslp-section">
         <div className="jslp-container">
           <div className="jslp-section__header jslp-section__header--center">
-            <p className="jslp-section__label jslp-accent">JobSwipeとは</p>
+            <p className="jslp-section__label jslp-accent">#JobSwipe!とは</p>
             <h2 className="jslp-section__title">スワイプで見て、そのまま応募・面談へ。</h2>
             <p className="jslp-section__lead jslp-section__lead--center">
               #JobSwipe!は、求職者が企業紹介動画をスワイプしながら閲覧し、そのまま応募・面談まで進められる新しい採用サービスです。求人票だけでは伝わらない職場の雰囲気や働く人の魅力を、全国の求職者へ動画で届けられます。

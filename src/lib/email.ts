@@ -1,4 +1,5 @@
 import { getAppUrl } from "@/lib/app-url";
+import { APP_NAME } from "@/lib/brand";
 import { escapeHtml, sendSmtpEmail } from "@/lib/email-smtp";
 
 type SendEmailInput = {
@@ -26,7 +27,7 @@ export async function sendMatchNotificationEmail(
   company: string
 ): Promise<boolean> {
   const chatUrl = `${await getAppUrl()}/chat`;
-  const subject = `【JobSwipe】採用が決定しました — ${company}`;
+  const subject = `【${APP_NAME}】採用が決定しました — ${company}`;
   const text = [
     `${name} 様`,
     "",
@@ -35,7 +36,7 @@ export async function sendMatchNotificationEmail(
     "",
     `チャットを開く: ${chatUrl}`,
     "",
-    "— JobSwipe",
+    `— ${APP_NAME}`,
   ].join("\n");
 
   const html = `
@@ -43,7 +44,7 @@ export async function sendMatchNotificationEmail(
     <p>おめでとうございます。<strong>${escapeHtml(company)}</strong> の「${escapeHtml(jobTitle)}」への応募が採用決定となりました。</p>
     <p>アプリのチャット画面から企業担当者と今後の手続きについてご連絡ください。</p>
     <p><a href="${escapeHtml(chatUrl)}">チャットを開く</a></p>
-    <p>— JobSwipe</p>
+    <p>— ${escapeHtml(APP_NAME)}</p>
   `;
 
   return sendEmail({ to, subject, html, text });

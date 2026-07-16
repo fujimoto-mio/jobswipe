@@ -54,7 +54,7 @@ function StaffSidebarContent({
   return (
     <>
       <div className="staff-sidebar-header">
-        <Link href="/" className="staff-sidebar-logo" onClick={onNavigate} aria-label="JobSwipe ホーム">
+        <Link href="/" className="staff-sidebar-logo" onClick={onNavigate} aria-label="#JobSwipe! ホーム">
           <Logo inTopbar showText={!collapsed} />
         </Link>
       </div>

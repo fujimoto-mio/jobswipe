@@ -57,7 +57,7 @@ const VOICES = [
 
 const FAQ_ITEMS = [
   {
-    q: "JobSwipeは無料で使えますか？",
+    q: "#JobSwipe!は無料で使えますか？",
     a: "はい、求職者の方は登録・求人閲覧・応募・チャットまで無料でご利用いただけます。",
   },
   {
@@ -140,7 +140,7 @@ export default function LandingPage() {
             職場の&ldquo;空気感&rdquo;。
           </h1>
           <p className="lp-hero__lead">
-            JobSwipeは求人動画をスワイプするだけで探せる、新しい求職プラットフォーム。
+            #JobSwipe!は求人動画をスワイプするだけで探せる、新しい求職プラットフォーム。
             応募者が知っていれば生じなかったミスマッチを、動画で先に防ぎます。
           </p>
           <div className="lp-hero__stats">
@@ -210,7 +210,7 @@ export default function LandingPage() {
             </p>
             <p className="lp-section-sub mt-8">ただし、最重要は「投稿数」ではありません。</p>
             <p className="lp-section-lead">
-              投稿の量ではなく&ldquo;何を伝えるか&rdquo;。JobSwipeなら、動画で会社のリアルな魅力が伝わり、入社前のミスマッチを防ぎます。
+              投稿の量ではなく&ldquo;何を伝えるか&rdquo;。#JobSwipe!なら、動画で会社のリアルな魅力が伝わり、入社前のミスマッチを防ぎます。
             </p>
             <div className="lp-highlight-box">
               &ldquo;認知ではなく、納得&rdquo;の採用へ。
@@ -226,7 +226,7 @@ export default function LandingPage() {
         <div className="lp-inner">
           <h2 className="lp-section-heading">Plan</h2>
           <p className="lp-section-title">一般的な求人媒体とは目的も成果も違う</p>
-          <p className="lp-section-sub">JobSwipe 基本プラン</p>
+          <p className="lp-section-sub">#JobSwipe! 基本プラン</p>
           <div className="lp-plan-card">
             <div className="lp-plan-card__head">
               <p className="lp-plan-card__name">動画×スワイプ求人プラットフォーム</p>
@@ -244,7 +244,7 @@ export default function LandingPage() {
             </div>
           </div>
           <p className="lp-section-lead mt-10">
-            「企業が見せたい情報」と「求職者が知りたい情報」には大きなズレがあります。JobSwipeは動画で&ldquo;社内の空気感&rdquo;を先に届けます。
+            「企業が見せたい情報」と「求職者が知りたい情報」には大きなズレがあります。#JobSwipe!は動画で&ldquo;社内の空気感&rdquo;を先に届けます。
           </p>
         </div>
       </section>
@@ -275,7 +275,7 @@ export default function LandingPage() {
               <thead>
                 <tr>
                   <th />
-                  <th className="lp-compare--highlight">JobSwipe</th>
+                  <th className="lp-compare--highlight">#JobSwipe!</th>
                   <th>従来の求人媒体</th>
                   <th>求人広告</th>
                 </tr>

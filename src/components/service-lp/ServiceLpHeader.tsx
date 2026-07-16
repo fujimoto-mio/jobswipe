@@ -3,13 +3,14 @@
 import Link from "next/link";
 import ServiceLpImage from "@/components/service-lp/ServiceLpImage";
 import { LP_ASSETS, LP_BASE_PATH, LP_CONTACT_PATH } from "@/components/service-lp/service-lp-data";
+import { APP_NAME } from "@/lib/brand";
 
 export default function ServiceLpHeader() {
   return (
     <header className="jslp-header">
       <Link href={LP_BASE_PATH} className="jslp-brand">
-        <ServiceLpImage src={LP_ASSETS.logo} alt="JobSwipe ロゴ" className="jslp-brand__logo" />
-        <span className="jslp-brand__name">JobSwipe</span>
+        <ServiceLpImage src={LP_ASSETS.logo} alt={`${APP_NAME} ロゴ`} className="jslp-brand__logo" />
+        <span className="jslp-brand__name">{APP_NAME}</span>
       </Link>
 
       <nav className="jslp-header__nav">

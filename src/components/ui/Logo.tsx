@@ -2,10 +2,8 @@ import Image from "next/image";
 import {
   APP_LOGO_FULL,
   APP_LOGO_MARK,
-  APP_NAME_HEAD,
-  APP_NAME_TAIL,
+  APP_NAME,
   APP_TAGLINE,
-  APP_TOPBAR_NAME,
 } from "@/lib/brand";
 
 type LogoProps = {
@@ -42,7 +40,7 @@ export default function Logo({
     <div className={`flex items-center ${inTopbar ? "gap-2.5" : "gap-3.5 sm:gap-4"}`}>
       <Image
         src={useMarkLogo ? APP_LOGO_MARK : APP_LOGO_FULL}
-        alt={APP_TOPBAR_NAME}
+        alt={APP_NAME}
         width={1181}
         height={1181}
         unoptimized
@@ -51,20 +49,13 @@ export default function Logo({
       />
       {showText && (
         <div className="min-w-0">
-          {inTopbar ? (
-            <p className={`${s.title} font-bold leading-tight tracking-normal ${textClass}`}>
-              {APP_TOPBAR_NAME}
+          <p className={`${s.title} font-bold leading-tight tracking-normal ${textClass}`}>
+            {APP_NAME}
+          </p>
+          {!inTopbar && (
+            <p className={`${s.tagline} mt-0.5 font-medium leading-snug ${subClass}`}>
+              {APP_TAGLINE}
             </p>
-          ) : (
-            <>
-              <p className={`${s.title} font-bold leading-tight tracking-normal ${textClass}`}>
-                {APP_NAME_HEAD}
-                <span className="text-[var(--accent)]">{APP_NAME_TAIL}</span>
-              </p>
-              <p className={`${s.tagline} mt-0.5 font-medium leading-snug ${subClass}`}>
-                {APP_TAGLINE}
-              </p>
-            </>
           )}
         </div>
       )}

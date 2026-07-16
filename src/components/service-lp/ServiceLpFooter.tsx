@@ -3,6 +3,7 @@
 import Link from "next/link";
 import ServiceLpImage from "@/components/service-lp/ServiceLpImage";
 import { FOOTER_LEGAL_LINKS, LP_ASSETS, LP_CONTACT_PATH } from "@/components/service-lp/service-lp-data";
+import { APP_NAME } from "@/lib/brand";
 
 export default function ServiceLpFooter() {
   return (
@@ -11,8 +12,8 @@ export default function ServiceLpFooter() {
         <div className="jslp-footer__top">
           <div className="jslp-footer__brand">
             <div className="jslp-brand">
-              <ServiceLpImage src={LP_ASSETS.logo} alt="JobSwipe ロゴ" className="jslp-brand__logo" />
-              <span className="jslp-brand__name">JobSwipe</span>
+              <ServiceLpImage src={LP_ASSETS.logo} alt={`${APP_NAME} ロゴ`} className="jslp-brand__logo" />
+              <span className="jslp-brand__name">{APP_NAME}</span>
             </div>
             <div className="jslp-footer__address">
               株式会社MasKOFF

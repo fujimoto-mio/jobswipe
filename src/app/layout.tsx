@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Montserrat, Noto_Sans_JP } from "next/font/google";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
-import { APP_NAME, APP_PAGE_TITLE, APP_TAGLINE } from "@/lib/brand";
+import { APP_NAME, APP_PAGE_TITLE, APP_TAGLINE, APP_TITLE_TEMPLATE } from "@/lib/brand";
 import "./globals.css";
 import "./landing.css";
 
@@ -20,7 +20,10 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: APP_PAGE_TITLE,
+  title: {
+    default: APP_PAGE_TITLE,
+    template: APP_TITLE_TEMPLATE,
+  },
   description: `${APP_TAGLINE}。求人動画をスワイプするだけで探せる、新しい求職体験。`,
   robots: {
     index: false,
@@ -32,7 +35,7 @@ export const metadata: Metadata = {
       noimageindex: true,
     },
   },
-  keywords: ["求人", "就活", "スワイプ", "動画", "採用", "転職"],
+  keywords: ["求人", "就活", "スワイプ", "動画", "採用", "転職", "JobSwipe", "#JobSwipe!"],
   applicationName: APP_NAME,
   appleWebApp: {
     capable: true,

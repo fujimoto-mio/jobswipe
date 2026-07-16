@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Mail } from "lucide-react";
 import { getYearJST } from "@/lib/datetime";
 import Logo from "@/components/ui/Logo";
+import { APP_NAME } from "@/lib/brand";
 import { SUPPORT_EMAIL } from "@/lib/constants";
 
 const LEGAL_LINKS = [
@@ -27,7 +28,7 @@ export default function LandingFooter() {
         <div className="lp-footer__brand">
           <Logo size="sm" theme="dark" showText={false} />
           <p className="lp-footer__company">株式会社Level Frontier</p>
-          <p className="lp-footer__tagline">JobSwipe運営事務局</p>
+          <p className="lp-footer__tagline">{APP_NAME}運営事務局</p>
         </div>
 
         <div className="lp-footer__info">

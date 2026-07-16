@@ -14,7 +14,7 @@ export default function ServiceLpContactPage() {
       <main className="jslp-contact-page">
         <div className="jslp-contact-page__inner">
           <Link href={LP_BASE_PATH} className="jslp-contact-page__back">
-            ← JobSwipe トップへ戻る
+            ← #JobSwipe! トップへ戻る
           </Link>
 
           <header className="jslp-contact-page__header">
