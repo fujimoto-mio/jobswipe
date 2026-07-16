@@ -142,7 +142,7 @@ async function seedJobs(prisma: PrismaClient, companyId: string) {
       title: "プロダクトデザイナー（審査中デモ）",
       approvalStatus: JobApprovalStatus.Pending,
       approvedAt: null,
-      category: "デザイン",
+      category: "デザイナー",
     },
   ];
 
