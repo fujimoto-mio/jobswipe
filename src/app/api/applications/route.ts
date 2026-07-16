@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireSeekerSession, getSeekerSession } from "@/lib/auth/seeker";
+import { requireSeekerSession } from "@/lib/auth/seeker";
 import { requireStaffUser, getStaffUser } from "@/lib/auth/admin";
 import { API_ERRORS } from "@/lib/api-errors";
 import {
@@ -37,10 +37,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ applications, total: applications.length });
     }
 
-    const session = await getSeekerSession();
-    if (!session) {
-      return NextResponse.json({ error: API_ERRORS.unauthorized }, { status: 401 });
-    }
+    const session = await requireSeekerSession();
+    if (session instanceof NextResponse) return session;
 
     const applications = await getApplicationsForSeeker(session.seekerId);
     return NextResponse.json({ applications, total: applications.length });

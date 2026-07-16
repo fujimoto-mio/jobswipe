@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { upsertSeekerProfile, updateSeekerProfileMedia } from "@/lib/db";
-import { getSeekerSession } from "@/lib/auth/seeker";
+import { requireSeekerSession } from "@/lib/auth/seeker";
 import { getSupabaseUserFromRequest } from "@/lib/auth/supabase-user";
 import { API_ERRORS } from "@/lib/api-errors";
 import {
@@ -42,10 +42,8 @@ function profilePatchErrorResponse(err: unknown) {
 }
 
 export async function GET() {
-  const session = await getSeekerSession();
-  if (!session) {
-    return NextResponse.json({ error: "ログインが必要です" }, { status: 401 });
-  }
+  const session = await requireSeekerSession();
+  if (session instanceof NextResponse) return session;
   return NextResponse.json({ profile: session.profile });
 }
 
@@ -77,10 +75,8 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const session = await getSeekerSession();
-  if (!session) {
-    return NextResponse.json({ error: "ログインが必要です" }, { status: 401 });
-  }
+  const session = await requireSeekerSession();
+  if (session instanceof NextResponse) return session;
 
   try {
     const raw = (await request.json()) as Partial<UserProfile>;

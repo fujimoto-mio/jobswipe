@@ -53,7 +53,15 @@ const ERROR_RULES: ErrorRule[] = [
     message: "リクエストが多すぎます。しばらくしてから再度お試しください",
   },
   {
-    test: (m) => m.includes("session") && (m.includes("missing") || m.includes("not found") || m.includes("expired")),
+    test: (m) => m.includes("session") && (m.includes("missing") || m.includes("not found") || m.includes("expired") || m.includes("有効期限")),
+    message: "セッションの有効期限が切れました。再度ログインしてください",
+  },
+  {
+    test: (m) => m.includes("求職者アカウント"),
+    message: "応募には求職者アカウントでログインしてください",
+  },
+  {
+    test: (m) => m === "unauthorized" || m.startsWith("unauthorized") || m === "ログインが必要です",
     message: "セッションの有効期限が切れました。再度ログインしてください",
   },
   {
@@ -63,10 +71,6 @@ const ERROR_RULES: ErrorRule[] = [
   {
     test: (m) => m.includes("network") || m.includes("fetch"),
     message: "通信エラーが発生しました。接続を確認してください",
-  },
-  {
-    test: (m) => m === "unauthorized" || m.startsWith("unauthorized"),
-    message: "ログインが必要です",
   },
   {
     test: (m) => m.includes("not found"),

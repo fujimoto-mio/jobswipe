@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getAuthSession } from "@/lib/auth/session";
 import { isStaffRole } from "@/lib/auth/roles";
+import { homePathForRole, loginPathForRole } from "@/lib/auth/paths";
 import { mapStaffPanelPath } from "@/lib/staff/paths";
 import { API_ERRORS } from "@/lib/api-errors";
 
@@ -30,10 +31,6 @@ function isCompanyPanelPath(pathname: string): boolean {
   return pathname === "/company" || pathname.startsWith("/company/");
 }
 
-function staffHomeForRole(role: "admin" | "company"): string {
-  return role === "admin" ? "/admin" : "/company";
-}
-
 export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const session = await getAuthSession(request);
@@ -49,7 +46,15 @@ export async function updateSession(request: NextRequest) {
 
   if (isAdminApi) {
     if (!isStaff) {
-      return NextResponse.json({ error: API_ERRORS.unauthorized }, { status: 401 });
+      return NextResponse.json(
+        {
+          error: API_ERRORS.unauthorized,
+          code: "session_required",
+          role: role ?? null,
+          loginPath: loginPathForRole(role),
+        },
+        { status: 401 }
+      );
     }
     return NextResponse.next({ request });
   }
@@ -86,15 +91,7 @@ export async function updateSession(request: NextRequest) {
 
   if (isStaffLoginPath(pathname)) {
     if (isStaff && role) {
-      const next = request.nextUrl.searchParams.get("next");
-      const home = staffHomeForRole(role);
-      let dest = home;
-
-      if (next) {
-        if (role === "admin" && next.startsWith("/admin")) dest = next;
-        if (role === "company" && next.startsWith("/company")) dest = next;
-      }
-
+      // Already authenticated as staff — go to the matching panel (or the other role's login).
       if (isAdminLogin && role === "company") {
         return NextResponse.redirect(new URL("/company/login", request.url));
       }
@@ -102,20 +99,48 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(new URL("/admin/login", request.url));
       }
 
+      const next = request.nextUrl.searchParams.get("next");
+      const home = homePathForRole(role);
+      let dest = home;
+      if (next) {
+        if (role === "admin" && next.startsWith("/admin")) dest = next;
+        if (role === "company" && next.startsWith("/company")) dest = next;
+      }
       return NextResponse.redirect(new URL(dest, request.url));
     }
     return NextResponse.next({ request });
   }
 
   if (AUTH_REQUIRED_APIS.some((p) => pathname.startsWith(p)) && !isLoggedIn) {
-    return NextResponse.json({ error: API_ERRORS.unauthorized }, { status: 401 });
+    return NextResponse.json(
+      {
+        error: "セッションの有効期限が切れました。再度ログインしてください",
+        code: "session_required",
+        role: null,
+        loginPath: "/login",
+      },
+      { status: 401 }
+    );
   }
 
-  if (SEEKER_PROTECTED.some((p) => pathname === p || pathname.startsWith(`${p}/`)) && !isLoggedIn) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("reason", "required");
-    loginUrl.searchParams.set("next", pathname);
-    return NextResponse.redirect(loginUrl);
+  if (SEEKER_PROTECTED.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+    if (!isLoggedIn) {
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("reason", "required");
+      loginUrl.searchParams.set("next", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // Already logged in as company/admin — send to their panel (not login, to avoid bounce).
+    if (role === "company" || role === "admin") {
+      return NextResponse.redirect(new URL(homePathForRole(role), request.url));
+    }
+    if (role !== "seeker") {
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("reason", "required");
+      loginUrl.searchParams.set("next", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
   }
 
   return NextResponse.next({ request });

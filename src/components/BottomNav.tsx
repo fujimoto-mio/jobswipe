@@ -42,7 +42,7 @@ export default function BottomNav({ saveCount = 0, chatCount = 0, theme = "light
             >
               <div className="relative">
                 <Icon
-                  className={`h-[22px] w-[22px] ${isActive && href === "/liked" ? "fill-current" : ""}`}
+                  className="h-[22px] w-[22px] fill-none"
                   strokeWidth={isActive ? 2.25 : 1.75}
                 />
                 {badge !== undefined && badge > 0 && (

@@ -4,6 +4,8 @@ import { SeekerStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { mapSeekerProfileResolved } from "@/lib/db/mappers";
 import { getAuthSession } from "@/lib/auth/session";
+import { API_ERRORS } from "@/lib/api-errors";
+import type { AuthRole } from "@/lib/auth/roles";
 import type { UserProfile } from "@/lib/types";
 
 export type SeekerSession = {
@@ -12,43 +14,117 @@ export type SeekerSession = {
   profile: UserProfile & { id: string };
 };
 
-export const getSeekerSession = cache(async (): Promise<SeekerSession | null> => {
-  const session = await getAuthSession();
-  if (!session || session.role !== "seeker") return null;
+type SeekerSessionFailure = {
+  status: 401 | 403;
+  error: string;
+  code: "session_required" | "wrong_role" | "profile_missing" | "suspended";
+  role?: AuthRole;
+  loginPath: string;
+};
 
-  if (session.seekerId) {
-    const row = await prisma.seekerProfile.findUnique({ where: { id: session.seekerId } });
-    if (!row || row.status === SeekerStatus.Suspended) return null;
+function failureResponse(failure: SeekerSessionFailure): NextResponse {
+  return NextResponse.json(
+    {
+      error: failure.error,
+      code: failure.code,
+      role: failure.role ?? null,
+      loginPath: failure.loginPath,
+    },
+    { status: failure.status }
+  );
+}
+
+async function resolveSeekerSession(): Promise<
+  { ok: true; session: SeekerSession } | { ok: false; failure: SeekerSessionFailure }
+> {
+  const auth = await getAuthSession();
+  if (!auth) {
     return {
-      authUserId: session.userId,
-      seekerId: row.id,
-      profile: await mapSeekerProfileResolved(row),
+      ok: false,
+      failure: {
+        status: 401,
+        error: "セッションの有効期限が切れました。再度ログインしてください",
+        code: "session_required",
+        loginPath: "/login",
+      },
     };
   }
 
-  const row = await prisma.seekerProfile.findFirst({
-    where: { OR: [{ supabaseUserId: session.userId }, { email: session.email }] },
-  });
-  if (!row || row.status === SeekerStatus.Suspended) return null;
+  if (auth.role !== "seeker") {
+    return {
+      ok: false,
+      failure: {
+        status: 401,
+        error: "求職者アカウントでログインしてください",
+        code: "wrong_role",
+        role: auth.role,
+        // Action requires seeker — always send to seeker login (not company/admin login).
+        loginPath: "/login",
+      },
+    };
+  }
 
-  if (row.supabaseUserId !== session.userId) {
+  let row =
+    auth.seekerId != null
+      ? await prisma.seekerProfile.findUnique({ where: { id: auth.seekerId } })
+      : null;
+
+  if (!row) {
+    row = await prisma.seekerProfile.findFirst({
+      where: { OR: [{ supabaseUserId: auth.userId }, { email: auth.email }] },
+    });
+  }
+
+  if (!row) {
+    return {
+      ok: false,
+      failure: {
+        status: 401,
+        error: API_ERRORS.profileNotFound,
+        code: "profile_missing",
+        role: "seeker",
+        loginPath: "/login",
+      },
+    };
+  }
+
+  if (row.status === SeekerStatus.Suspended) {
+    return {
+      ok: false,
+      failure: {
+        status: 403,
+        error: API_ERRORS.accountSuspended,
+        code: "suspended",
+        role: "seeker",
+        loginPath: "/login",
+      },
+    };
+  }
+
+  if (row.supabaseUserId !== auth.userId) {
     await prisma.seekerProfile.update({
       where: { id: row.id },
-      data: { supabaseUserId: session.userId },
+      data: { supabaseUserId: auth.userId },
     });
   }
 
   return {
-    authUserId: session.userId,
-    seekerId: row.id,
-    profile: await mapSeekerProfileResolved(row),
+    ok: true,
+    session: {
+      authUserId: auth.userId,
+      seekerId: row.id,
+      profile: await mapSeekerProfileResolved(row),
+    },
   };
+}
+
+export const getSeekerSession = cache(async (): Promise<SeekerSession | null> => {
+  const result = await resolveSeekerSession();
+  return result.ok ? result.session : null;
 });
 
 export async function requireSeekerSession(): Promise<SeekerSession | NextResponse> {
-  const session = await getSeekerSession();
-  if (!session) {
-    return NextResponse.json({ error: "ログインが必要です" }, { status: 401 });
-  }
-  return session;
+  const result = await resolveSeekerSession();
+  if (!result.ok) return failureResponse(result.failure);
+  return result.session;
 }

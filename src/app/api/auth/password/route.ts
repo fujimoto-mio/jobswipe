@@ -19,10 +19,11 @@ export async function PATCH(request: Request) {
   }
 
   const staff = await getStaffUser();
-  if (!staff) {
-    return NextResponse.json({ error: "ログインが必要です" }, { status: 401 });
+  if (staff) {
+    await updateAuthCredentialPassword(staff.id, password);
+    return NextResponse.json({ success: true });
   }
 
-  await updateAuthCredentialPassword(staff.id, password);
-  return NextResponse.json({ success: true });
+  // Prefer the structured seeker auth error (code + loginPath).
+  return seeker;
 }
