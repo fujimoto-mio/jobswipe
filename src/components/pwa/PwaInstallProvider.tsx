@@ -14,6 +14,7 @@ import {
   isAndroidDevice,
   isIosDevice,
   isStandalonePwa,
+  PWA_INSTALL_UI_ENABLED,
   registerServiceWorker,
 } from "@/lib/pwa";
 import PwaInstallConfirmModal from "@/components/pwa/PwaInstallConfirmModal";
@@ -37,11 +38,14 @@ export function PwaInstallProvider({ children }: { children: ReactNode }) {
   const [canNativeInstall, setCanNativeInstall] = useState(false);
   const [installModalOpen, setInstallModalOpen] = useState(false);
 
-  const openInstallModal = useCallback(() => setInstallModalOpen(true), []);
+  const openInstallModal = useCallback(() => {
+    if (!PWA_INSTALL_UI_ENABLED) return;
+    setInstallModalOpen(true);
+  }, []);
   const closeInstallModal = useCallback(() => setInstallModalOpen(false), []);
 
   const syncVisibility = useCallback(() => {
-    if (isStandalonePwa()) {
+    if (!PWA_INSTALL_UI_ENABLED || isStandalonePwa()) {
       setShowInstallUi(false);
       setCanNativeInstall(false);
       installPromptRef.current = null;
@@ -71,6 +75,7 @@ export function PwaInstallProvider({ children }: { children: ReactNode }) {
     const onBeforeInstallPrompt = (event: Event) => {
       event.preventDefault();
       installPromptRef.current = event as BeforeInstallPromptEvent;
+      if (!PWA_INSTALL_UI_ENABLED) return;
       setPlatform("android");
       setCanNativeInstall(true);
       setShowInstallUi(true);
@@ -88,6 +93,7 @@ export function PwaInstallProvider({ children }: { children: ReactNode }) {
   }, [syncVisibility]);
 
   const promptInstall = useCallback(async () => {
+    if (!PWA_INSTALL_UI_ENABLED) return false;
     const prompt = installPromptRef.current;
     if (!prompt) return false;
 
@@ -107,17 +113,19 @@ export function PwaInstallProvider({ children }: { children: ReactNode }) {
   return (
     <PwaInstallContext.Provider
       value={{
-        showInstallUi,
+        showInstallUi: PWA_INSTALL_UI_ENABLED && showInstallUi,
         platform,
-        canNativeInstall,
-        installModalOpen,
+        canNativeInstall: PWA_INSTALL_UI_ENABLED && canNativeInstall,
+        installModalOpen: PWA_INSTALL_UI_ENABLED && installModalOpen,
         openInstallModal,
         closeInstallModal,
         promptInstall,
       }}
     >
       {children}
-      <PwaInstallConfirmModal open={installModalOpen} onClose={closeInstallModal} />
+      {PWA_INSTALL_UI_ENABLED ? (
+        <PwaInstallConfirmModal open={installModalOpen} onClose={closeInstallModal} />
+      ) : null}
     </PwaInstallContext.Provider>
   );
 }

@@ -227,3 +227,7 @@ export const NEW_COMPANY_VALUE = "__new__";
 
 export const SUPPORT_EMAIL =
   process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "support@jobswipe.app";
+
+
+
+  

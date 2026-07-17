@@ -1,6 +1,9 @@
 export const PWA_INSTALL_DISMISS_KEY = "jobswipe_pwa_install_dismissed";
 export const PWA_INSTALL_DISMISS_DAYS = 14;
 
+/** Temporary: hide install banner / topbar CTA without removing PWA install logic. */
+export const PWA_INSTALL_UI_ENABLED = false;
+
 type NavigatorWithStandalone = Navigator & { standalone?: boolean };
 
 export type BeforeInstallPromptEvent = Event & {
@@ -71,6 +74,7 @@ export function dismissPwaInstallPrompt(): void {
 
 export function shouldOfferPwaInstall(): boolean {
   if (typeof window === "undefined") return false;
+  if (!PWA_INSTALL_UI_ENABLED) return false;
   if (isStandalonePwa()) return false;
   if (isPwaInstallDismissed()) return false;
   return isIosDevice() || isAndroidDevice() || "BeforeInstallPromptEvent" in window;
