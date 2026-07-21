@@ -1,4 +1,5 @@
 import {
+  EmploymentType,
   JobApprovalStatus,
   Prisma,
   PrismaClient,
@@ -97,7 +98,7 @@ function jobBase(companyId: string): Omit<Prisma.JobCreateInput, "id" | "title" 
     area: "東京都",
     category: "エンジニア",
     salaryDisplay: "年収 550万〜850万円",
-    employmentType: "正社員",
+    employmentType: EmploymentType.FullTime,
     description:
       "動画で魅力を伝える採用プラットフォームの開発に携わっていただきます。フロントエンドからバックエンドまで、プロダクト改善に直接関われる環境です。",
     requirements: ["Webアプリ開発の実務経験", "チームでの開発経験", "自走して課題解決できる方"],

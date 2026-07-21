@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import {
+  EmploymentType as PrismaEmploymentType,
   JobApprovalStatus as PrismaJobApprovalStatus,
   JobSubmissionStatus as PrismaJobSubmissionStatus,
   Prisma,
 } from "@prisma/client";
 import { mapJobResolved } from "@/lib/db/mappers";
+import { toEmploymentTypeLabel, toPrismaEmploymentType } from "@/lib/db/employment-type";
 import { now } from "@/lib/datetime";
 import { resolveCompanyIdForJob } from "@/lib/db/companies";
 import type { CreateJobInput, Job, JobSubmissionContent, JobSubmissionStatus, UpdateJobInput } from "@/lib/types";
@@ -27,7 +29,7 @@ export function mapSubmissionRow(
     area: string;
     category: string;
     salaryDisplay: string;
-    employmentType: string;
+    employmentType: PrismaEmploymentType;
     description: string;
     requirements: unknown;
     benefits: unknown;
@@ -48,7 +50,7 @@ export function mapSubmissionRow(
     area: row.area,
     category: row.category,
     salary: row.salaryDisplay,
-    employmentType: row.employmentType,
+    employmentType: toEmploymentTypeLabel(row.employmentType),
     tags: asStringArray(row.tags),
     description: row.description,
     requirements: asStringArray(row.requirements),
@@ -66,7 +68,9 @@ function submissionDataFromInput(input: CreateJobInput | UpdateJobInput) {
     area: input.area ?? "東京都",
     category: input.category ?? "エンジニア",
     salaryDisplay: input.salary ?? "",
-    employmentType: input.employmentType ?? "正社員",
+    employmentType: input.employmentType
+      ? toPrismaEmploymentType(input.employmentType)
+      : PrismaEmploymentType.FullTime,
     description: input.description ?? "",
     requirements: input.requirements ?? [],
     benefits: input.benefits ?? [],
@@ -197,7 +201,7 @@ export async function createJobWithStatus(
       area: input.area ?? "東京都",
       category: input.category ?? "エンジニア",
       salaryDisplay: input.salary,
-      employmentType: input.employmentType,
+      employmentType: toPrismaEmploymentType(input.employmentType),
       description: input.description,
       requirements: input.requirements ?? [],
       benefits: input.benefits ?? [],
@@ -286,7 +290,7 @@ export function submissionToPreviewJob(baseJob: Job, submission: JobSubmissionCo
     area: submission.area,
     category: submission.category,
     salary: submission.salary,
-    employmentType: submission.employmentType as Job["employmentType"],
+    employmentType: submission.employmentType,
     tags: submission.tags,
     description: submission.description,
     requirements: submission.requirements,

@@ -1,4 +1,11 @@
-import type { Job as PrismaJob, Company, Application as PrismaApplication, ChatMessage as PrismaChatMessage } from "@prisma/client";
+import type {
+  Job as PrismaJob,
+  Company,
+  Application as PrismaApplication,
+  ChatMessage as PrismaChatMessage,
+  EmploymentType as PrismaEmploymentType,
+} from "@prisma/client";
+import { toEmploymentTypeLabel } from "@/lib/db/employment-type";
 import { birthdayToInputValue } from "@/lib/birthday";
 import { asStringArray as parseNonEmptyStrings, asWorkHistory, asSkills } from "@/lib/profile-fields";
 import { getCompanyLogoUrl } from "@/lib/job-image";
@@ -36,7 +43,7 @@ export function mapJob(row: JobWithCompany): Job {
     area: row.area,
     category: row.category,
     salary: row.salaryDisplay,
-    employmentType: row.employmentType as Job["employmentType"],
+    employmentType: toEmploymentTypeLabel(row.employmentType),
     tags: asJsonStringArray(row.tags),
     description: row.description,
     requirements: asJsonStringArray(row.requirements),
@@ -62,7 +69,7 @@ export function mapJobFeed(row: JobWithCompany): JobFeedItem {
     area: row.area,
     category: row.category,
     salary: row.salaryDisplay,
-    employmentType: row.employmentType as JobFeedItem["employmentType"],
+    employmentType: toEmploymentTypeLabel(row.employmentType),
     tags: asJsonStringArray(row.tags),
     videoUrl: row.videoUrl,
     thumbnailUrl: row.thumbnailUrl ?? "",
@@ -142,7 +149,7 @@ export function mapSeekerProfile(row: {
   area: string;
   desiredJobType: string;
   experience: string;
-  employmentType: string;
+  employmentType: PrismaEmploymentType;
   introSentence?: string | null;
   profileTitle?: string | null;
   resumeUrl?: string | null;
@@ -166,7 +173,7 @@ export function mapSeekerProfile(row: {
     area: row.area,
     desiredJobType: row.desiredJobType,
     experience: row.experience,
-    employmentType: row.employmentType,
+    employmentType: toEmploymentTypeLabel(row.employmentType),
     email: row.email,
     introSentence: row.introSentence ?? "",
     profileTitle: row.profileTitle ?? "",

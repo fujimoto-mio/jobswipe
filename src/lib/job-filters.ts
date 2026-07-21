@@ -1,14 +1,14 @@
-import { AREAS, JOB_CATEGORIES } from "@/lib/constants";
+import { AREAS, EMPLOYMENT_TYPES, JOB_CATEGORIES } from "@/lib/constants";
 import type { JobFilters } from "@/lib/types";
 
-export const DEFAULT_JOB_FILTERS: JobFilters = { areas: [], categories: [] };
+export const DEFAULT_JOB_FILTERS: JobFilters = { areas: [], categories: [], employmentTypes: [] };
 
 const EXPLORE_FILTERS_STORAGE_KEY = "jobswipe_explore_filters";
 
 function sanitizeStoredFilters(value: unknown): JobFilters {
   if (!value || typeof value !== "object") return DEFAULT_JOB_FILTERS;
 
-  const raw = value as { areas?: unknown; categories?: unknown };
+  const raw = value as { areas?: unknown; categories?: unknown; employmentTypes?: unknown };
   const areas = Array.isArray(raw.areas)
     ? raw.areas.filter((area): area is string => typeof area === "string" && AREAS.includes(area as (typeof AREAS)[number]))
     : [];
@@ -18,8 +18,14 @@ function sanitizeStoredFilters(value: unknown): JobFilters {
           typeof category === "string" && JOB_CATEGORIES.includes(category as (typeof JOB_CATEGORIES)[number])
       )
     : [];
+  const employmentTypes = Array.isArray(raw.employmentTypes)
+    ? raw.employmentTypes.filter(
+        (type): type is string =>
+          typeof type === "string" && EMPLOYMENT_TYPES.includes(type as (typeof EMPLOYMENT_TYPES)[number])
+      )
+    : [];
 
-  return { areas, categories };
+  return { areas, categories, employmentTypes };
 }
 
 export function loadStoredExploreFilters(): JobFilters {
@@ -50,7 +56,8 @@ export const EXPLORE_FILTERS_PARAM = "filters";
 export function parseExploreFiltersFromParams(searchParams: URLSearchParams): JobFilters {
   const areas = searchParams.get("areas")?.split(",").filter(Boolean) ?? [];
   const categories = searchParams.get("categories")?.split(",").filter(Boolean) ?? [];
-  return { areas, categories };
+  const employmentTypes = searchParams.get("employmentTypes")?.split(",").filter(Boolean) ?? [];
+  return { areas, categories, employmentTypes };
 }
 
 export function isExploreFilterScreen(searchParams: URLSearchParams): boolean {
@@ -66,14 +73,10 @@ export function buildExploreFeedParams(
   options?: { started?: boolean }
 ): URLSearchParams {
   const params = new URLSearchParams();
-  if (options?.started) {
-    params.set(EXPLORE_STARTED_PARAM, "1");
-    if (filters.areas.length) params.set("areas", filters.areas.join(","));
-    if (filters.categories.length) params.set("categories", filters.categories.join(","));
-    return params;
-  }
+  if (options?.started) params.set(EXPLORE_STARTED_PARAM, "1");
   if (filters.areas.length) params.set("areas", filters.areas.join(","));
   if (filters.categories.length) params.set("categories", filters.categories.join(","));
+  if (filters.employmentTypes.length) params.set("employmentTypes", filters.employmentTypes.join(","));
   return params;
 }
 
@@ -81,6 +84,7 @@ export function exploreFeedParamsKey(searchParams: URLSearchParams): string {
   return [
     searchParams.get("areas") ?? "",
     searchParams.get("categories") ?? "",
+    searchParams.get("employmentTypes") ?? "",
     searchParams.get(EXPLORE_STARTED_PARAM) ?? "",
   ].join("|");
 }

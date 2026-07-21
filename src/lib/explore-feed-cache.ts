@@ -12,7 +12,8 @@ const feedCache = new Map<string, ExploreFeedCacheEntry>();
 export function exploreFeedCacheKey(filters: JobFilters): string {
   const areas = [...filters.areas].sort().join(",");
   const categories = [...filters.categories].sort().join(",");
-  return `${areas}|${categories}`;
+  const employmentTypes = [...filters.employmentTypes].sort().join(",");
+  return `${areas}|${categories}|${employmentTypes}`;
 }
 
 export function getExploreFeedCache(

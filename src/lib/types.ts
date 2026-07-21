@@ -1,13 +1,6 @@
-export type EmploymentType =
-  | "正社員"
-  | "契約社員"
-  | "派遣"
-  | "パート・アルバイト"
-  | "業務委託"
-  | "インターン"
-  | "アルバイト";
+import type { EMPLOYMENT_TYPES, JobApprovalStatus, JobSubmissionStatus } from "@/lib/constants";
 
-import type { JobApprovalStatus, JobSubmissionStatus } from "@/lib/constants";
+export type EmploymentType = (typeof EMPLOYMENT_TYPES)[number];
 
 export type { JobApprovalStatus };
 export type { JobSubmissionStatus } from "@/lib/constants";
@@ -94,7 +87,7 @@ export type JobSubmissionContent = {
   area: string;
   category: string;
   salary: string;
-  employmentType: string;
+  employmentType: EmploymentType;
   tags: string[];
   description: string;
   requirements: string[];
@@ -226,6 +219,7 @@ export type ChatThread = {
 export type JobFilters = {
   areas: string[];
   categories: string[];
+  employmentTypes: string[];
 };
 
 export type SeekerSettings = {

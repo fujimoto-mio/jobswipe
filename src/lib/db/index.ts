@@ -18,6 +18,11 @@ import {
   submitJobForReview,
   upsertPendingJobSubmission,
 } from "@/lib/db/job-submissions";
+import {
+  toEmploymentTypeLabel,
+  toPrismaEmploymentType,
+  toPrismaEmploymentTypes,
+} from "@/lib/db/employment-type";
 import type {
   Application,
   ApplicationStatus,
@@ -49,6 +54,9 @@ export async function getAllJobs(filters?: JobFilters, includeUnapproved = false
       ...(includeUnapproved ? {} : { approvalStatus: PrismaJobApprovalStatus.Active }),
       ...(filters?.areas.length ? { area: { in: filters.areas } } : {}),
       ...(filters?.categories.length ? { category: { in: filters.categories } } : {}),
+      ...(filters?.employmentTypes.length
+        ? { employmentType: { in: toPrismaEmploymentTypes(filters.employmentTypes) } }
+        : {}),
     },
     include: jobInclude,
     orderBy: { postedAt: "desc" },
@@ -63,6 +71,9 @@ export async function getFeedJobs(filters?: JobFilters): Promise<JobFeedItem[]> 
       approvalStatus: PrismaJobApprovalStatus.Active,
       ...(filters?.areas.length ? { area: { in: filters.areas } } : {}),
       ...(filters?.categories.length ? { category: { in: filters.categories } } : {}),
+      ...(filters?.employmentTypes.length
+        ? { employmentType: { in: toPrismaEmploymentTypes(filters.employmentTypes) } }
+        : {}),
     },
     include: jobInclude,
     orderBy: { postedAt: "desc" },
@@ -152,7 +163,8 @@ export async function updateJob(
           area: contentInput.area ?? existing.area,
           category: contentInput.category ?? existing.category,
           salary: contentInput.salary ?? existing.salaryDisplay,
-          employmentType: (contentInput.employmentType ?? existing.employmentType) as CreateJobInput["employmentType"],
+          employmentType:
+            contentInput.employmentType ?? toEmploymentTypeLabel(existing.employmentType),
           description: contentInput.description ?? existing.description,
           videoUrl: contentInput.videoUrl ?? existing.videoUrl,
           thumbnailUrl: contentInput.thumbnailUrl ?? existing.thumbnailUrl ?? undefined,
@@ -203,7 +215,7 @@ export async function updateJob(
         ...(contentInput.category !== undefined ? { category: contentInput.category } : {}),
         ...(contentInput.salary !== undefined ? { salaryDisplay: contentInput.salary } : {}),
         ...(contentInput.employmentType !== undefined
-          ? { employmentType: contentInput.employmentType }
+          ? { employmentType: toPrismaEmploymentType(contentInput.employmentType) }
           : {}),
         ...(contentInput.description !== undefined ? { description: contentInput.description } : {}),
         ...(contentInput.videoUrl !== undefined ? { videoUrl: contentInput.videoUrl } : {}),
@@ -389,7 +401,7 @@ export async function upsertSeekerProfile(
     area: profile.area,
     desiredJobType: profile.desiredJobType,
     experience: profile.experience,
-    employmentType: profile.employmentType,
+    employmentType: toPrismaEmploymentType(profile.employmentType),
     email: profile.email,
     introSentence: profile.introSentence?.trim() || null,
     profileTitle: profile.profileTitle?.trim() || null,

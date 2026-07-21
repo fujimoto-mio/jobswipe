@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
-import { AREAS, JOB_CATEGORIES } from "@/lib/constants";
+import { AREAS, EMPLOYMENT_TYPES, JOB_CATEGORIES } from "@/lib/constants";
+import { DEFAULT_JOB_FILTERS } from "@/lib/job-filters";
 import type { JobFilters } from "@/lib/types";
 
 type FilterBarProps = {
@@ -27,9 +28,17 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
     onChange({ ...filters, categories });
   };
 
-  const activeCount = filters.areas.length + filters.categories.length;
+  const toggleEmploymentType = (type: string) => {
+    const employmentTypes = filters.employmentTypes.includes(type)
+      ? filters.employmentTypes.filter((t) => t !== type)
+      : [...filters.employmentTypes, type];
+    onChange({ ...filters, employmentTypes });
+  };
 
-  const clearAll = () => onChange({ areas: [], categories: [] });
+  const activeCount =
+    filters.areas.length + filters.categories.length + filters.employmentTypes.length;
+
+  const clearAll = () => onChange(DEFAULT_JOB_FILTERS);
 
   return (
     <>
@@ -74,7 +83,7 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
               </div>
             </section>
 
-            <section className="mb-6">
+            <section className="mb-5">
               <h4 className="mb-2 text-sm font-semibold text-[#334155]">職種</h4>
               <div className="flex flex-wrap gap-2">
                 {JOB_CATEGORIES.map((cat) => (
@@ -84,6 +93,21 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
                     className={`chip ${filters.categories.includes(cat) ? "chip-active" : ""}`}
                   >
                     {cat}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <section className="mb-6">
+              <h4 className="mb-2 text-sm font-semibold text-[#334155]">希望雇用形態</h4>
+              <div className="flex flex-wrap gap-2">
+                {EMPLOYMENT_TYPES.map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => toggleEmploymentType(type)}
+                    className={`chip ${filters.employmentTypes.includes(type) ? "chip-active" : ""}`}
+                  >
+                    {type}
                   </button>
                 ))}
               </div>
