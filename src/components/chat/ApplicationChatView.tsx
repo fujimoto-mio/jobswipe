@@ -160,12 +160,6 @@ function ChatComposer({
             setContent(e.target.value);
             resize();
           }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              if (canSubmit) void handleSubmit();
-            }
-          }}
           className="input-field chat-composer-input scrollbar-none max-h-[120px] w-full resize-none overflow-y-auto leading-snug"
         />
       </div>

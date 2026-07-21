@@ -1,27 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AnimatePresence } from "framer-motion";
 import CompanyLogo from "@/components/chat/CompanyLogo";
+import CompanyStatusConfirmModal, {
+  COMPANY_STATUS_ACTION_TARGET,
+  type CompanyStatusAction,
+} from "@/components/admin/CompanyStatusConfirmModal";
 import FormSelectPicker from "@/components/form/FormSelectPicker";
-import PaginatedDataTable, { type ColumnDef } from "@/components/ui/PaginatedDataTable";
+import PaginatedDataTable, {
+  type ColumnDef,
+  type PaginatedDataTableHandle,
+} from "@/components/ui/PaginatedDataTable";
 import PaginatedTableToolbar from "@/components/ui/PaginatedTableToolbar";
-import { TableRowActions, TableViewLink } from "@/components/ui/TableRowActions";
+import {
+  TableApproveButton,
+  TableRejectButton,
+  TableRestoreButton,
+  TableRowActions,
+  TableSuspendButton,
+  TableViewLink,
+} from "@/components/ui/TableRowActions";
 import {
   COMPANY_STATUS_BADGE_CLASS,
   COMPANY_STATUS_LABELS,
+  COMPANY_STATUSES,
   type CompanyStatus,
 } from "@/lib/constants";
 import { formatDateJST } from "@/lib/datetime";
+import { apiFetch } from "@/lib/api-client";
 import type { AdminCompanyRow } from "@/lib/db/admin-companies";
 
 type CompanyStatusFilter = "" | CompanyStatus;
 
 const STATUS_FILTER_OPTIONS: { value: CompanyStatusFilter; label: string }[] = [
   { value: "", label: "すべて" },
-  { value: "Active", label: COMPANY_STATUS_LABELS.Active },
-  { value: "Pending", label: COMPANY_STATUS_LABELS.Pending },
-  { value: "Suspended", label: COMPANY_STATUS_LABELS.Suspended },
+  ...COMPANY_STATUSES.map((status) => ({
+    value: status as CompanyStatusFilter,
+    label: COMPANY_STATUS_LABELS[status],
+  })),
 ];
 
 function FilterSelect({
@@ -53,7 +71,25 @@ function FilterSelect({
 
 export default function AdminCompaniesPage() {
   const router = useRouter();
+  const tableRef = useRef<PaginatedDataTableHandle>(null);
   const [statusFilter, setStatusFilter] = useState<CompanyStatusFilter>("");
+  const [pendingAction, setPendingAction] = useState<{
+    company: AdminCompanyRow;
+    action: CompanyStatusAction;
+  } | null>(null);
+
+  const refetch = useCallback(async () => {
+    await tableRef.current?.refetch();
+  }, []);
+
+  const updateStatus = async (companyId: string, status: CompanyStatus) => {
+    const res = await apiFetch(`/api/admin/companies/${encodeURIComponent(companyId)}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
+    if (!res.ok) throw new Error("update failed");
+    await refetch();
+  };
 
   const columns: ColumnDef<AdminCompanyRow>[] = [
     {
@@ -108,6 +144,21 @@ export default function AdminCompaniesPage() {
       cell: (row) => (
         <TableRowActions>
           <TableViewLink href={`/admin/companies/${row.id}`} />
+          {row.status === "Pending" && (
+            <>
+              <TableApproveButton onClick={() => setPendingAction({ company: row, action: "approve" })} />
+              <TableRejectButton onClick={() => setPendingAction({ company: row, action: "reject" })} />
+            </>
+          )}
+          {row.status === "Active" && (
+            <TableSuspendButton onClick={() => setPendingAction({ company: row, action: "suspend" })} />
+          )}
+          {row.status === "Suspended" && (
+            <TableRestoreButton
+              label="再開"
+              onClick={() => setPendingAction({ company: row, action: "resume" })}
+            />
+          )}
         </TableRowActions>
       ),
     },
@@ -121,6 +172,7 @@ export default function AdminCompaniesPage() {
       </div>
 
       <PaginatedDataTable
+        ref={tableRef}
         staffStyle
         columns={columns}
         getRowId={(row) => row.id}
@@ -157,6 +209,23 @@ export default function AdminCompaniesPage() {
           />
         )}
       />
+
+      <AnimatePresence>
+        {pendingAction && (
+          <CompanyStatusConfirmModal
+            key={`${pendingAction.company.id}-${pendingAction.action}`}
+            company={pendingAction.company}
+            action={pendingAction.action}
+            onClose={() => setPendingAction(null)}
+            onConfirm={() =>
+              updateStatus(
+                pendingAction.company.id,
+                COMPANY_STATUS_ACTION_TARGET[pendingAction.action]
+              )
+            }
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }

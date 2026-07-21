@@ -679,6 +679,11 @@ export async function addChatMessage(
       where: { id: applicationId },
       data: { seekerReadAt: sentAt },
     });
+  } else if (sender === "company") {
+    await prisma.application.update({
+      where: { id: applicationId },
+      data: { companyReadAt: sentAt },
+    });
   }
 
   return mapChatMessageResolved(row);
@@ -707,6 +712,21 @@ export async function markSeekerChatRead(
   }
 }
 
+export async function markCompanyChatRead(
+  applicationId: string,
+  companyId: string
+): Promise<boolean> {
+  try {
+    const result = await prisma.application.updateMany({
+      where: { id: applicationId, job: { companyId } },
+      data: { companyReadAt: now() },
+    });
+    return result.count > 0;
+  } catch {
+    return false;
+  }
+}
+
 export async function getSeekerUnreadTotal(seekerId: string): Promise<number> {
   const rows = await prisma.$queryRaw<{ count: bigint }[]>`
     SELECT COUNT(*) AS count
@@ -715,6 +735,19 @@ export async function getSeekerUnreadTotal(seekerId: string): Promise<number> {
     WHERE a.seeker_id = ${seekerId}
       AND cm.sender = 'company'
       AND (a.seeker_read_at IS NULL OR cm.created_at > a.seeker_read_at)
+  `;
+  return Number(rows[0]?.count ?? 0);
+}
+
+export async function getCompanyUnreadTotal(companyId: string): Promise<number> {
+  const rows = await prisma.$queryRaw<{ count: bigint }[]>`
+    SELECT COUNT(*) AS count
+    FROM chat_messages cm
+    INNER JOIN applications a ON a.id = cm.application_id
+    INNER JOIN jobs j ON j.id = a.job_id
+    WHERE j.company_id = ${companyId}
+      AND cm.sender = 'seeker'
+      AND (a.company_read_at IS NULL OR cm.created_at > a.company_read_at)
   `;
   return Number(rows[0]?.count ?? 0);
 }
@@ -735,6 +768,48 @@ async function getSeekerUnreadByApplication(
   const map = new Map<string, number>();
   for (const row of rows) {
     map.set(row.application_id, Number(row.count));
+  }
+  return map;
+}
+
+export async function getCompanyUnreadByApplication(
+  companyId: string
+): Promise<Map<string, number>> {
+  const rows = await prisma.$queryRaw<{ application_id: string; count: bigint }[]>`
+    SELECT cm.application_id, COUNT(*) AS count
+    FROM chat_messages cm
+    INNER JOIN applications a ON a.id = cm.application_id
+    INNER JOIN jobs j ON j.id = a.job_id
+    WHERE j.company_id = ${companyId}
+      AND cm.sender = 'seeker'
+      AND (a.company_read_at IS NULL OR cm.created_at > a.company_read_at)
+    GROUP BY cm.application_id
+  `;
+
+  const map = new Map<string, number>();
+  for (const row of rows) {
+    map.set(row.application_id, Number(row.count));
+  }
+  return map;
+}
+
+export async function getCompanyUnreadByJob(
+  companyId: string
+): Promise<Map<string, number>> {
+  const rows = await prisma.$queryRaw<{ job_id: string; count: bigint }[]>`
+    SELECT a.job_id, COUNT(*) AS count
+    FROM chat_messages cm
+    INNER JOIN applications a ON a.id = cm.application_id
+    INNER JOIN jobs j ON j.id = a.job_id
+    WHERE j.company_id = ${companyId}
+      AND cm.sender = 'seeker'
+      AND (a.company_read_at IS NULL OR cm.created_at > a.company_read_at)
+    GROUP BY a.job_id
+  `;
+
+  const map = new Map<string, number>();
+  for (const row of rows) {
+    map.set(row.job_id, Number(row.count));
   }
   return map;
 }

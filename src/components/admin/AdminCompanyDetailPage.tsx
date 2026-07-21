@@ -1,13 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Briefcase, ExternalLink, Users } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
+import { ArrowLeft, Ban, Briefcase, Check, ExternalLink, RotateCcw, Users, X } from "lucide-react";
 import CompanyLogo from "@/components/chat/CompanyLogo";
+import CompanyStatusConfirmModal, {
+  COMPANY_STATUS_ACTION_TARGET,
+  type CompanyStatusAction,
+} from "@/components/admin/CompanyStatusConfirmModal";
 import JobThumbnail from "@/components/JobThumbnail";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
-import { APPLICATION_STATUS_LABELS, JOB_APPROVAL_BADGE_CLASS, JOB_APPROVAL_LABELS } from "@/lib/constants";
+import {
+  COMPANY_STATUS_BADGE_CLASS,
+  COMPANY_STATUS_LABELS,
+  JOB_APPROVAL_BADGE_CLASS,
+  JOB_APPROVAL_LABELS,
+  type CompanyStatus,
+} from "@/lib/constants";
 import { apiFetch } from "@/lib/api-client";
 import { companyLinkFormValues } from "@/lib/company-links";
 import type { AdminCompanyDetail } from "@/lib/db/admin-companies";
@@ -28,17 +39,31 @@ export default function AdminCompanyDetailPage() {
   const companyId = params.id as string;
   const [company, setCompany] = useState<AdminCompanyDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pendingAction, setPendingAction] = useState<CompanyStatusAction | null>(null);
+
+  const loadDetail = useCallback(async () => {
+    const res = await apiFetch(`/api/admin/companies/${encodeURIComponent(companyId)}`);
+    if (!res.ok) throw new Error("not found");
+    const data = await res.json();
+    return (data.company ?? null) as AdminCompanyDetail | null;
+  }, [companyId]);
 
   useEffect(() => {
-    apiFetch(`/api/admin/companies/${encodeURIComponent(companyId)}`)
-      .then(async (r) => {
-        if (!r.ok) throw new Error("not found");
-        return r.json();
-      })
-      .then((data) => setCompany(data.company ?? null))
+    loadDetail()
+      .then(setCompany)
       .catch(() => setCompany(null))
       .finally(() => setLoading(false));
-  }, [companyId]);
+  }, [loadDetail]);
+
+  const updateStatus = async (status: CompanyStatus) => {
+    const res = await apiFetch(`/api/admin/companies/${encodeURIComponent(companyId)}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
+    if (!res.ok) throw new Error("update failed");
+    const data = await res.json();
+    setCompany(data.company ?? null);
+  };
 
   if (loading) {
     return <PageLoading message="企業情報を読み込み中..." minHeight="min-h-[320px]" />;
@@ -73,13 +98,62 @@ export default function AdminCompanyDetailPage() {
           <ArrowLeft className="h-4 w-4" />
           企業一覧
         </Link>
-        <div className="flex items-start gap-4">
-          <CompanyLogo company={company.name} logoUrl={company.logoUrl} size="lg" />
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">{company.name}</h1>
-            <p className="mt-1 text-sm text-slate-500">
-              登録日 {company.createdAt} · 求人 {company.jobCount}件 · 応募 {company.applicationCount}件
-            </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-start gap-4">
+            <CompanyLogo company={company.name} logoUrl={company.logoUrl} size="lg" />
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-slate-900">{company.name}</h1>
+              <p className="mt-1 text-sm text-slate-500">
+                登録日 {company.createdAt} · 求人 {company.jobCount}件 · 応募 {company.applicationCount}件
+              </p>
+              <div className="mt-3">
+                <span className={`badge ${COMPANY_STATUS_BADGE_CLASS[company.status]}`}>
+                  {COMPANY_STATUS_LABELS[company.status]}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            {company.status === "Pending" && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setPendingAction("approve")}
+                  className="staff-ui btn-secondary inline-flex items-center gap-2 px-4 py-2 text-sm"
+                >
+                  <Check className="h-4 w-4" />
+                  承認
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPendingAction("reject")}
+                  className="staff-ui inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100"
+                >
+                  <X className="h-4 w-4" />
+                  却下
+                </button>
+              </>
+            )}
+            {company.status === "Active" && (
+              <button
+                type="button"
+                onClick={() => setPendingAction("suspend")}
+                className="staff-ui inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100"
+              >
+                <Ban className="h-4 w-4" />
+                停止
+              </button>
+            )}
+            {company.status === "Suspended" && (
+              <button
+                type="button"
+                onClick={() => setPendingAction("resume")}
+                className="staff-ui btn-secondary inline-flex items-center gap-2 px-4 py-2 text-sm"
+              >
+                <RotateCcw className="h-4 w-4" />
+                再開
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -102,6 +176,14 @@ export default function AdminCompanyDetailPage() {
           </div>
           <div className="company-profile-section-body">
             <div className="company-profile-info-table">
+              <div className="company-profile-info-row">
+                <div className="company-profile-info-label">ステータス</div>
+                <div className="company-profile-info-value">
+                  <span className={`badge ${COMPANY_STATUS_BADGE_CLASS[company.status]}`}>
+                    {COMPANY_STATUS_LABELS[company.status]}
+                  </span>
+                </div>
+              </div>
               <InfoRow label="コーポレートサイト" value={company.website} />
               <InfoRow label="郵便番号" value={company.postalCode} />
               <InfoRow label="所在地" value={company.address} />
@@ -189,6 +271,18 @@ export default function AdminCompanyDetailPage() {
         </section>
 
       </div>
+
+      <AnimatePresence>
+        {pendingAction && (
+          <CompanyStatusConfirmModal
+            key={pendingAction}
+            company={{ id: company.id, name: company.name }}
+            action={pendingAction}
+            onClose={() => setPendingAction(null)}
+            onConfirm={() => updateStatus(COMPANY_STATUS_ACTION_TARGET[pendingAction])}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

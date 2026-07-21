@@ -5,13 +5,19 @@ import {
   getChatMessages,
   getChatThreadsForSeeker,
   getChatThreadsForStaff,
+  getCompanyUnreadTotal,
   getSeekerUnreadTotal,
+  markCompanyChatRead,
   markSeekerChatRead,
 } from "@/lib/db";
 import { requireSeekerSession, getSeekerSession } from "@/lib/auth/seeker";
 import { requireStaffUser, getStaffUser } from "@/lib/auth/admin";
 import { seekerCanAccessApplication, staffCanAccessApplication } from "@/lib/db/access";
-import { broadcastChatMessage } from "@/lib/chat/realtime";
+import {
+  broadcastChatMessage,
+  broadcastCompanyChatInbox,
+  broadcastSeekerChatInbox,
+} from "@/lib/chat/realtime";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(request: Request) {
@@ -55,19 +61,36 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: API_ERRORS.unauthorized }, { status: 401 });
   }
 
-  const threads = await getChatThreadsForStaff(staff.role === "company" ? staff.companyId : null);
-  return NextResponse.json({ threads });
+  const companyId = staff.role === "company" ? staff.companyId : null;
+  const threads = await getChatThreadsForStaff(companyId);
+  const unreadTotal = companyId ? await getCompanyUnreadTotal(companyId) : 0;
+  return NextResponse.json({ threads, unreadTotal });
 }
 
 export async function PATCH(request: Request) {
-  const session = await requireSeekerSession();
-  if (session instanceof NextResponse) return session;
-
   try {
     const { applicationId } = (await request.json()) as { applicationId?: string };
     if (!applicationId) {
       return NextResponse.json({ error: API_ERRORS.applicationIdRequired }, { status: 400 });
     }
+
+    const staff = await getStaffUser();
+    if (staff) {
+      if (!staff.companyId) {
+        return NextResponse.json({ error: API_ERRORS.forbidden }, { status: 403 });
+      }
+      const allowed = await staffCanAccessApplication(applicationId, staff);
+      if (!allowed) {
+        return NextResponse.json({ error: API_ERRORS.forbidden }, { status: 403 });
+      }
+
+      await markCompanyChatRead(applicationId, staff.companyId);
+      const unreadTotal = await getCompanyUnreadTotal(staff.companyId);
+      return NextResponse.json({ success: true, unreadTotal });
+    }
+
+    const session = await requireSeekerSession();
+    if (session instanceof NextResponse) return session;
 
     const allowed = await seekerCanAccessApplication(applicationId, session.seekerId);
     if (!allowed) {
@@ -133,6 +156,23 @@ export async function POST(request: Request) {
       senderMeta
     );
     void broadcastChatMessage(applicationId, message);
+
+    const application = await prisma.application.findUnique({
+      where: { id: applicationId },
+      select: { seekerId: true, jobId: true, job: { select: { companyId: true } } },
+    });
+
+    if ((sender ?? "seeker") === "company") {
+      if (application?.seekerId) {
+        void broadcastSeekerChatInbox(application.seekerId, message);
+      }
+    } else if (application?.job.companyId) {
+      void broadcastCompanyChatInbox(application.job.companyId, {
+        ...message,
+        jobId: application.jobId,
+      });
+    }
+
     return NextResponse.json({ success: true, message }, { status: 201 });
   } catch (error) {
     console.error("[POST /api/chat]", error);

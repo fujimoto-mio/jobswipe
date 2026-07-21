@@ -107,7 +107,7 @@
 
 .seeker-ui .page-main,
 .seeker-ui .page-scroll,
-.seeker-ui .overflow-y-auto,
+.seeker-ui .overflow-y-auto:not(.scrollbar-none),
 .seeker-ui .job-detail-modal-panel,
 .seeker-ui .job-detail-modal-scroll,
 .seeker-ui .apply-modal-panel,
@@ -121,7 +121,7 @@
 
 .seeker-ui .page-main::-webkit-scrollbar,
 .seeker-ui .page-scroll::-webkit-scrollbar,
-.seeker-ui .overflow-y-auto::-webkit-scrollbar,
+.seeker-ui .overflow-y-auto:not(.scrollbar-none)::-webkit-scrollbar,
 .seeker-ui .job-detail-modal-panel::-webkit-scrollbar,
 .seeker-ui .job-detail-modal-scroll::-webkit-scrollbar,
 .seeker-ui .apply-modal-panel::-webkit-scrollbar,
@@ -135,7 +135,7 @@
 
 .seeker-ui .page-main::-webkit-scrollbar-track,
 .seeker-ui .page-scroll::-webkit-scrollbar-track,
-.seeker-ui .overflow-y-auto::-webkit-scrollbar-track,
+.seeker-ui .overflow-y-auto:not(.scrollbar-none)::-webkit-scrollbar-track,
 .seeker-ui .job-detail-modal-panel::-webkit-scrollbar-track,
 .seeker-ui .job-detail-modal-scroll::-webkit-scrollbar-track,
 .seeker-ui .apply-modal-panel::-webkit-scrollbar-track,
@@ -148,7 +148,7 @@
 
 .seeker-ui .page-main::-webkit-scrollbar-thumb,
 .seeker-ui .page-scroll::-webkit-scrollbar-thumb,
-.seeker-ui .overflow-y-auto::-webkit-scrollbar-thumb,
+.seeker-ui .overflow-y-auto:not(.scrollbar-none)::-webkit-scrollbar-thumb,
 .seeker-ui .job-detail-modal-panel::-webkit-scrollbar-thumb,
 .seeker-ui .job-detail-modal-scroll::-webkit-scrollbar-thumb,
 .seeker-ui .apply-modal-panel::-webkit-scrollbar-thumb,
@@ -162,7 +162,7 @@
 
 .seeker-ui .page-main::-webkit-scrollbar-thumb:hover,
 .seeker-ui .page-scroll::-webkit-scrollbar-thumb:hover,
-.seeker-ui .overflow-y-auto::-webkit-scrollbar-thumb:hover,
+.seeker-ui .overflow-y-auto:not(.scrollbar-none)::-webkit-scrollbar-thumb:hover,
 .seeker-ui .job-detail-modal-panel::-webkit-scrollbar-thumb:hover,
 .seeker-ui .job-detail-modal-scroll::-webkit-scrollbar-thumb:hover,
 .seeker-ui .apply-modal-panel::-webkit-scrollbar-thumb:hover,
@@ -615,13 +615,13 @@ body {
   display: none;
 }
 
-.overflow-y-auto::-webkit-scrollbar {
+.overflow-y-auto:not(.scrollbar-none)::-webkit-scrollbar {
   width: 4px;
 }
-.overflow-y-auto::-webkit-scrollbar-track {
+.overflow-y-auto:not(.scrollbar-none)::-webkit-scrollbar-track {
   background: transparent;
 }
-.overflow-y-auto::-webkit-scrollbar-thumb {
+.overflow-y-auto:not(.scrollbar-none)::-webkit-scrollbar-thumb {
   background: rgba(15, 23, 42, 0.12);
   border-radius: 4px;
 }
@@ -632,6 +632,8 @@ body {
 }
 .scrollbar-none::-webkit-scrollbar {
   display: none;
+  width: 0;
+  height: 0;
 }
 
 /* ── Form controls ── */
@@ -895,6 +897,13 @@ body {
 .chat-composer-input.input-field {
   min-height: 4.5rem;
   line-height: 1.45;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.chat-composer-input.input-field::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 .chat-composer .btn-send {
   display: inline-flex;
@@ -3504,6 +3513,11 @@ html[data-seeker-theme="dark"] .seeker-ui .seeker-auth-note {
   overflow-y: hidden;
   field-sizing: content;
 }
+.seeker-ui textarea.input-field.chat-composer-input {
+  overflow-x: hidden;
+  overflow-y: auto;
+  field-sizing: fixed;
+}
 .seeker-ui textarea.input-field.textarea-content {
   min-height: 7rem;
 }
@@ -4350,6 +4364,24 @@ html[data-staff-theme="dark"] .select-picker-option-muted {
 .company-chat-list-item-title--active {
   font-weight: 600;
   color: var(--staff-primary);
+}
+
+.company-chat-unread-badge {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: #ef4444;
+}
+
+.chat-unread-dot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: #ef4444;
 }
 
 .company-chat-seeker-item {
@@ -6554,9 +6586,9 @@ html[data-seeker-theme="dark"] .select-picker-option-muted {
 
 .staff-panel-shell,
 .staff-ui .staff-sidebar-nav,
-.staff-ui .overflow-y-auto,
-.staff-ui .overflow-auto,
-.staff-ui .overflow-x-auto,
+.staff-ui .overflow-y-auto:not(.scrollbar-none),
+.staff-ui .overflow-auto:not(.scrollbar-none),
+.staff-ui .overflow-x-auto:not(.scrollbar-none),
 .staff-ui .data-table-scroll,
 .staff-ui .modal-sheet,
 .staff-ui.application-seeker-info-modal,
@@ -6567,9 +6599,9 @@ html[data-seeker-theme="dark"] .select-picker-option-muted {
 
 .staff-panel-shell::-webkit-scrollbar,
 .staff-ui .staff-sidebar-nav::-webkit-scrollbar,
-.staff-ui .overflow-y-auto::-webkit-scrollbar,
-.staff-ui .overflow-auto::-webkit-scrollbar,
-.staff-ui .overflow-x-auto::-webkit-scrollbar,
+.staff-ui .overflow-y-auto:not(.scrollbar-none)::-webkit-scrollbar,
+.staff-ui .overflow-auto:not(.scrollbar-none)::-webkit-scrollbar,
+.staff-ui .overflow-x-auto:not(.scrollbar-none)::-webkit-scrollbar,
 .staff-ui .data-table-scroll::-webkit-scrollbar,
 .staff-ui .modal-sheet::-webkit-scrollbar,
 .staff-ui.application-seeker-info-modal::-webkit-scrollbar,
@@ -6580,9 +6612,9 @@ html[data-seeker-theme="dark"] .select-picker-option-muted {
 
 .staff-panel-shell::-webkit-scrollbar-button,
 .staff-ui .staff-sidebar-nav::-webkit-scrollbar-button,
-.staff-ui .overflow-y-auto::-webkit-scrollbar-button,
-.staff-ui .overflow-auto::-webkit-scrollbar-button,
-.staff-ui .overflow-x-auto::-webkit-scrollbar-button,
+.staff-ui .overflow-y-auto:not(.scrollbar-none)::-webkit-scrollbar-button,
+.staff-ui .overflow-auto:not(.scrollbar-none)::-webkit-scrollbar-button,
+.staff-ui .overflow-x-auto:not(.scrollbar-none)::-webkit-scrollbar-button,
 .staff-ui .data-table-scroll::-webkit-scrollbar-button,
 .staff-ui .modal-sheet::-webkit-scrollbar-button,
 .staff-ui.application-seeker-info-modal::-webkit-scrollbar-button,
@@ -6593,18 +6625,18 @@ html[data-seeker-theme="dark"] .select-picker-option-muted {
 }
 
 .staff-panel-shell::-webkit-scrollbar-corner,
-.staff-ui .overflow-y-auto::-webkit-scrollbar-corner,
-.staff-ui .overflow-auto::-webkit-scrollbar-corner,
-.staff-ui .overflow-x-auto::-webkit-scrollbar-corner,
+.staff-ui .overflow-y-auto:not(.scrollbar-none)::-webkit-scrollbar-corner,
+.staff-ui .overflow-auto:not(.scrollbar-none)::-webkit-scrollbar-corner,
+.staff-ui .overflow-x-auto:not(.scrollbar-none)::-webkit-scrollbar-corner,
 .staff-ui .data-table-scroll::-webkit-scrollbar-corner {
   background: transparent;
 }
 
 .staff-panel-shell::-webkit-scrollbar-track,
 .staff-ui .staff-sidebar-nav::-webkit-scrollbar-track,
-.staff-ui .overflow-y-auto::-webkit-scrollbar-track,
-.staff-ui .overflow-auto::-webkit-scrollbar-track,
-.staff-ui .overflow-x-auto::-webkit-scrollbar-track,
+.staff-ui .overflow-y-auto:not(.scrollbar-none)::-webkit-scrollbar-track,
+.staff-ui .overflow-auto:not(.scrollbar-none)::-webkit-scrollbar-track,
+.staff-ui .overflow-x-auto:not(.scrollbar-none)::-webkit-scrollbar-track,
 .staff-ui .data-table-scroll::-webkit-scrollbar-track,
 .staff-ui .modal-sheet::-webkit-scrollbar-track,
 .staff-ui.application-seeker-info-modal::-webkit-scrollbar-track,
@@ -6613,9 +6645,9 @@ html[data-seeker-theme="dark"] .select-picker-option-muted {
 }
 .staff-panel-shell::-webkit-scrollbar-thumb,
 .staff-ui .staff-sidebar-nav::-webkit-scrollbar-thumb,
-.staff-ui .overflow-y-auto::-webkit-scrollbar-thumb,
-.staff-ui .overflow-auto::-webkit-scrollbar-thumb,
-.staff-ui .overflow-x-auto::-webkit-scrollbar-thumb,
+.staff-ui .overflow-y-auto:not(.scrollbar-none)::-webkit-scrollbar-thumb,
+.staff-ui .overflow-auto:not(.scrollbar-none)::-webkit-scrollbar-thumb,
+.staff-ui .overflow-x-auto:not(.scrollbar-none)::-webkit-scrollbar-thumb,
 .staff-ui .data-table-scroll::-webkit-scrollbar-thumb,
 .staff-ui .modal-sheet::-webkit-scrollbar-thumb,
 .staff-ui.application-seeker-info-modal::-webkit-scrollbar-thumb,
@@ -6626,9 +6658,9 @@ html[data-seeker-theme="dark"] .select-picker-option-muted {
 
 .staff-panel-shell::-webkit-scrollbar-thumb:hover,
 .staff-ui .staff-sidebar-nav::-webkit-scrollbar-thumb:hover,
-.staff-ui .overflow-y-auto::-webkit-scrollbar-thumb:hover,
-.staff-ui .overflow-auto::-webkit-scrollbar-thumb:hover,
-.staff-ui .overflow-x-auto::-webkit-scrollbar-thumb:hover,
+.staff-ui .overflow-y-auto:not(.scrollbar-none)::-webkit-scrollbar-thumb:hover,
+.staff-ui .overflow-auto:not(.scrollbar-none)::-webkit-scrollbar-thumb:hover,
+.staff-ui .overflow-x-auto:not(.scrollbar-none)::-webkit-scrollbar-thumb:hover,
 .staff-ui .data-table-scroll::-webkit-scrollbar-thumb:hover,
 .staff-ui .modal-sheet::-webkit-scrollbar-thumb:hover,
 .staff-ui.application-seeker-info-modal::-webkit-scrollbar-thumb:hover,
@@ -6830,6 +6862,25 @@ html[data-staff-theme="dark"] .staff-ui {
   height: 1.125rem;
   width: 1.125rem;
   flex-shrink: 0;
+}
+
+.staff-nav-link-badge {
+  position: absolute;
+  top: -0.35rem;
+  right: -0.45rem;
+  display: inline-flex;
+  min-width: 1rem;
+  height: 1rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.25rem;
+  border-radius: 9999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 0 0 2px var(--staff-sidebar-bg, var(--staff-shell-bg));
 }
 
 .staff-nav-link-label {

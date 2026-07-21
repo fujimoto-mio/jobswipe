@@ -14,11 +14,21 @@ import LoadingSpinner, { PageLoading } from "@/components/ui/LoadingSpinner";
 import { markSeekerChatRead, prefetchChatMessages, prefetchChatMessagesIdle } from "@/lib/chat-unread";
 import { useSeekerUser } from "@/components/seeker/SeekerUserProvider";
 import { useSeekerBadges } from "@/components/seeker/SeekerBadgeProvider";
+import { useSeekerChatInbox } from "@/hooks/useSeekerChatInbox";
 import type { ChatMessage, ChatThread } from "@/lib/types";
 
 function syncChatUrl(applicationId: string | null) {
   const url = applicationId ? `/chat?applicationId=${applicationId}` : "/chat";
   window.history.replaceState(window.history.state, "", url);
+}
+
+function moveThreadToTop(threads: ChatThread[], applicationId: string): ChatThread[] {
+  const index = threads.findIndex((t) => t.application.id === applicationId);
+  if (index <= 0) return threads;
+  const next = [...threads];
+  const [item] = next.splice(index, 1);
+  next.unshift(item);
+  return next;
 }
 
 function SeekerChatContent() {
@@ -31,8 +41,41 @@ function SeekerChatContent() {
   const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
   const [initialLoading, setInitialLoading] = useState(true);
   const { profile: seekerProfile } = useSeekerUser();
-  const { saveCount, chatCount, setChatCount } = useSeekerBadges();
+  const { saveCount, chatCount, setChatCount, setActiveChatApplicationId } = useSeekerBadges();
   const seekerAvatarUrl = seekerProfile?.avatarUrl ?? null;
+  const selectedIdRef = useRef(selectedId);
+  selectedIdRef.current = selectedId;
+
+  useEffect(() => {
+    setActiveChatApplicationId(selectedId);
+    return () => setActiveChatApplicationId(null);
+  }, [selectedId, setActiveChatApplicationId]);
+
+  useSeekerChatInbox(seekerProfile?.id, (message) => {
+    if (message.sender !== "company") return;
+
+    const isActive = selectedIdRef.current === message.applicationId;
+
+    setThreads((prev) => {
+      const updated = prev.map((thread) => {
+        if (thread.application.id !== message.applicationId) return thread;
+        return {
+          ...thread,
+          lastMessage: message,
+          unreadCount: isActive ? 0 : (thread.unreadCount ?? 0) + 1,
+        };
+      });
+      return moveThreadToTop(updated, message.applicationId);
+    });
+
+    if (!isActive) {
+      setMessageCache((prev) => {
+        const existing = prev[message.applicationId];
+        if (!existing || existing.some((m) => m.id === message.id)) return prev;
+        return { ...prev, [message.applicationId]: [...existing, message] };
+      });
+    }
+  });
 
   const refreshThreads = useCallback(async () => {
     const chatRes = await apiFetch("/api/chat");
@@ -197,10 +240,18 @@ function SeekerChatContent() {
             setThreads((prev) =>
               prev.map((thread) =>
                 thread.application.id === message.applicationId
-                  ? { ...thread, lastMessage: message }
+                  ? {
+                      ...thread,
+                      lastMessage: message,
+                      unreadCount:
+                        message.sender === "company" ? 0 : (thread.unreadCount ?? 0),
+                    }
                   : thread
               )
             );
+            if (message.sender === "company") {
+              void markRead(selectedThread.application.id);
+            }
           }}
           emptyHint="企業担当者にメッセージを送って、選考について質問しましょう"
           className="min-h-0 flex-1"

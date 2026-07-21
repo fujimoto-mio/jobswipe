@@ -11,6 +11,38 @@ import type {
 
 const jobInclude = { company: true } as const;
 
+async function unreadByApplicationForCompany(companyId: string): Promise<Map<string, number>> {
+  const rows = await prisma.$queryRaw<{ application_id: string; count: bigint }[]>`
+    SELECT cm.application_id, COUNT(*) AS count
+    FROM chat_messages cm
+    INNER JOIN applications a ON a.id = cm.application_id
+    INNER JOIN jobs j ON j.id = a.job_id
+    WHERE j.company_id = ${companyId}
+      AND cm.sender = 'seeker'
+      AND (a.company_read_at IS NULL OR cm.created_at > a.company_read_at)
+    GROUP BY cm.application_id
+  `;
+  const map = new Map<string, number>();
+  for (const row of rows) map.set(row.application_id, Number(row.count));
+  return map;
+}
+
+async function unreadByJobForCompany(companyId: string): Promise<Map<string, number>> {
+  const rows = await prisma.$queryRaw<{ job_id: string; count: bigint }[]>`
+    SELECT a.job_id, COUNT(*) AS count
+    FROM chat_messages cm
+    INNER JOIN applications a ON a.id = cm.application_id
+    INNER JOIN jobs j ON j.id = a.job_id
+    WHERE j.company_id = ${companyId}
+      AND cm.sender = 'seeker'
+      AND (a.company_read_at IS NULL OR cm.created_at > a.company_read_at)
+    GROUP BY a.job_id
+  `;
+  const map = new Map<string, number>();
+  for (const row of rows) map.set(row.job_id, Number(row.count));
+  return map;
+}
+
 export type StaffApplicationsQuery = {
   companyId?: string | null;
   view: "applications" | "jobs";
@@ -28,6 +60,7 @@ export type JobApplicationGroupRow = {
   jobId: string;
   job: Job;
   applicantCount: number;
+  unreadCount?: number;
 };
 
 export type StaffApplicationRow = ApplicationWithSeeker & {
@@ -127,11 +160,16 @@ export async function getApplicationsForJob(
     rows.map((row) => ({ seekerId: row.seekerId, jobId: row.jobId }))
   );
 
+  const unreadMap = companyId
+    ? await unreadByApplicationForCompany(companyId)
+    : new Map<string, number>();
+
   return Promise.all(
     rows.map(async (row) => ({
       ...mapApplication(row),
       message: resolveApplicationMessage(row.seekerId, row.jobId, row.message, savedMessages),
       seeker: row.seeker ? await mapSeekerProfileResolved(row.seeker) : undefined,
+      unreadCount: unreadMap.get(row.id) ?? 0,
     }))
   );
 }
@@ -202,7 +240,7 @@ export async function queryStaffApplicationJobs(
     },
   };
 
-  const [total, rows, totalApplications] = await Promise.all([
+  const [total, rows, totalApplications, unreadByJob] = await Promise.all([
     prisma.job.count({ where: jobWhere }),
     prisma.job.findMany({
       where: jobWhere,
@@ -215,6 +253,9 @@ export async function queryStaffApplicationJobs(
       take: pageSize,
     }),
     prisma.application.count({ where: applicationSummaryWhere }),
+    query.companyId
+      ? unreadByJobForCompany(query.companyId)
+      : Promise.resolve(new Map<string, number>()),
   ]);
 
   return {
@@ -223,6 +264,7 @@ export async function queryStaffApplicationJobs(
         jobId: row.id,
         job: await mapJobResolved(row),
         applicantCount: row._count.applications,
+        unreadCount: unreadByJob.get(row.id) ?? 0,
       }))
     ),
     total,

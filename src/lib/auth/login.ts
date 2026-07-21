@@ -60,7 +60,10 @@ export async function loginWithPassword(
     return { ok: false, code: "invalid", message: API_ERRORS.invalidCredentials };
   }
 
-  if (account.role === "company" && account.company?.status === "Suspended") {
+  if (
+    account.role === "company" &&
+    (account.company?.status === "Suspended" || account.company?.status === "Cancelled")
+  ) {
     return { ok: false, code: "suspended", message: API_ERRORS.accountSuspended };
   }
 
@@ -100,7 +103,7 @@ export async function buildSessionForUserId(userId: string): Promise<AuthSession
       where: { id: account.companyId },
       select: { status: true },
     });
-    if (company?.status === "Suspended") return null;
+    if (company?.status === "Suspended" || company?.status === "Cancelled") return null;
   }
   return {
     userId,
