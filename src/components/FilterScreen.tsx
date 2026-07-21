@@ -47,7 +47,7 @@ export default function FilterScreen({ filters, onChange, onContinue, onCancel }
         <div className="mb-6 mt-2">
           <h1 className="seeker-filter-title">あなたに合う求人を探す</h1>
           <p className="seeker-filter-subtitle mt-2">
-            エリア・職種・希望雇用形態を選んで、動画フィードをスタート
+            エリア・職種・希望雇用形態のいずれかを選んで、動画フィードをスタート
           </p>
         </div>
 

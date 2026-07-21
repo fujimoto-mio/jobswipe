@@ -10,11 +10,16 @@ import type { EmploymentType } from "@/lib/types";
  * Compile-time guard: fails the build if the Prisma enum and the label map in
  * constants.ts ever drift apart (in either direction).
  */
-export type EmploymentTypeEnumInSync = EmploymentTypeValue extends PrismaEmploymentType
+type EmploymentTypeEnumInSync = EmploymentTypeValue extends PrismaEmploymentType
   ? PrismaEmploymentType extends EmploymentTypeValue
     ? true
     : never
   : never;
+
+// A bare conditional type resolving to `never` is not an error on its own, so
+// the assertion has to be consumed by a value for the build to actually break.
+const employmentTypeEnumInSync: EmploymentTypeEnumInSync = true;
+void employmentTypeEnumInSync;
 
 /** Database enum value -> Japanese label used by the API and the UI. */
 export function toEmploymentTypeLabel(value: PrismaEmploymentType): EmploymentType {
@@ -24,7 +29,9 @@ export function toEmploymentTypeLabel(value: PrismaEmploymentType): EmploymentTy
 /** Japanese label -> database enum value. Throws on an unknown label. */
 export function toPrismaEmploymentType(label: string): PrismaEmploymentType {
   const value = EMPLOYMENT_TYPE_VALUES[label as EmploymentType];
-  if (!value) throw new Error(`未対応の雇用形態です: ${label}`);
+  // Deliberately does not echo the input back — this message is surfaced to
+  // users verbatim by the job routes.
+  if (!value) throw new Error("雇用形態を正しく選択してください");
   return value;
 }
 

@@ -132,7 +132,7 @@ export type SeekerProfileDetail = UserProfile & {
   id: string;
   gender: string;
   experience: string;
-  employmentType: string;
+  employmentType: EmploymentType;
 };
 
 export type ApplicationWithSeeker = Application & {
@@ -175,7 +175,8 @@ export type UserProfile = {
   area: string;
   desiredJobType: string;
   experience: string;
-  employmentType: string;
+  /** `""` while the profile form is still a draft; see isProfileComplete. */
+  employmentType: EmploymentType | "";
   email: string;
   introSentence: string;
   profileTitle: string;

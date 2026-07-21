@@ -23,7 +23,7 @@ import type {
   Job,
   JobApprovalStatus,
   JobFeedItem,
-  UserProfile,
+  SeekerProfileDetail,
 } from "@/lib/types";
 
 type JobWithCompany = PrismaJob & { company: Company };
@@ -136,7 +136,7 @@ export async function mapChatMessageResolved(row: PrismaChatMessage): Promise<Ch
 
 export async function mapSeekerProfileResolved(
   row: Parameters<typeof mapSeekerProfile>[0]
-): Promise<UserProfile & { id: string }> {
+): Promise<SeekerProfileDetail> {
   return resolveSeekerProfileMedia(mapSeekerProfile(row));
 }
 
@@ -164,7 +164,7 @@ export function mapSeekerProfile(row: {
   bannerUrl?: string | null;
   skills?: unknown;
   workHistory?: unknown;
-}): UserProfile & { id: string } {
+}): SeekerProfileDetail {
   return {
     id: row.id,
     name: row.name,
