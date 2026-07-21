@@ -34,6 +34,19 @@ enum JobSubmissionStatus {
   Rejected
 }
 
+// Values are stable identifiers; the Japanese display labels live in
+// EMPLOYMENT_TYPE_LABELS (src/lib/constants.ts) so a label can be reworded
+// without a database migration.
+enum EmploymentType {
+  FullTime // 正社員
+  Contract // 契約社員
+  Dispatch // 派遣
+  PartTime // パート・アルバイト
+  Arbeit // アルバイト
+  Outsourcing // 業務委託
+  Internship // インターン
+}
+
 enum AuthCredentialRole {
   seeker
   company
@@ -67,7 +80,7 @@ model Job {
   area           String
   category       String
   salaryDisplay  String   @map("salary_display")
-  employmentType String   @map("employment_type")
+  employmentType EmploymentType @map("employment_type")
   description    String
   requirements   Json     @default("[]")
   benefits       Json     @default("[]")
@@ -101,7 +114,7 @@ model JobSubmission {
   area           String
   category       String
   salaryDisplay  String              @map("salary_display")
-  employmentType String              @map("employment_type")
+  employmentType EmploymentType      @map("employment_type")
   description    String
   requirements   Json                @default("[]")
   benefits       Json                @default("[]")
@@ -146,7 +159,7 @@ model SeekerProfile {
   area           String
   desiredJobType String   @map("desired_job_type")
   experience     String
-  employmentType String   @map("employment_type")
+  employmentType EmploymentType @map("employment_type")
   introSentence  String?  @map("intro_sentence")
   profileTitle   String?  @map("profile_title")
   resumeUrl      String?  @map("resume_url")

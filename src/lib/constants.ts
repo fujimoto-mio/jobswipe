@@ -94,14 +94,31 @@ export const EXPERIENCE_LEVELS = [
   "10年以上",
 ] as const;
 
-export const EMPLOYMENT_TYPES = [
-  "正社員",
-  "契約社員",
-  "派遣",
-  "パート・アルバイト",
-  "業務委託",
-  "インターン",
-] as const;
+/**
+ * Maps the `EmploymentType` database enum values to their Japanese display
+ * labels. This is the single source of truth: option lists, validation and the
+ * Prisma converters in `src/lib/db/employment-type.ts` all derive from it.
+ * Reword a label here without touching the database.
+ */
+export const EMPLOYMENT_TYPE_LABELS = {
+  FullTime: "正社員",
+  Contract: "契約社員",
+  Dispatch: "派遣",
+  PartTime: "パート・アルバイト",
+  Arbeit: "アルバイト",
+  Outsourcing: "業務委託",
+  Internship: "インターン",
+} as const;
+
+export type EmploymentTypeValue = keyof typeof EMPLOYMENT_TYPE_LABELS;
+export type EmploymentTypeLabel = (typeof EMPLOYMENT_TYPE_LABELS)[EmploymentTypeValue];
+
+/** Display labels in option-list order. */
+export const EMPLOYMENT_TYPES = Object.values(EMPLOYMENT_TYPE_LABELS);
+
+export const EMPLOYMENT_TYPE_VALUES = Object.fromEntries(
+  Object.entries(EMPLOYMENT_TYPE_LABELS).map(([value, label]) => [label, value])
+) as Record<EmploymentTypeLabel, EmploymentTypeValue>;
 
 export const SALARY_RANGES = [
   "200万円未満",

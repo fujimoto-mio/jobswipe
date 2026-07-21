@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { JobApprovalStatus as PrismaJobApprovalStatus } from "@prisma/client";
 import { mapApplication, mapJobResolved, mapSeekerProfileResolved } from "@/lib/db/mappers";
 import { fetchSavedApplyMessages, resolveApplicationMessage } from "@/lib/db/saved-job-message";
+import { employmentTypeValuesMatching } from "@/lib/db/employment-type";
 import type {
   ApplicationStatus,
   ApplicationWithSeeker,
@@ -93,6 +94,8 @@ function applicationSearchFilter(search?: string) {
 function jobSearchFilter(search?: string) {
   const q = search?.trim();
   if (!q) return {};
+  // employmentType is an enum column, so it is matched on its labels instead of `contains`.
+  const employmentTypes = employmentTypeValuesMatching(q);
   return {
     OR: [
       { title: { contains: q, mode: "insensitive" as const } },
@@ -100,7 +103,7 @@ function jobSearchFilter(search?: string) {
       { area: { contains: q, mode: "insensitive" as const } },
       { location: { contains: q, mode: "insensitive" as const } },
       { company: { name: { contains: q, mode: "insensitive" as const } } },
-      { employmentType: { contains: q, mode: "insensitive" as const } },
+      ...(employmentTypes.length ? [{ employmentType: { in: employmentTypes } }] : []),
       { salaryDisplay: { contains: q, mode: "insensitive" as const } },
     ],
   };
