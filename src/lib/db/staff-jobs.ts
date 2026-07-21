@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { JobApprovalStatus as PrismaJobApprovalStatus, JobSubmissionStatus as PrismaJobSubmissionStatus } from "@prisma/client";
 import { mapJobResolved } from "@/lib/db/mappers";
 import { mapSubmissionRow } from "@/lib/db/job-submissions";
+import { employmentTypeValuesMatching } from "@/lib/db/employment-type";
 import type { Job, JobApprovalStatus, JobSubmissionContent } from "@/lib/types";
 
 const jobInclude = { company: true } as const;
@@ -31,6 +32,8 @@ export type PaginatedJobsResult = {
 function jobSearchFilter(search?: string) {
   const q = search?.trim();
   if (!q) return {};
+  // employmentType is an enum column, so it is matched on its labels instead of `contains`.
+  const employmentTypes = employmentTypeValuesMatching(q);
   return {
     OR: [
       { title: { contains: q, mode: "insensitive" as const } },
@@ -38,7 +41,7 @@ function jobSearchFilter(search?: string) {
       { area: { contains: q, mode: "insensitive" as const } },
       { location: { contains: q, mode: "insensitive" as const } },
       { company: { name: { contains: q, mode: "insensitive" as const } } },
-      { employmentType: { contains: q, mode: "insensitive" as const } },
+      ...(employmentTypes.length ? [{ employmentType: { in: employmentTypes } }] : []),
       { salaryDisplay: { contains: q, mode: "insensitive" as const } },
     ],
   };

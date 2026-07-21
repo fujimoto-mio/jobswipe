@@ -57,9 +57,10 @@ export default function VideoFeed({
     const params = new URLSearchParams();
     if (filters.areas.length) params.set("areas", filters.areas.join(","));
     if (filters.categories.length) params.set("categories", filters.categories.join(","));
+    if (filters.employmentTypes.length) params.set("employmentTypes", filters.employmentTypes.join(","));
     const qs = params.toString();
     return `/api/jobs${qs ? `?${qs}` : ""}`;
-  }, [filters.areas, filters.categories]);
+  }, [filters.areas, filters.categories, filters.employmentTypes]);
 
   const flushViewCounts = useCallback(() => {
     const jobIds = [...pendingViewsRef.current];

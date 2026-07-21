@@ -8,10 +8,13 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const areas = searchParams.get("areas")?.split(",").filter(Boolean) ?? [];
   const categories = searchParams.get("categories")?.split(",").filter(Boolean) ?? [];
+  const employmentTypes = searchParams.get("employmentTypes")?.split(",").filter(Boolean) ?? [];
   const includeUnapproved = searchParams.get("includeUnapproved") === "true";
 
   const filters: JobFilters | undefined =
-    areas.length || categories.length ? { areas, categories } : undefined;
+    areas.length || categories.length || employmentTypes.length
+      ? { areas, categories, employmentTypes }
+      : undefined;
 
   if (includeUnapproved) {
     const staff = await requireStaffUser();
@@ -27,6 +30,9 @@ export async function GET(request: Request) {
     }
     if (filters?.categories.length) {
       jobs = jobs.filter((j) => filters.categories.includes(j.category));
+    }
+    if (filters?.employmentTypes.length) {
+      jobs = jobs.filter((j) => filters.employmentTypes.includes(j.employmentType));
     }
 
     return NextResponse.json({ jobs, total: jobs.length });
