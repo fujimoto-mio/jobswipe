@@ -105,7 +105,6 @@ export const EMPLOYMENT_TYPE_LABELS = {
   Contract: "契約社員",
   Dispatch: "派遣",
   PartTime: "パート・アルバイト",
-  Arbeit: "アルバイト",
   Outsourcing: "業務委託",
   Internship: "インターン",
 } as const;
@@ -113,8 +112,11 @@ export const EMPLOYMENT_TYPE_LABELS = {
 export type EmploymentTypeValue = keyof typeof EMPLOYMENT_TYPE_LABELS;
 export type EmploymentTypeLabel = (typeof EMPLOYMENT_TYPE_LABELS)[EmploymentTypeValue];
 
-/** Display labels in option-list order. */
-export const EMPLOYMENT_TYPES = Object.values(EMPLOYMENT_TYPE_LABELS);
+/** Display labels in option-list order. Frozen so an in-place sort cannot
+ *  corrupt every option list and filter chip row process-wide. */
+export const EMPLOYMENT_TYPES: readonly EmploymentTypeLabel[] = Object.freeze(
+  Object.values(EMPLOYMENT_TYPE_LABELS)
+);
 
 export const EMPLOYMENT_TYPE_VALUES = Object.fromEntries(
   Object.entries(EMPLOYMENT_TYPE_LABELS).map(([value, label]) => [label, value])

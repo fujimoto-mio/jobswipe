@@ -42,7 +42,6 @@ enum EmploymentType {
   Contract // 契約社員
   Dispatch // 派遣
   PartTime // パート・アルバイト
-  Arbeit // アルバイト
   Outsourcing // 業務委託
   Internship // インターン
 }

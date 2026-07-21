@@ -1,6 +1,6 @@
 import type { Job } from "@/lib/types";
 import type { JobFormValues } from "@/lib/validation/schemas";
-import { AREAS, EMPLOYMENT_TYPES, NEW_COMPANY_VALUE } from "@/lib/constants";
+import { AREAS, EMPLOYMENT_TYPE_LABELS, NEW_COMPANY_VALUE } from "@/lib/constants";
 import { resolveJobTags } from "@/lib/job-tags";
 import { formatJobSalary, parseJobSalary } from "@/lib/validation/job-salary";
 
@@ -19,7 +19,7 @@ export const emptyJobFormValues: JobFormValues = {
   category: "エンジニア",
   salaryMin: "",
   salaryMax: "",
-  employmentType: EMPLOYMENT_TYPES[0],
+  employmentType: EMPLOYMENT_TYPE_LABELS.FullTime,
   description: "",
   requirements: "",
   benefits: "",

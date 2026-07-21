@@ -56,7 +56,11 @@ export const EXPLORE_FILTERS_PARAM = "filters";
 export function parseExploreFiltersFromParams(searchParams: URLSearchParams): JobFilters {
   const areas = searchParams.get("areas")?.split(",").filter(Boolean) ?? [];
   const categories = searchParams.get("categories")?.split(",").filter(Boolean) ?? [];
-  const employmentTypes = searchParams.get("employmentTypes")?.split(",").filter(Boolean) ?? [];
+  // Unlike areas/categories, an unrecognised employment type would be dropped at
+  // the enum boundary and turn into `in: []`, emptying the whole feed. Drop it
+  // here instead so a stale link degrades to "no employment filter".
+  const employmentTypes = (searchParams.get("employmentTypes")?.split(",").filter(Boolean) ?? [])
+    .filter((type) => EMPLOYMENT_TYPES.includes(type as (typeof EMPLOYMENT_TYPES)[number]));
   return { areas, categories, employmentTypes };
 }
 
