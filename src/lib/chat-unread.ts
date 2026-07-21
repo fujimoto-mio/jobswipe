@@ -21,6 +21,17 @@ export async function markSeekerChatRead(applicationId: string): Promise<number>
   return typeof data.unreadTotal === "number" ? data.unreadTotal : 0;
 }
 
+export async function markCompanyChatRead(applicationId: string): Promise<number> {
+  const res = await apiFetch("/api/chat", {
+    method: "PATCH",
+    body: JSON.stringify({ applicationId }),
+  });
+  const data = await res.json();
+  invalidateApiCache("/api/chat");
+  invalidateApiCache("/api/admin/chat/unread");
+  return typeof data.unreadTotal === "number" ? data.unreadTotal : 0;
+}
+
 type PrefetchOptions = {
   /** Prefer these threads first when capping. */
   first?: string[];

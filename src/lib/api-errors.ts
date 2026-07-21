@@ -21,6 +21,8 @@ export const API_ERRORS = {
   fileRequired: "ファイルを選択してください",
   kindRequired: "アップロード種別を指定してください",
   statusActiveOrSuspended: "ステータスはActiveまたはSuspendedを指定してください",
+  invalidCompanyStatus:
+    "ステータスはActive、Pending、Suspended、Cancelledのいずれかを指定してください",
   adminOnlyApproval: "承認ステータスの変更は管理者のみ可能です",
   signupFirst: "先にアカウント登録を行ってください",
   companyRegisterFieldsRequired:

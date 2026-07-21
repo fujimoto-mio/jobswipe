@@ -192,20 +192,27 @@ export const JOB_SUBMISSION_LABELS: Record<JobSubmissionStatus, string> = {
   Rejected: "差し戻し",
 };
 
-export type CompanyStatus = "Active" | "Pending" | "Suspended";
+export type CompanyStatus = "Active" | "Pending" | "Suspended" | "Cancelled";
 
-export const COMPANY_STATUSES: CompanyStatus[] = ["Active", "Pending", "Suspended"];
+export const COMPANY_STATUSES: CompanyStatus[] = [
+  "Active",
+  "Pending",
+  "Suspended",
+  "Cancelled",
+];
 
 export const COMPANY_STATUS_LABELS: Record<CompanyStatus, string> = {
   Active: "有効",
   Pending: "審査待ち",
   Suspended: "停止中",
+  Cancelled: "却下",
 };
 
 export const COMPANY_STATUS_BADGE_CLASS: Record<CompanyStatus, string> = {
   Active: "badge-green",
   Pending: "badge-amber",
   Suspended: "badge-red",
+  Cancelled: "badge-slate",
 };
 
 export type SeekerStatus = "Active" | "Suspended";

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdminUser } from "@/lib/auth/admin";
 import { queryAdminCompanies } from "@/lib/db/admin-companies";
 import { listCompanies } from "@/lib/db/companies";
+import { COMPANY_STATUSES, type CompanyStatus } from "@/lib/constants";
 
 function parsePage(value: string | null): number {
   const n = Number(value);
@@ -34,8 +35,8 @@ export async function GET(request: Request) {
     const order = searchParams.get("order") === "asc" ? "asc" : "desc";
     const statusParam = searchParams.get("status");
     const status =
-      statusParam === "Active" || statusParam === "Pending" || statusParam === "Suspended"
-        ? statusParam
+      statusParam && COMPANY_STATUSES.includes(statusParam as CompanyStatus)
+        ? (statusParam as CompanyStatus)
         : undefined;
 
     const result = await queryAdminCompanies({ page, limit, search, sort, order, status });

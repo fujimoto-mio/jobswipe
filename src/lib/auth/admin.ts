@@ -24,7 +24,11 @@ export const getStaffUser = cache(async (): Promise<StaffUser | null> => {
   });
   if (!account || account.role !== session.role) return null;
 
-  if (account.role === "company" && account.company?.status === CompanyStatus.Suspended) {
+  if (
+    account.role === "company" &&
+    (account.company?.status === CompanyStatus.Suspended ||
+      account.company?.status === CompanyStatus.Cancelled)
+  ) {
     return null;
   }
 

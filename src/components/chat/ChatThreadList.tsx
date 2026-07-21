@@ -46,9 +46,7 @@ export default function ChatThreadList({ threads, selectedId, onSelect }: ChatTh
                 </p>
               </div>
               {unread > 0 && (
-                <span className="flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full bg-[#2563EB] px-1.5 text-[10px] font-bold text-white">
-                  {unread > 99 ? "99+" : unread}
-                </span>
+                <span className="chat-unread-dot shrink-0" aria-label="未読あり" />
               )}
             </button>
           </li>

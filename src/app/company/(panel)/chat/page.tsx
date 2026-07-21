@@ -9,12 +9,14 @@ import ApplicationChatView from "@/components/chat/ApplicationChatView";
 import ChatColumnSearch from "@/components/chat/ChatColumnSearch";
 import ColumnResizeHandle from "@/components/chat/ColumnResizeHandle";
 import ApplicationSeekerInfoModal from "@/components/staff/ApplicationSeekerInfoModal";
-import JobThumbnail from "@/components/JobThumbnail";
+import { useCompanyBadges } from "@/components/staff/CompanyBadgeProvider";
 import EmptyState from "@/components/ui/EmptyState";
 import { PageLoading } from "@/components/ui/LoadingSpinner";
+import { useCompanyChatInbox } from "@/hooks/useCompanyChatInbox";
 import { useResizableChatColumns } from "@/hooks/useResizableChatColumns";
 import { APPLICATION_STATUS_LABELS } from "@/lib/constants";
 import { apiFetch } from "@/lib/api-client";
+import { markCompanyChatRead } from "@/lib/chat-unread";
 import type { ApplicationStatus, ApplicationWithSeeker } from "@/lib/types";
 import type { JobApplicationGroupRow } from "@/lib/db/staff-applications";
 
@@ -50,6 +52,12 @@ function CompanyChatContent() {
     companyLogoUrl: string | null;
   }>({ name: null, avatarUrl: null, companyLogoUrl: null });
 
+  const { companyId, setChatCount, setActiveChatApplicationId } = useCompanyBadges();
+  const selectedApplicationIdRef = useRef(selectedApplicationId);
+  selectedApplicationIdRef.current = selectedApplicationId;
+  const selectedJobIdRef = useRef(selectedJobId);
+  selectedJobIdRef.current = selectedJobId;
+
   const panelRef = useRef<HTMLDivElement>(null);
   const { jobsPercent, seekersPercent, startJobsResize, startSeekersResize } =
     useResizableChatColumns(panelRef);
@@ -67,6 +75,11 @@ function CompanyChatContent() {
   const jobsResizeHandleClass = selectedJobId && !selectedApplicationId ? "chat-column-resize-handle--lg-only" : "";
 
   useEffect(() => {
+    setActiveChatApplicationId(selectedApplicationId);
+    return () => setActiveChatApplicationId(null);
+  }, [selectedApplicationId, setActiveChatApplicationId]);
+
+  useEffect(() => {
     void apiFetch("/api/admin/me")
       .then(async (res) => (res.ok ? res.json() : null))
       .then((data) => {
@@ -78,6 +91,78 @@ function CompanyChatContent() {
         });
       });
   }, []);
+
+  const bumpJobUnread = useCallback((jobId: string, delta: number) => {
+    setJobGroups((prev) =>
+      prev.map((group) =>
+        group.jobId === jobId
+          ? { ...group, unreadCount: Math.max(0, (group.unreadCount ?? 0) + delta) }
+          : group
+      )
+    );
+  }, []);
+
+  const applyUnreadToCache = useCallback((jobId: string, applicationId: string, unreadCount: number) => {
+    const cached = applicationsCacheRef.current.get(jobId);
+    if (!cached) return;
+    applicationsCacheRef.current.set(
+      jobId,
+      cached.map((app) => (app.id === applicationId ? { ...app, unreadCount } : app))
+    );
+  }, []);
+
+  useCompanyChatInbox(companyId, (message) => {
+    if (message.sender !== "seeker") return;
+
+    const isActive = selectedApplicationIdRef.current === message.applicationId;
+    const jobId =
+      message.jobId ??
+      [...applicationsCacheRef.current.entries()].find(([, apps]) =>
+        apps.some((app) => app.id === message.applicationId)
+      )?.[0] ??
+      selectedJobIdRef.current;
+
+    if (!jobId) return;
+
+    const cachedUnread =
+      applicationsCacheRef.current.get(jobId)?.find((app) => app.id === message.applicationId)
+        ?.unreadCount ?? 0;
+    const nextUnread = isActive ? 0 : cachedUnread + 1;
+
+    if (selectedJobIdRef.current === jobId) {
+      setApplications((prev) =>
+        prev.map((app) =>
+          app.id === message.applicationId ? { ...app, unreadCount: nextUnread } : app
+        )
+      );
+    }
+    applyUnreadToCache(jobId, message.applicationId, nextUnread);
+    if (!isActive) bumpJobUnread(jobId, 1);
+  });
+
+  const markRead = useCallback(
+    async (applicationId: string, jobId: string | null) => {
+      const previousUnread =
+        applications.find((app) => app.id === applicationId)?.unreadCount ??
+        (jobId
+          ? applicationsCacheRef.current.get(jobId)?.find((app) => app.id === applicationId)
+              ?.unreadCount
+          : 0) ??
+        0;
+
+      const total = await markCompanyChatRead(applicationId);
+      setChatCount(total);
+
+      setApplications((prev) =>
+        prev.map((app) => (app.id === applicationId ? { ...app, unreadCount: 0 } : app))
+      );
+      if (jobId) {
+        applyUnreadToCache(jobId, applicationId, 0);
+        if (previousUnread > 0) bumpJobUnread(jobId, -previousUnread);
+      }
+    },
+    [applications, applyUnreadToCache, bumpJobUnread, setChatCount]
+  );
 
   const loadApplicationsForJob = useCallback(async (jobId: string) => {
     const cached = applicationsCacheRef.current.get(jobId);
@@ -156,6 +241,32 @@ function CompanyChatContent() {
         setApplications(list);
         setSelectedApplicationId(applicationId);
         syncChatUrl(jobId, applicationId);
+
+        if (applicationId && jobId) {
+          const unread =
+            list.find((app) => app.id === applicationId)?.unreadCount ?? 0;
+          void markCompanyChatRead(applicationId).then((total) => {
+            setChatCount(total);
+            setApplications((prev) =>
+              prev.map((app) => (app.id === applicationId ? { ...app, unreadCount: 0 } : app))
+            );
+            applicationsCacheRef.current.set(
+              jobId,
+              (applicationsCacheRef.current.get(jobId) ?? list).map((app) =>
+                app.id === applicationId ? { ...app, unreadCount: 0 } : app
+              )
+            );
+            if (unread > 0) {
+              setJobGroups((prev) =>
+                prev.map((group) =>
+                  group.jobId === jobId
+                    ? { ...group, unreadCount: Math.max(0, (group.unreadCount ?? 0) - unread) }
+                    : group
+                )
+              );
+            }
+          });
+        }
       } catch (error) {
         console.error("[CompanyChatContent] init failed", error);
         if (!cancelled) {
@@ -189,8 +300,9 @@ function CompanyChatContent() {
       if (applicationId === selectedApplicationId) return;
       setSelectedApplicationId(applicationId);
       syncChatUrl(selectedJobId, applicationId);
+      void markRead(applicationId, selectedJobId);
     },
-    [selectedApplicationId, selectedJobId]
+    [markRead, selectedApplicationId, selectedJobId]
   );
 
   const clearJobSelection = useCallback(() => {
@@ -323,6 +435,7 @@ function CompanyChatContent() {
             ) : (
               filteredJobs.map((group) => {
               const active = group.jobId === selectedJobId;
+              const unread = group.unreadCount ?? 0;
               return (
                 <li key={group.jobId}>
                   <button
@@ -330,12 +443,11 @@ function CompanyChatContent() {
                     onClick={() => selectJob(group.jobId)}
                     className={`company-chat-list-item ${active ? "company-chat-list-item--active" : ""}`}
                   >
-                    <JobThumbnail job={group.job} className="company-chat-list-thumb" showLogoBadge={false} />
                     <div className="min-w-0 flex-1">
                       <p
                         className={`chat-list-item-title company-chat-list-item-title text-sm ${
                           active ? "company-chat-list-item-title--active" : ""
-                        }`}
+                        } ${unread > 0 ? "font-bold" : ""}`}
                         title={group.job.title}
                       >
                         {group.job.title}
@@ -344,7 +456,14 @@ function CompanyChatContent() {
                         {group.job.category} · {group.job.area || group.job.location}
                       </p>
                     </div>
-                    <span className="data-table-count-pill shrink-0">{group.applicantCount}</span>
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      {unread > 0 && (
+                        <span className="company-chat-unread-badge" aria-label="未読あり" />
+                      )}
+                      {group.applicantCount > 0 && (
+                        <span className="data-table-count-pill">{group.applicantCount}</span>
+                      )}
+                    </div>
                   </button>
                 </li>
               );
@@ -405,6 +524,7 @@ function CompanyChatContent() {
             <ul className="flex-1 overflow-y-auto">
               {filteredApplications.map((app) => {
                 const active = app.id === selectedApplicationId;
+                const unread = app.unreadCount ?? 0;
                 return (
                   <li key={app.id}>
                     <div
@@ -427,10 +547,16 @@ function CompanyChatContent() {
                         <span
                           className={`company-chat-seeker-name ${
                             active ? "company-chat-seeker-name--active" : ""
-                          }`}
+                          } ${unread > 0 ? "font-bold" : ""}`}
                         >
                           {app.applicantName}
                         </span>
+                        {unread > 0 && (
+                          <span
+                            className="company-chat-unread-badge ml-auto shrink-0"
+                            aria-label="未読あり"
+                          />
+                        )}
                       </button>
                       <button
                         type="button"
@@ -487,6 +613,11 @@ function CompanyChatContent() {
                 emptyHint="求職者にメッセージを送って、選考や面談について連絡しましょう"
                 className="min-h-0 flex-1"
                 staffStyle
+                onIncomingMessage={(message) => {
+                  if (message.sender === "seeker") {
+                    void markRead(selectedApplication.id, selectedJob.jobId);
+                  }
+                }}
               />
             </div>
           ) : (

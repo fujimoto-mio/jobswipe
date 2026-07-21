@@ -144,6 +144,7 @@ export type SeekerProfileDetail = UserProfile & {
 
 export type ApplicationWithSeeker = Application & {
   seeker?: SeekerProfileDetail;
+  unreadCount?: number;
 };
 
 export type CreateApplicationInput = {

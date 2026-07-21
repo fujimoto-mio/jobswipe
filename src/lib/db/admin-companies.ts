@@ -106,6 +106,13 @@ export type AdminCompanyDetail = {
   recentJobs: Awaited<ReturnType<typeof mapJobResolved>>[];
 };
 
+export async function setCompanyStatus(companyId: string, status: CompanyStatus) {
+  return prisma.company.update({
+    where: { id: companyId },
+    data: { status: toPrismaCompanyStatus(status) },
+  });
+}
+
 export async function getAdminCompanyDetail(companyId: string): Promise<AdminCompanyDetail | null> {
   const company = await prisma.company.findUnique({
     where: { id: companyId },

@@ -5,11 +5,13 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 import { apiFetchCached, invalidateApiCache } from "@/lib/api-client";
 import { useSeekerUser } from "@/components/seeker/SeekerUserProvider";
+import { useSeekerChatInbox } from "@/hooks/useSeekerChatInbox";
 
 type SavesSummary = {
   count?: number;
@@ -28,16 +30,29 @@ type SeekerBadgeContextValue = {
   refresh: () => Promise<void>;
   applySavesUpdate: (savedIds: string[], count: number) => void;
   setChatCount: (count: number) => void;
+  /** Currently open chat thread — inbox events for this id won't bump the badge. */
+  setActiveChatApplicationId: (applicationId: string | null) => void;
 };
 
 const SeekerBadgeContext = createContext<SeekerBadgeContextValue | null>(null);
 
 export function SeekerBadgeProvider({ children }: { children: ReactNode }) {
-  const { loggedIn, ready: authReady } = useSeekerUser();
+  const { loggedIn, ready: authReady, profile } = useSeekerUser();
   const [saveCount, setSaveCount] = useState(0);
   const [chatCount, setChatCount] = useState(0);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [ready, setReady] = useState(false);
+  const activeChatApplicationIdRef = useRef<string | null>(null);
+
+  const setActiveChatApplicationId = useCallback((applicationId: string | null) => {
+    activeChatApplicationIdRef.current = applicationId;
+  }, []);
+
+  const refreshChatUnread = useCallback(async () => {
+    invalidateApiCache("/api/chat/unread");
+    const chat = await apiFetchCached<ChatUnreadSummary>("/api/chat/unread", 10_000);
+    setChatCount(chat.unreadTotal ?? 0);
+  }, []);
 
   const refresh = useCallback(async () => {
     const [saves, chat] = await Promise.all([
@@ -77,6 +92,34 @@ export function SeekerBadgeProvider({ children }: { children: ReactNode }) {
     };
   }, [authReady, loggedIn, refresh]);
 
+  useSeekerChatInbox(loggedIn ? profile?.id : null, (message) => {
+    if (message.sender !== "company") return;
+    if (activeChatApplicationIdRef.current === message.applicationId) return;
+
+    setChatCount((prev) => prev + 1);
+    invalidateApiCache("/api/chat/unread");
+    invalidateApiCache("/api/chat");
+    void refreshChatUnread();
+  });
+
+  // Fallback when returning to the tab / app
+  useEffect(() => {
+    if (!loggedIn) return;
+
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      invalidateApiCache("/api/chat/unread");
+      void refreshChatUnread();
+    };
+
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, [loggedIn, refreshChatUnread]);
+
   return (
     <SeekerBadgeContext.Provider
       value={{
@@ -87,6 +130,7 @@ export function SeekerBadgeProvider({ children }: { children: ReactNode }) {
         refresh,
         applySavesUpdate,
         setChatCount,
+        setActiveChatApplicationId,
       }}
     >
       {children}

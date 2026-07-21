@@ -27,6 +27,7 @@ import StaffTopbarIcons from "@/components/staff/StaffTopbarIcons";
 import { StaffThemeToggle } from "@/components/staff/StaffThemeToggle";
 import { useStaffTheme } from "@/components/staff/StaffThemeProvider";
 import { useStaffPanel } from "@/components/staff/StaffPanelContext";
+import { useCompanyBadgesOptional } from "@/components/staff/CompanyBadgeProvider";
 
 const SIDEBAR_COLLAPSED_KEY = "jobswipe-staff-sidebar-collapsed";
 
@@ -38,6 +39,7 @@ type NavItem = {
   href: string;
   label: string;
   icon: typeof LayoutDashboard;
+  badge?: number;
 };
 
 function StaffSidebarContent({
@@ -60,7 +62,7 @@ function StaffSidebarContent({
       </div>
 
       <nav className="staff-sidebar-nav" aria-label="メインナビゲーション">
-        {nav.map(({ href, label, icon: Icon }) => (
+        {nav.map(({ href, label, icon: Icon, badge }) => (
           <Link
             key={href}
             href={href}
@@ -68,7 +70,14 @@ function StaffSidebarContent({
             title={collapsed ? label : undefined}
             className={`staff-nav-link ${isActive(href) ? "staff-nav-link-active" : ""}`}
           >
-            <Icon className="staff-nav-link-icon" aria-hidden />
+            <span className="relative shrink-0">
+              <Icon className="staff-nav-link-icon" aria-hidden />
+              {typeof badge === "number" && badge > 0 && (
+                <span className="staff-nav-link-badge" aria-hidden>
+                  {badge > 99 ? "99+" : badge}
+                </span>
+              )}
+            </span>
             <span className="staff-nav-link-label">{label}</span>
           </Link>
         ))}
@@ -91,6 +100,7 @@ function StaffSidebarFooter({ onLogout }: { onLogout: () => void }) {
 export default function StaffPanelShell({ children }: StaffPanelShellProps) {
   const { basePath, role, loginPath } = useStaffPanel();
   const { theme } = useStaffTheme();
+  const companyBadges = useCompanyBadgesOptional();
   const pathname = usePathname();
   const router = useRouter();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -125,6 +135,8 @@ export default function StaffPanelShell({ children }: StaffPanelShellProps) {
   const accountMenuHref = role === "admin" ? `${basePath}/settings` : `${basePath}/profile`;
   const accountMenuLabel = role === "admin" ? "設定" : "プロフィール";
 
+  const chatUnread = role === "company" ? (companyBadges?.chatCount ?? 0) : 0;
+
   const nav: NavItem[] =
     role === "admin"
       ? [
@@ -138,7 +150,7 @@ export default function StaffPanelShell({ children }: StaffPanelShellProps) {
           { href: basePath, label: "ダッシュボード", icon: LayoutDashboard },
           { href: `${basePath}/jobs`, label: "求人管理", icon: Briefcase },
           { href: `${basePath}/applications`, label: "応募管理", icon: FileText },
-          { href: `${basePath}/chat`, label: "チャット", icon: MessageCircle },
+          { href: `${basePath}/chat`, label: "チャット", icon: MessageCircle, badge: chatUnread },
           { href: `${basePath}/profile`, label: "プロフィール", icon: User },
         ];
 

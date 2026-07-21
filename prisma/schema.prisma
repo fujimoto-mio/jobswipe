@@ -12,6 +12,7 @@ enum CompanyStatus {
   Active
   Pending
   Suspended
+  Cancelled
 }
 
 enum SeekerStatus {

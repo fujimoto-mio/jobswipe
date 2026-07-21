@@ -1,34 +1,47 @@
 "use client";
 
+import Link from "next/link";
 import { Bell, MessageCircle } from "lucide-react";
-
-const TOPBAR_ICONS = [
-  { id: "notifications", icon: Bell, label: "通知", count: 3 },
-  { id: "messages", icon: MessageCircle, label: "メッセージ", count: 2 },
-] as const;
+import { useCompanyBadgesOptional } from "@/components/staff/CompanyBadgeProvider";
+import { useStaffPanel } from "@/components/staff/StaffPanelContext";
 
 function formatBadgeCount(count: number) {
   return count > 99 ? "99+" : String(count);
 }
 
 export default function StaffTopbarIcons() {
+  const { role, basePath } = useStaffPanel();
+  const companyBadges = useCompanyBadgesOptional();
+  const chatCount = role === "company" ? (companyBadges?.chatCount ?? 0) : 0;
+  const chatHref = `${basePath}/chat`;
+
   return (
     <div className="staff-topbar-icons">
-      {TOPBAR_ICONS.map(({ id, icon: Icon, label, count }) => (
-        <button
-          key={id}
-          type="button"
+      <button
+        type="button"
+        className="staff-topbar-icon-btn"
+        aria-label="通知"
+      >
+        <Bell className="staff-topbar-icon-btn__icon" aria-hidden />
+      </button>
+      {role === "company" ? (
+        <Link
+          href={chatHref}
           className="staff-topbar-icon-btn"
-          aria-label={count > 0 ? `${label}（${count}件）` : label}
+          aria-label={chatCount > 0 ? `メッセージ（${chatCount}件）` : "メッセージ"}
         >
-          <Icon className="staff-topbar-icon-btn__icon" aria-hidden />
-          {count > 0 && (
+          <MessageCircle className="staff-topbar-icon-btn__icon" aria-hidden />
+          {chatCount > 0 && (
             <span className="staff-topbar-icon-badge" aria-hidden>
-              {formatBadgeCount(count)}
+              {formatBadgeCount(chatCount)}
             </span>
           )}
+        </Link>
+      ) : (
+        <button type="button" className="staff-topbar-icon-btn" aria-label="メッセージ">
+          <MessageCircle className="staff-topbar-icon-btn__icon" aria-hidden />
         </button>
-      ))}
+      )}
     </div>
   );
 }
